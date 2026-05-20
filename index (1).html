@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#0a0905">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Folhados d'Ouro</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    /* ✨ TIPOGRAFIA FLUIDA: escala com a largura da tela */
+    html{font-size:clamp(20px, 5.5vw, 26px)}
+    :root{
+      --gold:#c9973a;--gl:#f5d98b;--bg:#0a0905;--bg2:#0e0c07;--bg3:#1a1305;
+      --text:#f0e6c8;--mut:#8a7a5a;--brd:#2a1e08;--grn:#4ade80;--red:#f87171;
+    }
+    body{height:100vh;overflow:hidden;background:var(--bg);color:var(--text);
+      font-family:Georgia,serif;-webkit-text-size-adjust:100%}
+    .scr{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+    .scr.off{display:none}
+
+    /* ══ HEADER ══ */
+    .hdr{padding:1.1rem 1.2rem 0.9rem;background:var(--bg3);border-bottom:2px solid var(--brd);
+      display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .hdr-brand{font-size:0.6rem;letter-spacing:0.25rem;color:var(--gold);text-transform:uppercase;margin-bottom:0.2rem}
+    .hdr-title{font-size:1.05rem;font-weight:bold;color:var(--gl)}
+    .hdr-pct{font-size:1.7rem;font-weight:bold;color:var(--gold);line-height:1}
+    .hdr-sub{font-size:0.6rem;color:var(--mut);letter-spacing:0.12rem;text-transform:uppercase}
+    .pb{height:0.2rem;background:var(--brd);flex-shrink:0}
+    .pb-fill{height:100%;background:linear-gradient(90deg,#5a3008,var(--gold),var(--gl));transition:width .5s}
+
+    /* ══ STATUS BAR ══ */
+    .sb{padding:0.65rem 1.2rem;background:rgba(201,151,58,.05);border-bottom:1px solid var(--brd);
+      display:flex;align-items:center;gap:0.6rem;flex-shrink:0;min-height:2.6rem}
+    .dot{width:0.6rem;height:0.6rem;border-radius:50%;flex-shrink:0}
+    .dot.on{background:var(--grn);box-shadow:0 0 0.6rem var(--grn);animation:blink 1.4s infinite}
+    .dot.off{background:#2a2a2a}.dot.err{background:var(--red)}
+    .sb-txt{font-size:0.7rem;letter-spacing:0.08rem;text-transform:uppercase;color:var(--mut);flex-shrink:0;font-weight:bold}
+    .sb-tr{font-size:0.7rem;color:var(--gold);font-style:italic;flex:1;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+    /* ══ GROUP BANNER ══ */
+    .gb{margin:0.8rem 1rem 0.5rem;padding:0.6rem 1rem;
+      background:linear-gradient(90deg,rgba(201,151,58,.18),transparent);
+      border-left:0.3rem solid var(--gold);border-radius:0.2rem;flex-shrink:0;
+      font-size:0.85rem;letter-spacing:0.2rem;color:var(--gl);text-transform:uppercase;font-weight:bold}
+
+    /* ══ CURRENT STEP (DESTAQUE BEM GRANDE) ══ */
+    .cur{margin:0 1rem;padding:1.2rem 1.3rem;background:var(--bg3);
+      border:1px solid var(--brd);border-left:0.35rem solid var(--gold);border-radius:0.6rem;flex-shrink:0}
+    .cur-cat{font-size:0.75rem;color:var(--gold);letter-spacing:0.25rem;
+      text-transform:uppercase;margin-bottom:0.4rem;font-weight:bold}
+    .cur-name{font-size:1.45rem;color:var(--gl);font-weight:bold;
+      margin-bottom:0.4rem;line-height:1.25}
+    .cur-qty{font-size:2.1rem;color:var(--gold);font-weight:bold;margin-bottom:0.4rem;line-height:1.1}
+    .cur-det{font-size:0.95rem;color:var(--mut);line-height:1.5}
+
+    /* ══ NAV BUTTONS ══ */
+    .nav{display:flex;gap:0.6rem;margin:0.8rem 1rem;flex-shrink:0}
+    .nbtn{flex:1;padding:1rem 0.4rem;border-radius:0.6rem;font-family:Georgia,serif;font-weight:bold;
+      font-size:0.85rem;letter-spacing:0.08rem;text-transform:uppercase;cursor:pointer;
+      border:1px solid var(--brd);background:var(--bg3);color:var(--gold);
+      min-height:3.4rem;display:flex;align-items:center;justify-content:center}
+    .nbtn.next{background:linear-gradient(135deg,#3a2005,#7a4a0a);color:var(--gl);border-color:#5a3008}
+    .nbtn:active{opacity:.7;transform:scale(.97)}
+
+    /* ══ STEP LIST ══ */
+    .list{flex:1;overflow-y:auto;padding:0 1rem 0.8rem}
+    .list-grupo{font-size:0.75rem;letter-spacing:0.2rem;color:var(--gold);text-transform:uppercase;
+      padding:0.7rem 0.2rem 0.5rem;margin-top:0.5rem;border-top:1px solid var(--brd);font-weight:bold}
+    .list-grupo:first-child{border-top:none;margin-top:0;padding-top:0.3rem}
+    .si{display:flex;align-items:flex-start;gap:0.7rem;padding:0.85rem 0.7rem;margin-bottom:0.25rem;
+      border-radius:0.5rem;cursor:pointer;border:1px solid transparent;min-height:3.5rem}
+    .si.active{background:rgba(201,151,58,.1);border-color:rgba(201,151,58,.25)}
+    .si.done{opacity:.35}
+    .cb{width:1.6rem;height:1.6rem;border-radius:0.3rem;flex-shrink:0;border:2px solid var(--brd);
+      background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;
+      font-size:0.9rem;color:#0a0905;font-weight:bold;margin-top:0.1rem}
+    .cb.chk{background:var(--grn);border-color:var(--grn)}
+    .si-num{font-size:0.65rem;letter-spacing:0.15rem;color:var(--mut);text-transform:uppercase;margin-bottom:0.15rem;font-weight:bold}
+    .si-name{font-size:1rem;color:var(--text);line-height:1.3}
+    .si.active .si-name{color:var(--gl)}
+    .si-qty{font-size:0.95rem;color:var(--gold);margin-top:0.15rem;font-weight:bold}
+
+    /* ══ AI RESPONSE ══ */
+    .ai{margin:0 1rem 0.6rem;padding:0.8rem 1rem;background:var(--bg2);
+      border:1px solid var(--brd);border-radius:0.5rem;flex-shrink:0}
+    .ai-lbl{font-size:0.65rem;color:#5a4a2a;letter-spacing:0.2rem;text-transform:uppercase;margin-bottom:0.3rem;font-weight:bold}
+    .ai-txt{font-size:0.95rem;color:#c9a060;line-height:1.5}
+
+    /* ══ BOTTOM ══ */
+    .bot{padding:0.8rem 1rem 1rem;border-top:1px solid var(--brd);flex-shrink:0;background:var(--bg)}
+    .btn-danger{width:100%;padding:0.9rem;border-radius:0.5rem;font-family:Georgia,serif;font-weight:bold;
+      font-size:0.85rem;letter-spacing:0.2rem;text-transform:uppercase;cursor:pointer;
+      background:transparent;border:2px solid #5a1a0e;color:#f08060;min-height:3rem}
+
+    /* ══════════════════════════════════════
+       START SCREEN
+    ══════════════════════════════════════ */
+    #s-start{padding:0}
+    .start-top{padding:1.8rem 1.3rem 1.2rem;text-align:center;flex-shrink:0}
+    .start-icon{font-size:3.6rem;margin-bottom:0.7rem;line-height:1}
+    .start-brand{font-size:0.7rem;letter-spacing:0.3rem;color:var(--gold);text-transform:uppercase;margin-bottom:0.3rem;font-weight:bold}
+    .start-title{font-size:1.7rem;font-weight:bold;color:var(--gl);margin-bottom:0.3rem}
+    .start-sub{font-size:0.9rem;color:var(--mut);letter-spacing:0.05rem}
+
+    .modulos-label{font-size:0.7rem;letter-spacing:0.2rem;text-transform:uppercase;color:var(--mut);
+      padding:0 1.3rem 0.6rem;flex-shrink:0;font-weight:bold}
+    .modulos{flex:1;overflow-y:auto;padding:0 1rem 1rem;display:flex;flex-direction:column;gap:0.65rem}
+    .modulo{display:flex;align-items:center;gap:0.9rem;padding:1.05rem 1.05rem;border-radius:0.65rem;
+      border:1px solid var(--brd);background:var(--bg3);cursor:pointer}
+    .modulo.ativo{border-color:#7a5a1e;border-width:2px}
+    .modulo.ativo:active{opacity:.8;transform:scale(.98)}
+    .modulo.inativo{opacity:.35;cursor:default}
+    .modulo-icon{font-size:1.9rem;flex-shrink:0;width:2.6rem;text-align:center;line-height:1}
+    .modulo-info{flex:1;min-width:0}
+    .modulo-nome{font-size:1.05rem;font-weight:bold;color:var(--gl);margin-bottom:0.2rem}
+    .modulo.inativo .modulo-nome{color:var(--mut)}
+    .modulo-desc{font-size:0.78rem;color:var(--mut);line-height:1.35}
+    .modulo-badge{font-size:0.6rem;letter-spacing:0.15rem;text-transform:uppercase;padding:0.3rem 0.55rem;
+      border-radius:0.25rem;flex-shrink:0;font-weight:bold}
+    .badge-ativo{background:rgba(201,151,58,.18);color:var(--gold);border:1px solid rgba(201,151,58,.35)}
+    .badge-breve{background:rgba(42,30,8,.6);color:#4a3a1a;border:1px solid var(--brd)}
+
+    .start-footer{padding:0.8rem 1.3rem 1.3rem;display:flex;justify-content:center;gap:0.9rem;flex-shrink:0}
+    .link-btn{background:transparent;border:1px solid var(--brd);color:var(--mut);
+      font-family:Georgia,serif;font-weight:bold;font-size:0.8rem;letter-spacing:0.12rem;
+      text-transform:uppercase;padding:0.7rem 1.1rem;border-radius:0.4rem;cursor:pointer;min-height:2.8rem}
+
+    /* ══ CONFIG ══ */
+    #s-config{padding:2.2rem 1.4rem;gap:1rem;justify-content:center}
+    .cfg-t{font-size:1.15rem;color:var(--gl);font-weight:bold}
+    .cfg-s{font-size:0.85rem;color:var(--mut);line-height:1.7}
+    .inp{background:var(--bg3);border:2px solid var(--brd);color:var(--text);
+      font-family:Georgia,serif;font-size:0.95rem;padding:0.9rem 1rem;border-radius:0.5rem;width:100%;outline:none}
+    .inp:focus{border-color:var(--gold)}
+    .btn-main{padding:1.05rem 1.8rem;border-radius:0.5rem;font-family:Georgia,serif;font-weight:bold;
+      font-size:1rem;letter-spacing:0.2rem;text-transform:uppercase;cursor:pointer;
+      background:linear-gradient(135deg,#6a3808,var(--gold));color:#0a0905;border:none;
+      width:100%;min-height:3.4rem}
+
+    /* ══ DONE / HISTORY ══ */
+    #s-done{align-items:center;justify-content:center;gap:1rem;padding:1.8rem}
+    .hist-list{flex:1;overflow-y:auto;padding:1rem}
+    .hi{background:var(--bg3);border:1px solid var(--brd);border-radius:0.5rem;padding:0.9rem 1rem;margin-bottom:0.6rem}
+    .hi-d{font-size:0.75rem;color:var(--mut);margin-bottom:0.3rem;letter-spacing:0.05rem}
+    .hi-i{font-size:0.9rem;color:var(--text)}
+
+    ::-webkit-scrollbar{width:0.2rem}
+    ::-webkit-scrollbar-track{background:var(--bg)}
+    ::-webkit-scrollbar-thumb{background:var(--brd);border-radius:0.1rem}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+  </style>
+</head>
+<body>
+
+<div id="s-config" class="scr off">
+  <div class="cfg-t">🔑 Chave API Gemini</div>
+  <div class="cfg-s">Acesse <strong style="color:var(--gl)">aistudio.google.com</strong><br>→ Get API key → Create API key</div>
+  <input id="inp-key" class="inp" type="password" placeholder="AIza..." autocomplete="off">
+  <div class="cfg-s" style="font-size:0.8rem;margin-top:-0.3rem">Operador (opcional):</div>
+  <input id="inp-op" class="inp" type="text" placeholder="Wagner">
+  <button class="btn-main" onclick="salvarConfig()">Salvar e Continuar</button>
+  <button class="link-btn" style="margin-top:0.3rem;width:100%;text-align:center" onclick="ir('start')">← Voltar</button>
+</div>
+
+<div id="s-start" class="scr">
+  <div class="start-top">
+    <div class="start-icon">🥐</div>
+    <div class="start-brand">Folhados d'Ouro</div>
+    <div class="start-title">Produção</div>
+    <div class="start-sub">Selecione o módulo</div>
+  </div>
+  <div class="modulos-label">Módulos de Produção</div>
+  <div class="modulos">
+    <div class="modulo ativo" onclick="iniciar('porcionamento')">
+      <div class="modulo-icon">⚖️</div>
+      <div class="modulo-info"><div class="modulo-nome">Porcionamento — Receita 1</div><div class="modulo-desc">Pesagem de farinhas, líquidos e ingredientes</div></div>
+      <div class="modulo-badge badge-ativo">Ativo</div>
+    </div>
+    <div class="modulo inativo"><div class="modulo-icon">🥣</div><div class="modulo-info"><div class="modulo-nome">Bater a Massa</div><div class="modulo-desc">Velocidades, tempos e temperatura</div></div><div class="modulo-badge badge-breve">Em breve</div></div>
+    <div class="modulo inativo"><div class="modulo-icon">📐</div><div class="modulo-info"><div class="modulo-nome">Laminação</div><div class="modulo-desc">Dobras e folhamento com manteiga</div></div><div class="modulo-badge badge-breve">Em breve</div></div>
+    <div class="modulo inativo"><div class="modulo-icon">✂️</div><div class="modulo-info"><div class="modulo-nome">Modelagem</div><div class="modulo-desc">Corte, enrolamento e pesagem</div></div><div class="modulo-badge badge-breve">Em breve</div></div>
+    <div class="modulo inativo"><div class="modulo-icon">🌡️</div><div class="modulo-info"><div class="modulo-nome">Fermentação</div><div class="modulo-desc">Tempo, temperatura e umidade</div></div><div class="modulo-badge badge-breve">Em breve</div></div>
+    <div class="modulo inativo"><div class="modulo-icon">🔥</div><div class="modulo-info"><div class="modulo-nome">Forneamento</div><div class="modulo-desc">Temperatura, vapor e tempo</div></div><div class="modulo-badge badge-breve">Em breve</div></div>
+    <div class="modulo inativo"><div class="modulo-icon">📦</div><div class="modulo-info"><div class="modulo-nome">Expedição</div><div class="modulo-desc">Controle de saída e rastreabilidade</div></div><div class="modulo-badge badge-breve">Em breve</div></div>
+  </div>
+  <div class="start-footer">
+    <button class="link-btn" onclick="ir('history')">Histórico</button>
+    <button class="link-btn" onclick="ir('config')">Config</button>
+  </div>
+</div>
+
+<div id="s-active" class="scr off">
+  <div class="hdr">
+    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Porcionamento · R1</div></div>
+    <div style="text-align:right"><div class="hdr-pct" id="pct">0%</div><div class="hdr-sub">Concluído</div></div>
+  </div>
+  <div class="pb"><div class="pb-fill" id="pb" style="width:0%"></div></div>
+  <div class="sb"><div class="dot off" id="mic-dot"></div><span class="sb-txt" id="sb-txt">Iniciando...</span><span class="sb-tr" id="sb-tr"></span></div>
+  <div class="gb" id="gb">—</div>
+  <div class="cur">
+    <div class="cur-cat" id="c-cat">—</div>
+    <div class="cur-name" id="c-name">—</div>
+    <div class="cur-qty" id="c-qty"></div>
+    <div class="cur-det" id="c-det"></div>
+  </div>
+  <div class="nav">
+    <button class="nbtn" onclick="irPasso(st.step-1)">← Voltar</button>
+    <button class="nbtn" onclick="repetir()">🔊 Repetir</button>
+    <button class="nbtn next" onclick="avancar()">Próximo →</button>
+  </div>
+  <div class="list" id="lista"></div>
+  <div class="ai" id="ai-box" style="display:none"><div class="ai-lbl">Assistente</div><div class="ai-txt" id="ai-txt"></div></div>
+  <div class="bot"><button class="btn-danger" onclick="encerrar()">■ Encerrar Sessão</button></div>
+</div>
+
+<div id="s-done" class="scr off">
+  <div style="font-size:3.5rem">✅</div>
+  <div style="font-size:1.3rem;color:var(--gl);font-weight:bold;text-align:center">Porcionamento Concluído!</div>
+  <div style="font-size:0.95rem;color:var(--mut);text-align:center;line-height:2">Sessão salva no histórico<br><span style="font-size:0.75rem;letter-spacing:0.15rem;text-transform:uppercase">Próxima: Bater a Massa</span></div>
+  <button class="btn-main" style="width:auto;padding:1rem 2.5rem;margin-top:1.5rem" onclick="ir('start')">← Início</button>
+</div>
+
+<div id="s-history" class="scr off">
+  <div class="hdr"><div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Histórico</div></div><button class="link-btn" onclick="ir('start')">← Voltar</button></div>
+  <div class="hist-list" id="hist-list"></div>
+</div>
+
+<script>
+const RECEITA = [
+  {id:1, grupo:'BALDE 1 · FARINHAS', cat:'FARINHA',  nome:'Bagatelle',           qty:'3,605 kg', det:'Primeira farinha do balde de secos'},
+  {id:2, grupo:'BALDE 1 · FARINHAS', cat:'FARINHA',  nome:'Feuilletage',         qty:'3,605 kg', det:'Acumulado de farinha: 7,209 kg'},
+  {id:3, grupo:'BALDE 1 · FARINHAS', cat:'FARINHA',  nome:'Italiana 00',         qty:'801 g',    det:'Acumulado total farinha: 8,010 kg'},
+  {id:4, grupo:'BALDE 1 · FARINHAS', cat:'FERMENTO', nome:'Fermento seco',       qty:'84 g',     det:'Junto com as farinhas no balde 1'},
+  {id:5, grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Água com gelo',       qty:'3,680 kg', det:'Temperatura baixa é essencial'},
+  {id:6, grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Leite em pó',         qty:'184 g',    det:'Diluir na água gelada'},
+  {id:7, grupo:'PÓS-BATIMENTO',      cat:'GORDURA',  nome:'Manteiga',            qty:'112 g',    det:'Adicionar APÓS início do batimento'},
+  {id:8, grupo:'PÓS-BATIMENTO',      cat:'SAL',      nome:'Sal refinado',        qty:'184 g',    det:'Adicionar APÓS início do batimento'},
+  {id:9, grupo:'APROVEITAMENTO',     cat:'APROVEITA',nome:'Aproveitamento',      qty:'2,500 kg', det:'Massa antiga incorporada à massa nova'},
+];
+
+const PASSOS_TXT = RECEITA.map(p => `Passo ${p.id} [${p.grupo}] ${p.nome}: ${p.qty}. ${p.det}`).join('\n');
+const SYSTEM = `Você é o assistente da Folhados d'Ouro, dedicado EXCLUSIVAMENTE ao Porcionamento da Receita 1.
+
+INGREDIENTES NA ORDEM EXATA:
+${PASSOS_TXT}
+
+REGRAS:
+1. Responda APENAS sobre esta receita. Outro assunto → "Foco no porcionamento."
+2. Não invente quantidades fora desta lista.
+3. Máximo 2 frases, português brasileiro, tom direto.
+4. NUNCA saia do contexto do porcionamento.`;
+
+const CMD = {
+  avancar:['próximo','proximo','próxima','proxima','prossiga','seguinte','continua','continuar','feito','fiz','pesei','adicionei','coloquei','botei','ok','sim','certo','correto','isso','pronto','concluído','concluido','terminei','tá','ta','beleza','joia','perfeito','pode','vai','vamos','bora','manda','done','next','avança','avançar','passa'],
+  voltar:['voltar','volta','volte','retorna','anterior','antes','atrás','atras','errei','errou','errado','desfaz','back'],
+  repetir:['repetir','repete','repita','de novo','outra vez','novamente','como é','qual','qual era','não entendi','nao entendi','quanto'],
+  pausar:['pausa','pausar','espera','aguarda','para','pare','calma','peraí','segura']
+};
+function matchCmd(t,g){return CMD[g].some(p=>t.includes(p))}
+
+const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0};
+const LS={g:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch{return d}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+const getKey=()=>LS.g('fdo_key','');
+const getOp=()=>LS.g('fdo_op','Padeiro');
+
+function ir(id){document.querySelectorAll('.scr').forEach(s=>s.classList.add('off'));document.getElementById('s-'+id).classList.remove('off');if(id==='history') renderHist();}
+
+function salvarConfig(){
+  const k=document.getElementById('inp-key').value.trim();
+  if(!k){alert('Insira a chave API');return;}
+  LS.s('fdo_key',k);
+  const op=document.getElementById('inp-op').value.trim();
+  if(op) LS.s('fdo_op',op);
+  ir('start');
+}
+
+function iniciar(){
+  if(!getKey()){ir('config');return;}
+  st.step=0;st.done=new Set();st.sessionStart=Date.now();
+  ir('active');renderLista();atualizarUI();
+  setDot('off','Iniciando microfone...');
+  iniciarVoz();
+}
+
+function iniciarVoz(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){setDot('err','Use Chrome para voz');return;}
+  const rec=new SR();
+  rec.lang='pt-BR';rec.continuous=true;rec.interimResults=false;rec.maxAlternatives=3;
+  st.rec=rec;
+  rec.onstart=()=>setDot('on','Ouvindo');
+  rec.onend=()=>{if(st.rec===rec){setDot('off','Reconectando...');setTimeout(()=>{try{rec.start();}catch(e){}},500);}};
+  rec.onerror=(e)=>{if(e.error==='not-allowed') setDot('err','Microfone bloqueado');else if(e.error!=='no-speech'&&e.error!=='aborted') setDot('off','Mic: '+e.error);};
+  rec.onresult=(e)=>{
+    const r=e.results[e.results.length-1];
+    let txt=r[0].transcript.trim().toLowerCase();
+    document.getElementById('sb-tr').textContent='"'+txt+'"';
+    const agora=Date.now();
+    if(agora-st.ts<800) return;
+    st.ts=agora;
+    processarComando(txt,r);
+  };
+  try{rec.start();}catch(e){}
+  setTimeout(()=>{const p=RECEITA[0];falar(`Porcionamento Receita 1 iniciado. ${p.grupo}. Passo 1: ${p.nome}, ${p.qty}.`);},900);
+}
+
+function processarComando(txt,alt){
+  const todas=[txt];
+  if(alt) for(let i=1;i<alt.length;i++) todas.push(alt[i].transcript.trim().toLowerCase());
+  for(const t of todas){
+    if(matchCmd(t,'avancar')){avancar();return;}
+    if(matchCmd(t,'voltar')){irPasso(st.step-1);return;}
+    if(matchCmd(t,'repetir')){repetir();return;}
+    if(matchCmd(t,'pausar')){speechSynthesis?.cancel();mostrarAI('Pausado.');return;}
+  }
+  if(txt.length>5) perguntarGemini(txt);
+}
+
+async function perguntarGemini(pergunta){
+  const key=getKey();if(!key) return;
+  const p=RECEITA[st.step];
+  const ctx=`Passo atual ${p.id}, ${p.grupo}, ${p.nome} ${p.qty}.\nPergunta: "${pergunta}"`;
+  try{
+    setDot('off','Consultando...');
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+      {method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({system_instruction:{parts:[{text:SYSTEM}]},contents:[{role:'user',parts:[{text:ctx}]}],generationConfig:{maxOutputTokens:150,temperature:0.3}})});
+    const data=await r.json();
+    const resp=data?.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    setDot('on','Ouvindo');
+    if(resp){mostrarAI(resp);falar(resp);}
+  }catch(err){setDot('on','Ouvindo');}
+}
+
+function falar(texto){
+  if(!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(texto);
+  u.lang='pt-BR';u.rate=1.0;u.pitch=1.0;
+  const vozes=speechSynthesis.getVoices();
+  const voz=vozes.find(v=>v.lang==='pt-BR')||vozes.find(v=>v.lang.startsWith('pt'));
+  if(voz) u.voice=voz;
+  speechSynthesis.speak(u);
+}
+
+function mostrarAI(txt){
+  const box=document.getElementById('ai-box');
+  document.getElementById('ai-txt').textContent=txt;
+  box.style.display='block';
+  clearTimeout(st.aiTimer);
+  st.aiTimer=setTimeout(()=>box.style.display='none',10000);
+}
+
+function irPasso(n){
+  st.step=Math.max(0,Math.min(n,RECEITA.length-1));
+  atualizarUI();
+  const p=RECEITA[st.step];
+  falar(`${p.grupo}. Passo ${p.id}: ${p.nome}, ${p.qty}. ${p.det}`);
+}
+
+function avancar(){
+  const ga=RECEITA[st.step].grupo;
+  st.done.add(st.step);
+  const next=st.step+1;
+  if(next>=RECEITA.length){concluir();return;}
+  st.step=next;
+  atualizarUI();
+  const p=RECEITA[st.step];
+  if(p.grupo!==ga){falar(`Concluído! Próximo grupo: ${p.grupo}. Passo ${p.id}: ${p.nome}, ${p.qty}.`);}
+  else{falar(`Concluído. Passo ${p.id}: ${p.nome}, ${p.qty}. ${p.det}`);}
+}
+
+function repetir(){const p=RECEITA[st.step];falar(`Passo ${p.id}: ${p.nome}, ${p.qty}. ${p.det}`);}
+function toggleDone(i,ev){ev.stopPropagation();st.done.has(i)?st.done.delete(i):st.done.add(i);atualizarUI();}
+
+function setDot(tipo,msg){document.getElementById('mic-dot').className='dot '+(tipo==='on'?'on':tipo==='err'?'err':'off');document.getElementById('sb-txt').textContent=msg;}
+
+function atualizarUI(){
+  const pct=Math.round((st.done.size/RECEITA.length)*100);
+  document.getElementById('pct').textContent=pct+'%';
+  document.getElementById('pb').style.width=pct+'%';
+  const p=RECEITA[st.step];
+  document.getElementById('gb').textContent=p.grupo;
+  document.getElementById('c-cat').textContent=p.cat;
+  document.getElementById('c-name').textContent=p.nome;
+  document.getElementById('c-qty').textContent=p.qty;
+  document.getElementById('c-det').textContent=p.det;
+  renderLista();
+}
+
+function renderLista(){
+  let html='';let ga=null;
+  RECEITA.forEach((p,i)=>{
+    if(p.grupo!==ga){html+=`<div class="list-grupo">${p.grupo}</div>`;ga=p.grupo;}
+    html+=`<div class="si${i===st.step?' active':''}${st.done.has(i)?' done':''}" onclick="irPasso(${i})">
+      <div class="cb${st.done.has(i)?' chk':''}" onclick="toggleDone(${i},event)">${st.done.has(i)?'✓':''}</div>
+      <div style="flex:1;min-width:0">
+        <div class="si-num">${String(p.id).padStart(2,'0')} · ${p.cat}</div>
+        <div class="si-name">${p.nome}</div>
+        <div class="si-qty">${p.qty}</div>
+      </div></div>`;
+  });
+  document.getElementById('lista').innerHTML=html;
+  document.querySelector('.si.active')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function concluir(){salvarSessao(true);pararVoz();falar('Porcionamento concluído!');setTimeout(()=>ir('done'),1500);}
+function encerrar(){salvarSessao(false);pararVoz();ir('start');}
+function pararVoz(){if(st.rec){st.rec.onend=null;try{st.rec.stop();}catch(e){}st.rec=null;}speechSynthesis?.cancel();}
+function salvarSessao(ok){
+  const all=LS.g('fdo_sess',[]);
+  all.unshift({data:new Date().toLocaleString('pt-BR'),modulo:'Porcionamento R1',op:getOp(),concluidos:st.done.size,total:RECEITA.length,dur:Math.round((Date.now()-st.sessionStart)/60000),ok});
+  LS.s('fdo_sess',all.slice(0,60));
+}
+function renderHist(){
+  const all=LS.g('fdo_sess',[]);
+  const el=document.getElementById('hist-list');
+  if(!all.length){el.innerHTML='<div style="padding:2rem;text-align:center;color:var(--mut);font-size:0.9rem">Nenhuma sessão ainda</div>';return;}
+  el.innerHTML=all.map(s=>`<div class="hi"><div class="hi-d">${s.data} · ${s.dur} min · ${s.modulo||'—'} · ${s.op||'—'}</div><div class="hi-i">${s.concluidos}/${s.total} passos ${s.ok?'✅':'⚠️'}</div></div>`).join('');
+}
+
+(function(){
+  if(!getKey()) ir('config'); else ir('start');
+  const op=LS.g('fdo_op','');
+  if(op) document.getElementById('inp-op').value=op;
+  speechSynthesis?.getVoices();
+  speechSynthesis?.addEventListener('voiceschanged',()=>speechSynthesis.getVoices());
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
