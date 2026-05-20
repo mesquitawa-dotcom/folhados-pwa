@@ -2,134 +2,151 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <meta name="theme-color" content="#0a0905">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <title>Folhados d'Ouro</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <style>
     *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
     :root{
       --gold:#c9973a;--gl:#f5d98b;--bg:#0a0905;--bg2:#0e0c07;--bg3:#1a1305;
-      --text:#f0e6c8;--mut:#6a5a3a;--brd:#2a1e08;--grn:#4ade80;--red:#f87171;
+      --text:#f0e6c8;--mut:#8a7a5a;--brd:#2a1e08;--grn:#4ade80;--red:#f87171;
     }
-    html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Georgia,serif}
+    html{font-size:18px}
+    body{height:100vh;overflow:hidden;background:var(--bg);color:var(--text);
+      font-family:Georgia,serif;-webkit-text-size-adjust:100%}
     .scr{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
     .scr.off{display:none}
 
-    .hdr{padding:14px 20px 10px;background:var(--bg3);border-bottom:1px solid var(--brd);
+    /* ══ HEADER ══ */
+    .hdr{padding:20px 22px 16px;background:var(--bg3);border-bottom:2px solid var(--brd);
       display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-    .hdr-brand{font-size:9px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:3px}
-    .hdr-title{font-size:17px;font-weight:bold;color:var(--gl)}
-    .hdr-pct{font-size:26px;font-weight:bold;color:var(--gold);line-height:1}
-    .hdr-sub{font-size:9px;color:var(--mut);letter-spacing:2px;text-transform:uppercase}
-    .pb{height:2px;background:var(--brd);flex-shrink:0}
+    .hdr-brand{font-size:12px;letter-spacing:5px;color:var(--gold);text-transform:uppercase;margin-bottom:4px}
+    .hdr-title{font-size:22px;font-weight:bold;color:var(--gl)}
+    .hdr-pct{font-size:36px;font-weight:bold;color:var(--gold);line-height:1}
+    .hdr-sub{font-size:12px;color:var(--mut);letter-spacing:2px;text-transform:uppercase}
+    .pb{height:4px;background:var(--brd);flex-shrink:0}
     .pb-fill{height:100%;background:linear-gradient(90deg,#5a3008,var(--gold),var(--gl));transition:width .5s}
 
-    .sb{padding:7px 20px;background:rgba(201,151,58,.04);border-bottom:1px solid var(--brd);
-      display:flex;align-items:center;gap:8px;flex-shrink:0;min-height:34px}
-    .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:all .3s}
-    .dot.on{background:var(--grn);box-shadow:0 0 8px var(--grn);animation:blink 1.4s infinite}
-    .dot.off{background:#2a2a2a}
-    .dot.err{background:var(--red)}
-    .sb-txt{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mut);flex-shrink:0}
-    .sb-tr{font-size:11px;color:var(--gold);font-style:italic;flex:1;
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:4px}
+    /* ══ STATUS BAR ══ */
+    .sb{padding:12px 22px;background:rgba(201,151,58,.04);border-bottom:1px solid var(--brd);
+      display:flex;align-items:center;gap:12px;flex-shrink:0;min-height:48px}
+    .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+    .dot.on{background:var(--grn);box-shadow:0 0 12px var(--grn);animation:blink 1.4s infinite}
+    .dot.off{background:#2a2a2a}.dot.err{background:var(--red)}
+    .sb-txt{font-size:14px;letter-spacing:1px;text-transform:uppercase;color:var(--mut);flex-shrink:0}
+    .sb-tr{font-size:14px;color:var(--gold);font-style:italic;flex:1;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-    /* Group banner (BALDE 1, BALDE 2, etc) */
-    .gb{margin:10px 16px 4px;padding:6px 12px;background:linear-gradient(90deg,rgba(201,151,58,.12),transparent);
-      border-left:2px solid var(--gold);border-radius:2px;flex-shrink:0;
-      font-size:10px;letter-spacing:3px;color:var(--gl);text-transform:uppercase;font-weight:bold}
+    /* ══ GROUP BANNER ══ */
+    .gb{margin:14px 18px 8px;padding:10px 16px;background:linear-gradient(90deg,rgba(201,151,58,.12),transparent);
+      border-left:4px solid var(--gold);border-radius:3px;flex-shrink:0;
+      font-size:15px;letter-spacing:3px;color:var(--gl);text-transform:uppercase;font-weight:bold}
 
-    .cur{margin:0 16px;padding:12px 16px;background:var(--bg3);
-      border:1px solid var(--brd);border-left:3px solid var(--gold);border-radius:4px;flex-shrink:0}
-    .cur-cat{font-size:9px;color:var(--gold);letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
-    .cur-name{font-size:16px;color:var(--gl);font-weight:bold;margin-bottom:3px;line-height:1.3}
-    .cur-qty{font-size:22px;color:var(--gold);font-weight:bold;margin-bottom:3px}
-    .cur-det{font-size:12px;color:var(--mut);line-height:1.5}
+    /* ══ CURRENT STEP (DESTAQUE GRANDE) ══ */
+    .cur{margin:0 18px;padding:20px;background:var(--bg3);
+      border:1px solid var(--brd);border-left:5px solid var(--gold);border-radius:8px;flex-shrink:0}
+    .cur-cat{font-size:13px;color:var(--gold);letter-spacing:4px;text-transform:uppercase;margin-bottom:6px}
+    .cur-name{font-size:26px;color:var(--gl);font-weight:bold;margin-bottom:8px;line-height:1.3}
+    .cur-qty{font-size:34px;color:var(--gold);font-weight:bold;margin-bottom:8px}
+    .cur-det{font-size:16px;color:var(--mut);line-height:1.6}
 
-    .nav{display:flex;gap:8px;margin:8px 16px;flex-shrink:0}
-    .nbtn{flex:1;padding:8px 6px;border-radius:3px;font-family:Georgia,serif;font-weight:bold;
-      font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;
-      border:1px solid var(--brd);background:var(--bg3);color:var(--gold)}
+    /* ══ NAV BUTTONS (GRANDES, FÁCIL DE TOCAR) ══ */
+    .nav{display:flex;gap:10px;margin:12px 18px;flex-shrink:0}
+    .nbtn{flex:1;padding:16px 10px;border-radius:8px;font-family:Georgia,serif;font-weight:bold;
+      font-size:16px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+      border:1px solid var(--brd);background:var(--bg3);color:var(--gold);
+      min-height:56px;display:flex;align-items:center;justify-content:center}
     .nbtn.next{background:linear-gradient(135deg,#3a2005,#7a4a0a);color:var(--gl);border-color:#5a3008}
+    .nbtn:active{opacity:.7;transform:scale(.97)}
 
-    .list{flex:1;overflow-y:auto;padding:0 16px 10px}
-    .list-grupo{font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;
-      padding:8px 4px 6px;margin-top:6px;border-top:1px solid var(--brd);font-weight:bold}
-    .list-grupo:first-child{border-top:none;margin-top:0;padding-top:4px}
-    .si{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;margin-bottom:3px;
-      border-radius:4px;cursor:pointer;border:1px solid transparent}
-    .si.active{background:rgba(201,151,58,.08);border-color:rgba(201,151,58,.2)}
-    .si.done{opacity:.36}
-    .cb{width:20px;height:20px;border-radius:3px;flex-shrink:0;border:1px solid var(--brd);
+    /* ══ STEP LIST ══ */
+    .list{flex:1;overflow-y:auto;padding:0 18px 14px}
+    .list-grupo{font-size:13px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;
+      padding:12px 4px 10px;margin-top:10px;border-top:1px solid var(--brd);font-weight:bold}
+    .list-grupo:first-child{border-top:none;margin-top:0;padding-top:6px}
+    .si{display:flex;align-items:flex-start;gap:14px;padding:14px;margin-bottom:5px;
+      border-radius:8px;cursor:pointer;border:1px solid transparent;min-height:60px}
+    .si.active{background:rgba(201,151,58,.1);border-color:rgba(201,151,58,.25)}
+    .si.done{opacity:.35}
+    .cb{width:28px;height:28px;border-radius:5px;flex-shrink:0;border:2px solid var(--brd);
       background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;
-      font-size:11px;color:#0a0905;font-weight:bold;margin-top:1px}
+      font-size:16px;color:#0a0905;font-weight:bold;margin-top:2px}
     .cb.chk{background:var(--grn);border-color:var(--grn)}
-    .si-num{font-size:9px;letter-spacing:2px;color:var(--mut);text-transform:uppercase;margin-bottom:2px}
-    .si-name{font-size:13px;color:var(--text)}
+    .si-num{font-size:11px;letter-spacing:2px;color:var(--mut);text-transform:uppercase;margin-bottom:3px}
+    .si-name{font-size:17px;color:var(--text);line-height:1.3}
     .si.active .si-name{color:var(--gl)}
-    .si-qty{font-size:11px;color:var(--gold);margin-top:1px;font-weight:bold}
+    .si-qty{font-size:16px;color:var(--gold);margin-top:3px;font-weight:bold}
 
-    .ai{margin:0 16px 8px;padding:9px 13px;background:var(--bg2);
-      border:1px solid var(--brd);border-radius:4px;flex-shrink:0}
-    .ai-lbl{font-size:9px;color:#4a3a1a;letter-spacing:3px;text-transform:uppercase;margin-bottom:3px}
-    .ai-txt{font-size:12px;color:#c9a060;line-height:1.6}
+    /* ══ AI RESPONSE ══ */
+    .ai{margin:0 18px 10px;padding:14px 16px;background:var(--bg2);
+      border:1px solid var(--brd);border-radius:8px;flex-shrink:0}
+    .ai-lbl{font-size:11px;color:#5a4a2a;letter-spacing:3px;text-transform:uppercase;margin-bottom:5px}
+    .ai-txt{font-size:16px;color:#c9a060;line-height:1.6}
 
-    .bot{padding:10px 16px;border-top:1px solid var(--brd);flex-shrink:0;background:var(--bg)}
-    .btn-danger{width:100%;padding:10px;border-radius:3px;font-family:Georgia,serif;font-weight:bold;
-      font-size:11px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;
-      background:transparent;border:1px solid #5a1a0e;color:#f08060}
+    /* ══ BOTTOM ══ */
+    .bot{padding:14px 18px;border-top:1px solid var(--brd);flex-shrink:0;background:var(--bg)}
+    .btn-danger{width:100%;padding:14px;border-radius:8px;font-family:Georgia,serif;font-weight:bold;
+      font-size:15px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;
+      background:transparent;border:2px solid #5a1a0e;color:#f08060;min-height:52px}
 
+    /* ════════════════════════════════════
+       START SCREEN
+    ════════════════════════════════════ */
     #s-start{padding:0}
-    .start-top{padding:22px 24px 14px;text-align:center;flex-shrink:0}
-    .start-icon{font-size:40px;margin-bottom:10px}
-    .start-brand{font-size:9px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:4px}
-    .start-title{font-size:22px;font-weight:bold;color:var(--gl);margin-bottom:4px}
-    .start-sub{font-size:11px;color:var(--mut);letter-spacing:1px}
-
-    .modulos-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--mut);
-      padding:0 20px 8px;flex-shrink:0}
-    .modulos{flex:1;overflow-y:auto;padding:0 16px 16px;display:flex;flex-direction:column;gap:8px}
-    .modulo{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:6px;
-      border:1px solid var(--brd);background:var(--bg3);cursor:pointer;position:relative}
-    .modulo.ativo{border-color:#7a5a1e}
-    .modulo.ativo:active{opacity:.8}
-    .modulo.inativo{opacity:.38;cursor:default}
-    .modulo-icon{font-size:24px;flex-shrink:0;width:36px;text-align:center}
+    .start-top{padding:30px 24px 20px;text-align:center;flex-shrink:0}
+    .start-icon{font-size:64px;margin-bottom:14px}
+    .start-brand{font-size:12px;letter-spacing:5px;color:var(--gold);text-transform:uppercase;margin-bottom:6px}
+    .start-title{font-size:28px;font-weight:bold;color:var(--gl);margin-bottom:6px}
+    .start-sub{font-size:15px;color:var(--mut);letter-spacing:1px}
+    .modulos-label{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--mut);
+      padding:0 22px 10px;flex-shrink:0}
+    .modulos{flex:1;overflow-y:auto;padding:0 18px 18px;display:flex;flex-direction:column;gap:12px}
+    .modulo{display:flex;align-items:center;gap:16px;padding:18px 18px;border-radius:10px;
+      border:1px solid var(--brd);background:var(--bg3);cursor:pointer}
+    .modulo.ativo{border-color:#7a5a1e;border-width:2px}
+    .modulo.ativo:active{opacity:.8;transform:scale(.98)}
+    .modulo.inativo{opacity:.35;cursor:default}
+    .modulo-icon{font-size:34px;flex-shrink:0;width:44px;text-align:center}
     .modulo-info{flex:1;min-width:0}
-    .modulo-nome{font-size:13px;font-weight:bold;color:var(--gl);margin-bottom:2px}
+    .modulo-nome{font-size:18px;font-weight:bold;color:var(--gl);margin-bottom:4px}
     .modulo.inativo .modulo-nome{color:var(--mut)}
-    .modulo-desc{font-size:10px;color:var(--mut);line-height:1.4}
-    .modulo-badge{font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:3px 7px;
-      border-radius:2px;flex-shrink:0;font-weight:bold}
-    .badge-ativo{background:rgba(201,151,58,.15);color:var(--gold);border:1px solid rgba(201,151,58,.3)}
+    .modulo-desc{font-size:14px;color:var(--mut);line-height:1.4}
+    .modulo-badge{font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:5px 10px;
+      border-radius:4px;flex-shrink:0;font-weight:bold}
+    .badge-ativo{background:rgba(201,151,58,.18);color:var(--gold);border:1px solid rgba(201,151,58,.35)}
     .badge-breve{background:rgba(42,30,8,.6);color:#4a3a1a;border:1px solid var(--brd)}
-
-    .start-footer{padding:10px 20px 16px;display:flex;justify-content:center;gap:14px;flex-shrink:0}
+    .start-footer{padding:14px 22px 22px;display:flex;justify-content:center;gap:16px;flex-shrink:0}
     .link-btn{background:transparent;border:1px solid var(--brd);color:var(--mut);
-      font-family:Georgia,serif;font-weight:bold;font-size:10px;letter-spacing:2px;
-      text-transform:uppercase;padding:7px 14px;border-radius:3px;cursor:pointer}
+      font-family:Georgia,serif;font-weight:bold;font-size:14px;letter-spacing:2px;
+      text-transform:uppercase;padding:12px 20px;border-radius:6px;cursor:pointer;min-height:48px}
 
-    #s-config{padding:36px 24px;gap:14px;justify-content:center}
-    .cfg-t{font-size:15px;color:var(--gl);font-weight:bold}
-    .cfg-s{font-size:12px;color:var(--mut);line-height:1.7}
-    .inp{background:var(--bg3);border:1px solid var(--brd);color:var(--text);
-      font-family:Georgia,serif;font-size:13px;padding:12px 16px;border-radius:4px;width:100%;outline:none}
+    /* ══ CONFIG ══ */
+    #s-config{padding:40px 24px;gap:18px;justify-content:center}
+    .cfg-t{font-size:20px;color:var(--gl);font-weight:bold}
+    .cfg-s{font-size:15px;color:var(--mut);line-height:1.7}
+    .inp{background:var(--bg3);border:2px solid var(--brd);color:var(--text);
+      font-family:Georgia,serif;font-size:17px;padding:16px 18px;border-radius:8px;width:100%;outline:none}
     .inp:focus{border-color:var(--gold)}
-    .btn-main{padding:14px 32px;border-radius:4px;font-family:Georgia,serif;font-weight:bold;
-      font-size:14px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;
-      background:linear-gradient(135deg,#6a3808,var(--gold));color:#0a0905;border:none;width:100%}
+    .btn-main{padding:18px 32px;border-radius:8px;font-family:Georgia,serif;font-weight:bold;
+      font-size:18px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;
+      background:linear-gradient(135deg,#6a3808,var(--gold));color:#0a0905;border:none;
+      width:100%;min-height:58px}
 
-    #s-done{align-items:center;justify-content:center;gap:14px}
-    .hist-list{flex:1;overflow-y:auto;padding:16px}
-    .hi{background:var(--bg3);border:1px solid var(--brd);border-radius:4px;padding:12px 16px;margin-bottom:8px}
-    .hi-d{font-size:10px;color:var(--mut);margin-bottom:3px;letter-spacing:1px}
-    .hi-i{font-size:13px;color:var(--text)}
+    /* ══ DONE ══ */
+    #s-done{align-items:center;justify-content:center;gap:18px;padding:32px}
+    /* ══ HISTORY ══ */
+    .hist-list{flex:1;overflow-y:auto;padding:18px}
+    .hi{background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:16px 18px;margin-bottom:10px}
+    .hi-d{font-size:13px;color:var(--mut);margin-bottom:5px;letter-spacing:1px}
+    .hi-i{font-size:16px;color:var(--text)}
 
-    ::-webkit-scrollbar{width:3px}
+    ::-webkit-scrollbar{width:4px}
     ::-webkit-scrollbar-track{background:var(--bg)}
     ::-webkit-scrollbar-thumb{background:var(--brd);border-radius:2px}
     @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
@@ -143,10 +160,10 @@
   <div class="cfg-s">Acesse <strong style="color:var(--gl)">aistudio.google.com</strong><br>
     → Get API key → Create API key</div>
   <input id="inp-key" class="inp" type="password" placeholder="AIza..." autocomplete="off">
-  <div class="cfg-s" style="font-size:11px;margin-top:-4px">Operador (opcional):</div>
+  <div class="cfg-s" style="font-size:14px;margin-top:-4px">Operador (opcional):</div>
   <input id="inp-op" class="inp" type="text" placeholder="Wagner">
   <button class="btn-main" onclick="salvarConfig()">Salvar e Continuar</button>
-  <button class="link-btn" style="margin-top:4px" onclick="ir('start')">← Voltar</button>
+  <button class="link-btn" style="margin-top:6px;width:100%;text-align:center" onclick="ir('start')">← Voltar</button>
 </div>
 
 <!-- ═══ INÍCIO ═══ -->
@@ -159,25 +176,22 @@
   </div>
   <div class="modulos-label">Módulos de Produção</div>
   <div class="modulos">
-
     <div class="modulo ativo" onclick="iniciar('porcionamento')">
       <div class="modulo-icon">⚖️</div>
       <div class="modulo-info">
         <div class="modulo-nome">Porcionamento — Receita 1</div>
-        <div class="modulo-desc">Pesagem de farinhas, líquidos e demais ingredientes</div>
+        <div class="modulo-desc">Pesagem de farinhas, líquidos e ingredientes</div>
       </div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
-
     <div class="modulo inativo">
       <div class="modulo-icon">🥣</div>
       <div class="modulo-info">
         <div class="modulo-nome">Bater a Massa</div>
-        <div class="modulo-desc">Velocidades, tempos e temperatura final</div>
+        <div class="modulo-desc">Velocidades, tempos e temperatura</div>
       </div>
       <div class="modulo-badge badge-breve">Em breve</div>
     </div>
-
     <div class="modulo inativo">
       <div class="modulo-icon">📐</div>
       <div class="modulo-info">
@@ -186,7 +200,6 @@
       </div>
       <div class="modulo-badge badge-breve">Em breve</div>
     </div>
-
     <div class="modulo inativo">
       <div class="modulo-icon">✂️</div>
       <div class="modulo-info">
@@ -195,7 +208,6 @@
       </div>
       <div class="modulo-badge badge-breve">Em breve</div>
     </div>
-
     <div class="modulo inativo">
       <div class="modulo-icon">🌡️</div>
       <div class="modulo-info">
@@ -204,16 +216,14 @@
       </div>
       <div class="modulo-badge badge-breve">Em breve</div>
     </div>
-
     <div class="modulo inativo">
       <div class="modulo-icon">🔥</div>
       <div class="modulo-info">
         <div class="modulo-nome">Forneamento</div>
-        <div class="modulo-desc">Temperatura, vapor e tempo de forno</div>
+        <div class="modulo-desc">Temperatura, vapor e tempo</div>
       </div>
       <div class="modulo-badge badge-breve">Em breve</div>
     </div>
-
     <div class="modulo inativo">
       <div class="modulo-icon">📦</div>
       <div class="modulo-info">
@@ -222,7 +232,6 @@
       </div>
       <div class="modulo-badge badge-breve">Em breve</div>
     </div>
-
   </div>
   <div class="start-footer">
     <button class="link-btn" onclick="ir('history')">Histórico</button>
@@ -235,7 +244,7 @@
   <div class="hdr">
     <div>
       <div class="hdr-brand">Folhados d'Ouro</div>
-      <div class="hdr-title">Porcionamento · Receita 1</div>
+      <div class="hdr-title">Porcionamento · R1</div>
     </div>
     <div style="text-align:right">
       <div class="hdr-pct" id="pct">0%</div>
@@ -272,13 +281,13 @@
 
 <!-- ═══ CONCLUÍDO ═══ -->
 <div id="s-done" class="scr off">
-  <div style="font-size:52px">✅</div>
-  <div style="font-size:20px;color:var(--gl);font-weight:bold">Porcionamento Concluído!</div>
-  <div style="font-size:13px;color:var(--mut);text-align:center;line-height:1.9">
+  <div style="font-size:64px">✅</div>
+  <div style="font-size:24px;color:var(--gl);font-weight:bold;text-align:center">Porcionamento Concluído!</div>
+  <div style="font-size:16px;color:var(--mut);text-align:center;line-height:2">
     Sessão salva no histórico<br>
-    <span style="font-size:10px;letter-spacing:2px;text-transform:uppercase">Próxima etapa: Bater a Massa</span>
+    <span style="font-size:13px;letter-spacing:2px;text-transform:uppercase">Próxima etapa: Bater a Massa</span>
   </div>
-  <button class="btn-main" style="width:auto;padding:14px 40px;margin-top:24px" onclick="ir('start')">← Início</button>
+  <button class="btn-main" style="width:auto;padding:18px 48px;margin-top:28px" onclick="ir('start')">← Início</button>
 </div>
 
 <!-- ═══ HISTÓRICO ═══ -->
@@ -295,22 +304,15 @@
 //  RECEITA 1 — PORCIONAMENTO
 // ════════════════════════════════════════════════════════════════════════════
 const RECEITA = [
-  // BALDE 1 — FARINHAS
   {id:1, grupo:'BALDE 1 · FARINHAS', cat:'FARINHA',  nome:'Bagatelle',           qty:'3,605 kg', det:'Primeira farinha do balde de secos'},
   {id:2, grupo:'BALDE 1 · FARINHAS', cat:'FARINHA',  nome:'Feuilletage',         qty:'3,605 kg', det:'Acumulado de farinha: 7,209 kg'},
-  {id:3, grupo:'BALDE 1 · FARINHAS', cat:'FARINHA',  nome:'Italiana 00',         qty:'801 g',    det:'Acumulado total de farinha: 8,010 kg'},
-  {id:4, grupo:'BALDE 1 · FARINHAS', cat:'FERMENTO', nome:'Fermento seco',       qty:'84 g',     det:'Adicionar junto com as farinhas no balde 1'},
-
-  // BALDE 2 — LÍQUIDOS
+  {id:3, grupo:'BALDE 1 · FARINHAS', cat:'FARINHA',  nome:'Italiana 00',         qty:'801 g',    det:'Acumulado total farinha: 8,010 kg'},
+  {id:4, grupo:'BALDE 1 · FARINHAS', cat:'FERMENTO', nome:'Fermento seco',       qty:'84 g',     det:'Junto com as farinhas no balde 1'},
   {id:5, grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Água com gelo',       qty:'3,680 kg', det:'Temperatura baixa é essencial'},
-  {id:6, grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Leite em pó',         qty:'184 g',    det:'Diluir junto com a água gelada'},
-
-  // PÓS BATIMENTO
-  {id:7, grupo:'PÓS-BATIMENTO',      cat:'GORDURA',  nome:'Manteiga',            qty:'112 g',    det:'Adicionar somente APÓS o início do batimento'},
-  {id:8, grupo:'PÓS-BATIMENTO',      cat:'SAL',      nome:'Sal refinado',        qty:'184 g',    det:'Adicionar somente APÓS o início do batimento'},
-
-  // APROVEITAMENTO
-  {id:9, grupo:'APROVEITAMENTO',     cat:'APROVEITA',nome:'Aproveitamento (massa antiga)', qty:'2,500 kg', det:'Massa antiga incorporada à massa nova'},
+  {id:6, grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Leite em pó',         qty:'184 g',    det:'Diluir na água gelada'},
+  {id:7, grupo:'PÓS-BATIMENTO',      cat:'GORDURA',  nome:'Manteiga',            qty:'112 g',    det:'Adicionar APÓS início do batimento'},
+  {id:8, grupo:'PÓS-BATIMENTO',      cat:'SAL',      nome:'Sal refinado',        qty:'184 g',    det:'Adicionar APÓS início do batimento'},
+  {id:9, grupo:'APROVEITAMENTO',     cat:'APROVEITA',nome:'Aproveitamento',      qty:'2,500 kg', det:'Massa antiga incorporada à massa nova'},
 ];
 
 const PASSOS_TXT = RECEITA.map(p =>
@@ -323,56 +325,54 @@ INGREDIENTES NA ORDEM EXATA:
 ${PASSOS_TXT}
 
 REGRAS ABSOLUTAS:
-1. Responda APENAS sobre esta receita de porcionamento. Qualquer outro tópico (clima, esportes, outras receitas, qualquer coisa fora desta lista) → "Foco no porcionamento."
+1. Responda APENAS sobre esta receita de porcionamento. Qualquer outro tópico → "Foco no porcionamento."
 2. Não invente quantidades ou ingredientes fora desta lista.
 3. Confirme o passo atual quando o padeiro indicar conclusão.
-4. Respostas SEMPRE em português brasileiro, máximo 2 frases, tom direto e profissional.
-5. Nunca saia do contexto do porcionamento.`;
+4. Máximo 2 frases, português brasileiro, tom direto e profissional.
+5. NUNCA saia do contexto do porcionamento desta receita.`;
 
 // ════════════════════════════════════════════════════════════════════════════
-//  COMANDOS DE VOZ (vocabulário amplo)
+//  COMANDOS DE VOZ
 // ════════════════════════════════════════════════════════════════════════════
-const COMANDOS = {
+const CMD = {
   avancar: [
     'próximo','proximo','próxima','proxima','prossiga','prossegue','seguinte','continua','continuar','continue',
-    'feito','fiz','fis','pesei','pesado','adicionei','adicionado','coloquei','colocado','botei','botou',
-    'ok','okay','ókei','ókey','sim','certo','correto','isso','isso aí','isso ai','isso mesmo',
-    'pronto','concluído','concluido','concluí','conclui','terminei','terminado','finalizei','finalizado',
-    'tá','ta','tah','ta bom','tá bom','tabom','beleza','blz','joia','jóia','perfeito','show',
-    'pode','pode ir','pode passar','vai','vamos','bora','manda','manda ver','manda bala',
-    'check','checado','checked','done','next','avança','avançar','avança','passa','passou'
+    'feito','fiz','pesei','pesado','adicionei','adicionado','coloquei','colocado','botei',
+    'ok','okay','sim','certo','correto','isso','isso aí','isso ai','isso mesmo',
+    'pronto','concluído','concluido','concluí','terminei','terminado','finalizei',
+    'tá','ta','ta bom','tá bom','beleza','joia','jóia','perfeito','show',
+    'pode','pode ir','vai','vamos','bora','manda','manda ver',
+    'check','done','next','avança','avançar','passa','passou','avance'
   ],
   voltar: [
-    'voltar','volta','volte','volto','retorna','retornar','retornou','anterior','antes','atrás','atras',
-    'errei','errou','errado','engano','enganado','enganei','desfaz','desfazer','undo','back'
+    'voltar','volta','volte','retorna','retornar','anterior','antes','atrás','atras',
+    'errei','errou','errado','engano','enganei','desfaz','desfazer','back'
   ],
   repetir: [
-    'repetir','repete','repita','repetiu','de novo','denovo','denouvo','outra vez','outra vez',
-    'novamente','de novo','como é','como e','qual','qual era','qual é','qual e','não entendi','nao entendi',
-    'fala de novo','fala denovo','diz de novo','diga novamente','repetia','repete aí','repete ai',
-    'o que','o que é','o que e','que era','foi','quanto','quanto é','quanto e'
+    'repetir','repete','repita','de novo','denovo','outra vez','novamente',
+    'como é','como e','qual','qual era','qual é','não entendi','nao entendi',
+    'fala de novo','diz de novo','diga novamente','quanto','quanto é','quanto e'
   ],
   pausar: [
-    'pausa','pausar','espera','aguarda','aguardar','para','pare','calma','um momento','um instante',
-    'segura','segura aí','segura ai','peraí','peraí','perai','perae'
+    'pausa','pausar','espera','aguarda','para','pare','calma','peraí','perai','segura'
   ]
 };
 
-function matchComando(txt, grupo){
-  return COMANDOS[grupo].some(p => txt.includes(p));
+function matchCmd(txt, grupo){
+  return CMD[grupo].some(p => txt.includes(p));
 }
 
 // ════════════════════════════════════════════════════════════════════════════
 //  STATE
 // ════════════════════════════════════════════════════════════════════════════
-const st = { step:0, done:new Set(), sessionStart:0, rec:null, aiTimer:null, ultimoComando:0 };
+const st = { step:0, done:new Set(), sessionStart:0, rec:null, aiTimer:null, ts:0 };
 
 const LS = {
   g:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch{return d}},
   s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
 };
-const getKey = ()=> LS.g('fdo_key','');
-const getOp  = ()=> LS.g('fdo_op','Padeiro');
+const getKey=()=>LS.g('fdo_key','');
+const getOp=()=>LS.g('fdo_op','Padeiro');
 
 function ir(id){
   document.querySelectorAll('.scr').forEach(s=>s.classList.add('off'));
@@ -381,22 +381,18 @@ function ir(id){
 }
 
 function salvarConfig(){
-  const k = document.getElementById('inp-key').value.trim();
-  if(!k){ alert('Insira a chave API'); return; }
-  LS.s('fdo_key', k);
-  const op = document.getElementById('inp-op').value.trim();
-  if(op) LS.s('fdo_op', op);
+  const k=document.getElementById('inp-key').value.trim();
+  if(!k){alert('Insira a chave API');return;}
+  LS.s('fdo_key',k);
+  const op=document.getElementById('inp-op').value.trim();
+  if(op) LS.s('fdo_op',op);
   ir('start');
 }
 
-function iniciar(modulo){
-  if(!getKey()){ ir('config'); return; }
-  st.step = 0;
-  st.done = new Set();
-  st.sessionStart = Date.now();
-  ir('active');
-  renderLista();
-  atualizarUI();
+function iniciar(){
+  if(!getKey()){ir('config');return;}
+  st.step=0; st.done=new Set(); st.sessionStart=Date.now();
+  ir('active'); renderLista(); atualizarUI();
   setDot('off','Iniciando microfone...');
   iniciarVoz();
 }
@@ -405,193 +401,157 @@ function iniciar(modulo){
 //  VOZ
 // ════════════════════════════════════════════════════════════════════════════
 function iniciarVoz(){
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR){ setDot('err','Use Chrome para voz'); return; }
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){setDot('err','Use Chrome para voz');return;}
 
-  const rec = new SR();
-  rec.lang = 'pt-BR';
-  rec.continuous = true;
-  rec.interimResults = false;
-  rec.maxAlternatives = 3;
-  st.rec = rec;
+  const rec=new SR();
+  rec.lang='pt-BR'; rec.continuous=true; rec.interimResults=false; rec.maxAlternatives=3;
+  st.rec=rec;
 
-  rec.onstart = ()=> setDot('on','Ouvindo');
-  rec.onend = ()=>{
-    if(st.rec === rec){
-      setDot('off','Reconectando...');
-      setTimeout(()=>{ try{ rec.start(); }catch(e){} }, 500);
-    }
+  rec.onstart=()=>setDot('on','Ouvindo');
+  rec.onend=()=>{
+    if(st.rec===rec){setDot('off','Reconectando...');setTimeout(()=>{try{rec.start();}catch(e){}},500);}
   };
-  rec.onerror = (e)=>{
-    if(e.error === 'not-allowed') setDot('err','Microfone bloqueado');
-    else if(e.error !== 'no-speech' && e.error !== 'aborted') setDot('off','Mic: '+e.error);
+  rec.onerror=(e)=>{
+    if(e.error==='not-allowed') setDot('err','Microfone bloqueado');
+    else if(e.error!=='no-speech'&&e.error!=='aborted') setDot('off','Mic: '+e.error);
   };
-  rec.onresult = (e)=>{
-    // Considera todas as alternativas
-    const r = e.results[e.results.length-1];
-    let txt = r[0].transcript.trim().toLowerCase();
-    document.getElementById('sb-tr').textContent = '"'+txt+'"';
-    // Debounce 800ms para evitar duplicação
-    const agora = Date.now();
-    if(agora - st.ultimoComando < 800) return;
-    st.ultimoComando = agora;
-    processarComando(txt, r);
+  rec.onresult=(e)=>{
+    const r=e.results[e.results.length-1];
+    let txt=r[0].transcript.trim().toLowerCase();
+    document.getElementById('sb-tr').textContent='"'+txt+'"';
+    const agora=Date.now();
+    if(agora-st.ts<800) return;
+    st.ts=agora;
+    processarComando(txt,r);
   };
 
-  try{ rec.start(); }catch(e){}
-
+  try{rec.start();}catch(e){}
   setTimeout(()=>{
-    const p = RECEITA[0];
+    const p=RECEITA[0];
     falar(`Porcionamento Receita 1 iniciado. ${p.grupo}. Passo 1: ${p.nome}, ${p.qty}.`);
-  }, 900);
+  },900);
 }
 
-function processarComando(txt, alt){
-  // Tenta cada alternativa do reconhecimento
-  const todasAlts = [txt];
-  if(alt) for(let i=1;i<alt.length;i++) todasAlts.push(alt[i].transcript.trim().toLowerCase());
+function processarComando(txt,alt){
+  const todas=[txt];
+  if(alt) for(let i=1;i<alt.length;i++) todas.push(alt[i].transcript.trim().toLowerCase());
 
-  for(const t of todasAlts){
-    if(matchComando(t,'avancar')){ avancar(); return; }
-    if(matchComando(t,'voltar')){  irPasso(st.step-1); return; }
-    if(matchComando(t,'repetir')){ repetir(); return; }
-    if(matchComando(t,'pausar')){
-      speechSynthesis?.cancel();
-      mostrarAI('Pausado. Diga continuar quando estiver pronto.');
-      return;
-    }
+  for(const t of todas){
+    if(matchCmd(t,'avancar')){avancar();return;}
+    if(matchCmd(t,'voltar')){irPasso(st.step-1);return;}
+    if(matchCmd(t,'repetir')){repetir();return;}
+    if(matchCmd(t,'pausar')){speechSynthesis?.cancel();mostrarAI('Pausado. Diga continuar quando pronto.');return;}
   }
-
-  // Não é comando → pergunta ao Gemini (somente se tiver +5 chars e parecer pergunta)
-  if(txt.length > 5){
-    perguntarGemini(txt);
-  }
+  if(txt.length>5) perguntarGemini(txt);
 }
 
 async function perguntarGemini(pergunta){
-  const key = getKey();
-  if(!key) return;
-  const p = RECEITA[st.step];
-  const contexto = `Contexto do operador: passo atual ${p.id}, ${p.grupo}, ingrediente ${p.nome} ${p.qty}.\nPergunta: "${pergunta}"`;
-
+  const key=getKey(); if(!key) return;
+  const p=RECEITA[st.step];
+  const ctx=`Passo atual ${p.id}, ${p.grupo}, ${p.nome} ${p.qty}.\nPergunta: "${pergunta}"`;
   try{
-    setDot('off','Consultando assistente...');
-    const r = await fetch(
+    setDot('off','Consultando...');
+    const r=await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
-      {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          system_instruction:{ parts:[{text: SYSTEM}] },
-          contents:[{ role:'user', parts:[{text: contexto}] }],
-          generationConfig:{ maxOutputTokens:150, temperature:0.3 }
-        })
-      }
+      {method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({
+         system_instruction:{parts:[{text:SYSTEM}]},
+         contents:[{role:'user',parts:[{text:ctx}]}],
+         generationConfig:{maxOutputTokens:150,temperature:0.3}
+       })}
     );
-    const data = await r.json();
-    const resp = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const data=await r.json();
+    const resp=data?.candidates?.[0]?.content?.parts?.[0]?.text||'';
     setDot('on','Ouvindo');
-    if(resp){
-      mostrarAI(resp);
-      falar(resp);
-    }
-  }catch(err){
-    setDot('on','Ouvindo');
-  }
+    if(resp){mostrarAI(resp);falar(resp);}
+  }catch(err){setDot('on','Ouvindo');}
 }
 
 function falar(texto){
   if(!window.speechSynthesis) return;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(texto);
-  u.lang = 'pt-BR';
-  u.rate = 1.05;
-  u.pitch = 1.0;
-  const vozes = speechSynthesis.getVoices();
-  const voz = vozes.find(v=> v.lang === 'pt-BR') || vozes.find(v=> v.lang.startsWith('pt'));
-  if(voz) u.voice = voz;
+  const u=new SpeechSynthesisUtterance(texto);
+  u.lang='pt-BR'; u.rate=1.0; u.pitch=1.0;
+  const vozes=speechSynthesis.getVoices();
+  const voz=vozes.find(v=>v.lang==='pt-BR')||vozes.find(v=>v.lang.startsWith('pt'));
+  if(voz) u.voice=voz;
   speechSynthesis.speak(u);
 }
 
 function mostrarAI(txt){
-  const box = document.getElementById('ai-box');
-  document.getElementById('ai-txt').textContent = txt;
-  box.style.display = 'block';
+  const box=document.getElementById('ai-box');
+  document.getElementById('ai-txt').textContent=txt;
+  box.style.display='block';
   clearTimeout(st.aiTimer);
-  st.aiTimer = setTimeout(()=> box.style.display='none', 10000);
+  st.aiTimer=setTimeout(()=>box.style.display='none',10000);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
 //  CONTROLES
 // ════════════════════════════════════════════════════════════════════════════
-function falarPasso(p){
-  const aviso = p.grupo !== (RECEITA[st.step-1]?.grupo) && st.step > 0 ? `Atenção, ${p.grupo}. ` : '';
-  falar(`${aviso}Passo ${p.id}: ${p.nome}, ${p.qty}. ${p.det}`);
-}
-
 function irPasso(n){
-  st.step = Math.max(0, Math.min(n, RECEITA.length-1));
+  st.step=Math.max(0,Math.min(n,RECEITA.length-1));
   atualizarUI();
-  falarPasso(RECEITA[st.step]);
+  const p=RECEITA[st.step];
+  falar(`${p.grupo}. Passo ${p.id}: ${p.nome}, ${p.qty}. ${p.det}`);
 }
 
 function avancar(){
-  const grupoAtual = RECEITA[st.step].grupo;
+  const grupoAnt=RECEITA[st.step].grupo;
   st.done.add(st.step);
-  const next = st.step + 1;
-  if(next >= RECEITA.length){ concluir(); return; }
-  st.step = next;
+  const next=st.step+1;
+  if(next>=RECEITA.length){concluir();return;}
+  st.step=next;
   atualizarUI();
-  const p = RECEITA[st.step];
-  const trocouGrupo = p.grupo !== grupoAtual;
-  if(trocouGrupo){
-    falar(`Concluído. Próximo grupo: ${p.grupo}. Passo ${p.id}: ${p.nome}, ${p.qty}.`);
+  const p=RECEITA[st.step];
+  if(p.grupo!==grupoAnt){
+    falar(`Concluído! Próximo grupo: ${p.grupo}. Passo ${p.id}: ${p.nome}, ${p.qty}.`);
   } else {
     falar(`Concluído. Passo ${p.id}: ${p.nome}, ${p.qty}. ${p.det}`);
   }
 }
 
 function repetir(){
-  falarPasso(RECEITA[st.step]);
+  const p=RECEITA[st.step];
+  falar(`Passo ${p.id}: ${p.nome}, ${p.qty}. ${p.det}`);
 }
 
-function toggleDone(i, ev){
+function toggleDone(i,ev){
   ev.stopPropagation();
-  st.done.has(i) ? st.done.delete(i) : st.done.add(i);
+  st.done.has(i)?st.done.delete(i):st.done.add(i);
   atualizarUI();
 }
 
 // ════════════════════════════════════════════════════════════════════════════
 //  UI
 // ════════════════════════════════════════════════════════════════════════════
-function setDot(tipo, msg){
-  const d = document.getElementById('mic-dot');
-  d.className = 'dot ' + (tipo==='on'?'on':tipo==='err'?'err':'off');
-  document.getElementById('sb-txt').textContent = msg;
+function setDot(tipo,msg){
+  document.getElementById('mic-dot').className='dot '+(tipo==='on'?'on':tipo==='err'?'err':'off');
+  document.getElementById('sb-txt').textContent=msg;
 }
 
 function atualizarUI(){
-  const pct = Math.round((st.done.size / RECEITA.length) * 100);
-  document.getElementById('pct').textContent = pct+'%';
-  document.getElementById('pb').style.width = pct+'%';
-  const p = RECEITA[st.step];
-  document.getElementById('gb').textContent = p.grupo;
-  document.getElementById('c-cat').textContent = p.cat;
-  document.getElementById('c-name').textContent = p.nome;
-  document.getElementById('c-qty').textContent = p.qty;
-  document.getElementById('c-det').textContent = p.det;
+  const pct=Math.round((st.done.size/RECEITA.length)*100);
+  document.getElementById('pct').textContent=pct+'%';
+  document.getElementById('pb').style.width=pct+'%';
+  const p=RECEITA[st.step];
+  document.getElementById('gb').textContent=p.grupo;
+  document.getElementById('c-cat').textContent=p.cat;
+  document.getElementById('c-name').textContent=p.nome;
+  document.getElementById('c-qty').textContent=p.qty;
+  document.getElementById('c-det').textContent=p.det;
   renderLista();
 }
 
 function renderLista(){
-  let html = '';
-  let grupoAtual = null;
+  let html=''; let ga=null;
   RECEITA.forEach((p,i)=>{
-    if(p.grupo !== grupoAtual){
-      html += `<div class="list-grupo">${p.grupo}</div>`;
-      grupoAtual = p.grupo;
+    if(p.grupo!==ga){
+      html+=`<div class="list-grupo">${p.grupo}</div>`;
+      ga=p.grupo;
     }
-    html += `
+    html+=`
       <div class="si${i===st.step?' active':''}${st.done.has(i)?' done':''}" onclick="irPasso(${i})">
         <div class="cb${st.done.has(i)?' chk':''}" onclick="toggleDone(${i},event)">${st.done.has(i)?'✓':''}</div>
         <div style="flex:1;min-width:0">
@@ -601,7 +561,7 @@ function renderLista(){
         </div>
       </div>`;
   });
-  document.getElementById('lista').innerHTML = html;
+  document.getElementById('lista').innerHTML=html;
   document.querySelector('.si.active')?.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
@@ -609,50 +569,30 @@ function renderLista(){
 //  CONCLUIR / ENCERRAR
 // ════════════════════════════════════════════════════════════════════════════
 function concluir(){
-  salvarSessao(true);
-  pararVoz();
-  falar('Porcionamento concluído. Excelente trabalho!');
-  setTimeout(()=> ir('done'), 1500);
+  salvarSessao(true); pararVoz();
+  falar('Porcionamento concluído! Excelente trabalho.');
+  setTimeout(()=>ir('done'),1500);
 }
-
-function encerrar(){
-  salvarSessao(false);
-  pararVoz();
-  ir('start');
-}
-
+function encerrar(){salvarSessao(false);pararVoz();ir('start');}
 function pararVoz(){
-  if(st.rec){ st.rec.onend = null; try{ st.rec.stop(); }catch(e){} st.rec = null; }
+  if(st.rec){st.rec.onend=null;try{st.rec.stop();}catch(e){}st.rec=null;}
   speechSynthesis?.cancel();
 }
-
 function salvarSessao(ok){
-  const all = LS.g('fdo_sess', []);
-  all.unshift({
-    data: new Date().toLocaleString('pt-BR'),
-    modulo: 'Porcionamento R1',
-    op: getOp(),
-    concluidos: st.done.size,
-    total: RECEITA.length,
-    dur: Math.round((Date.now()-st.sessionStart)/60000),
-    ok
-  });
-  LS.s('fdo_sess', all.slice(0,60));
+  const all=LS.g('fdo_sess',[]);
+  all.unshift({data:new Date().toLocaleString('pt-BR'),modulo:'Porcionamento R1',op:getOp(),
+    concluidos:st.done.size,total:RECEITA.length,dur:Math.round((Date.now()-st.sessionStart)/60000),ok});
+  LS.s('fdo_sess',all.slice(0,60));
 }
-
 function renderHist(){
-  const all = LS.g('fdo_sess', []);
-  const el = document.getElementById('hist-list');
-  if(!all.length){
-    el.innerHTML='<div style="padding:40px;text-align:center;color:var(--mut);font-size:13px">Nenhuma sessão ainda</div>';
-    return;
-  }
-  el.innerHTML = all.map(s=>`
+  const all=LS.g('fdo_sess',[]);
+  const el=document.getElementById('hist-list');
+  if(!all.length){el.innerHTML='<div style="padding:40px;text-align:center;color:var(--mut);font-size:16px">Nenhuma sessão ainda</div>';return;}
+  el.innerHTML=all.map(s=>`
     <div class="hi">
       <div class="hi-d">${s.data} · ${s.dur} min · ${s.modulo||'—'} · ${s.op||'—'}</div>
-      <div class="hi-i">${s.concluidos}/${s.total} passos ${s.ok?'✅ Concluído':'⚠️ Interrompido'}</div>
-    </div>
-  `).join('');
+      <div class="hi-i">${s.concluidos}/${s.total} passos ${s.ok?'✅':'⚠️'}</div>
+    </div>`).join('');
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -660,10 +600,10 @@ function renderHist(){
 // ════════════════════════════════════════════════════════════════════════════
 (function(){
   if(!getKey()) ir('config'); else ir('start');
-  const op = LS.g('fdo_op','');
-  if(op) document.getElementById('inp-op').value = op;
+  const op=LS.g('fdo_op','');
+  if(op) document.getElementById('inp-op').value=op;
   speechSynthesis?.getVoices();
-  speechSynthesis?.addEventListener('voiceschanged', ()=> speechSynthesis.getVoices());
+  speechSynthesis?.addEventListener('voiceschanged',()=>speechSynthesis.getVoices());
   if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
