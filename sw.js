@@ -1,6 +1,6 @@
 // Folhados d'Ouro — Service Worker
-const CACHE = 'fdo-v2';
-
+const CACHE = 'fdo-v3';
+ 
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE)
@@ -14,7 +14,7 @@ self.addEventListener('install', e => {
       .then(() => self.skipWaiting())
   );
 });
-
+ 
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -22,12 +22,12 @@ self.addEventListener('activate', e => {
     ).then(() => self.clients.claim())
   );
 });
-
+ 
 self.addEventListener('fetch', e => {
   // API do Gemini — nunca cachear
   if (e.request.url.includes('generativelanguage.googleapis.com')) return;
   if (e.request.method !== 'GET') return;
-
+ 
   e.respondWith(
     caches.match(e.request)
       .then(r => r || fetch(e.request).then(res => {
