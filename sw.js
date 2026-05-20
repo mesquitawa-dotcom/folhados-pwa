@@ -1,11 +1,16 @@
 // Folhados d'Ouro — Service Worker
-const CACHE = 'fdo-v1';
-const CORE = ['/index.html', '/manifest.json'];
+const CACHE = 'fdo-v2';
 
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE)
-      .then(c => c.addAll(CORE))
+      .then(c => c.addAll([
+        './',
+        './index.html',
+        './manifest.json',
+        './icon-192.png',
+        './icon-512.png'
+      ]))
       .then(() => self.skipWaiting())
   );
 });
@@ -19,18 +24,19 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Gemini API — nunca cachear
+  // API do Gemini — nunca cachear
   if (e.request.url.includes('generativelanguage.googleapis.com')) return;
+  if (e.request.method !== 'GET') return;
 
   e.respondWith(
     caches.match(e.request)
       .then(r => r || fetch(e.request).then(res => {
-        if (res.ok && e.request.method === 'GET') {
+        if (res.ok) {
           const clone = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
       }))
-      .catch(() => caches.match('/index.html'))
+      .catch(() => caches.match('./index.html'))
   );
 });
