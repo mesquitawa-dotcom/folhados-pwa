@@ -68,7 +68,7 @@
       font-family:Georgia,serif;font-weight:bold;
       font-size:.85rem;letter-spacing:.05rem;text-transform:uppercase;cursor:pointer;
       border:1px solid var(--brd);background:var(--bg3);color:var(--gold);
-      min-height:3.3rem;display:flex;align-items:center;justify-content:center}
+      min-height:3rem;display:flex;align-items:center;justify-content:center}
     .nbtn.next{background:linear-gradient(135deg,#3a2005,#7a4a0a);color:var(--gl);border-color:#5a3008}
     .nbtn:active{opacity:.7;transform:scale(.97)}
 
@@ -137,6 +137,12 @@
       font-family:Georgia,serif;font-weight:bold;font-size:.75rem;letter-spacing:.15rem;
       text-transform:uppercase;padding:.65rem 1.1rem;border-radius:.35rem;cursor:pointer;min-height:2.6rem}
 
+    /* ════ PRE TEMP SCREEN (NOVA TELA) ════ */
+    #s-pre-temp{padding:0}
+    .pre-temp-container{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;gap:1rem;text-align:center}
+    .pre-temp-card{background:var(--bg3);border:1px solid var(--brd);border-radius:.6rem;padding:2rem 1.5rem;width:100%;max-width:16rem;box-shadow:0 .4rem 1.5rem rgba(0,0,0,.5)}
+    .pre-temp-val{font-size:3rem;font-weight:bold;color:var(--gold);margin:.5rem 0;line-height:1}
+
     /* ════ TEMP SCREEN ════ */
     #s-temp{padding:0}
     .temp-grid{flex:1;overflow-y:auto;padding:0 1rem 1rem;display:grid;
@@ -179,7 +185,6 @@
 </head>
 <body>
 
-<!-- ═══ CONFIG ═══ -->
 <div id="s-config" class="scr off">
   <div class="cfg-t">🔑 Chave API Gemini</div>
   <div class="cfg-s">Acesse <strong style="color:var(--gl)">aistudio.google.com</strong><br>
@@ -191,7 +196,6 @@
   <button class="link-btn" style="margin-top:.3rem;width:100%;text-align:center" onclick="ir('start')">← Voltar</button>
 </div>
 
-<!-- ═══ INÍCIO ═══ -->
 <div id="s-start" class="scr">
   <div class="start-top">
     <div class="start-icon">🥐</div>
@@ -201,7 +205,7 @@
   </div>
   <div class="modulos-label">Módulos de Produção</div>
   <div class="modulos">
-    <div class="modulo ativo" onclick="escolherTemp()">
+    <div class="modulo ativo" onclick="buscarPrevisaoMadrugada()">
       <div class="modulo-icon">⚖️</div>
       <div class="modulo-info">
         <div class="modulo-nome">Porcionamento — Receita 1</div>
@@ -225,7 +229,7 @@
       <div class="modulo-badge badge-breve">Em breve</div>
     </div>
     <div class="modulo inativo">
-      <div class="modulo-icon">🌡️</div>
+      <div class="modulo-icon">📐</div>
       <div class="modulo-info"><div class="modulo-nome">Fermentação</div><div class="modulo-desc">Tempo, temperatura e umidade</div></div>
       <div class="modulo-badge badge-breve">Em breve</div>
     </div>
@@ -246,7 +250,27 @@
   </div>
 </div>
 
-<!-- ═══ TEMPERATURA DA NOITE ═══ -->
+<div id="s-pre-temp" class="scr off">
+  <div class="start-top">
+    <div class="start-icon">🌍</div>
+    <div class="start-brand">Folhados d'Ouro</div>
+    <div class="start-title">Clima em Tempo Real</div>
+    <div class="start-sub">Previsão Meteorológica</div>
+  </div>
+  <div class="pre-temp-container">
+    <div class="pre-temp-card">
+      <div class="done-conf" style="margin-bottom:.6rem">Média da Próxima Madrugada</div>
+      <div style="font-size:.65rem;color:var(--mut);text-transform:uppercase;letter-spacing:.05rem">(00:00 às 06:00)</div>
+      <div class="pre-temp-val" id="pre-temp-resultado">--°C</div>
+      <div class="cur-det" id="pre-temp-status" style="font-size:.7rem">Consultando satélite...</div>
+    </div>
+    <button class="btn-main" style="width:auto;min-width:12rem" onclick="escolherTemp()">Definir Fermento →</button>
+  </div>
+  <div class="start-footer">
+    <button class="link-btn" onclick="ir('start')">← Voltar</button>
+  </div>
+</div>
+
 <div id="s-temp" class="scr off">
   <div class="start-top">
     <div class="start-icon">🌡️</div>
@@ -257,11 +281,10 @@
   <div class="modulos-label">Define a quantidade de fermento seco</div>
   <div class="temp-grid" id="temp-grid"></div>
   <div class="start-footer">
-    <button class="link-btn" onclick="ir('start')">← Voltar</button>
+    <button class="link-btn" onclick="ir('pre-temp')">← Voltar</button>
   </div>
 </div>
 
-<!-- ═══ ATIVO ═══ -->
 <div id="s-active" class="scr off">
   <div class="hdr">
     <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Porcionamento · R1</div></div>
@@ -296,7 +319,6 @@
   </div>
 </div>
 
-<!-- ═══ CONCLUÍDO ═══ -->
 <div id="s-done" class="scr off">
   <div style="font-size:3.5rem">✅</div>
   <div style="font-size:1.4rem;color:var(--gl);font-weight:bold;text-align:center">Porcionamento Concluído!</div>
@@ -308,7 +330,6 @@
   <button class="btn-main" style="width:auto;padding:1rem 2.5rem;margin-top:1rem" onclick="ir('start')">← Início</button>
 </div>
 
-<!-- ═══ HISTÓRICO ═══ -->
 <div id="s-history" class="scr off">
   <div class="hdr">
     <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Histórico</div></div>
@@ -333,6 +354,10 @@ const RECEITA = [
   {id:9, grupo:'PARA BATIMENTO',     cat:'GORDURA',  nome:'Manteiga',      qty:'112 g',    g:112,  det:'No batimento — APÓS o sal'},
   {id:10,grupo:'APROVEITAMENTO',     cat:'APROVEITA',nome:'Aproveitamento',qty:'2,500 kg', g:2500, det:'Massa antiga incorporada à massa nova'},
 ];
+
+// Coordenadas padrão da fábrica (substitua se necessário)
+const LAT_FABRICA = -20.53;
+const LNG_FABRICA = -47.40;
 
 // Formata gramas: >=1000 vira kg (vírgula decimal), senão fica em g
 function formatPeso(g){
@@ -384,9 +409,63 @@ const getOp=()=>LS.g('fdo_op','Padeiro');
 function ir(id){document.querySelectorAll('.scr').forEach(s=>s.classList.add('off'));document.getElementById('s-'+id).classList.remove('off');if(id==='history')renderHist();}
 function salvarConfig(){const k=document.getElementById('inp-key').value.trim();if(!k){alert('Insira a chave API');return;}LS.s('fdo_key',k);const op=document.getElementById('inp-op').value.trim();if(op)LS.s('fdo_op',op);ir('start');}
 
-// Tela inicial: escolher a temperatura da noite antes de iniciar
-function escolherTemp(){
+// Nova função que busca e renderiza o cálculo automático na tela intermediária
+async function buscarPrevisaoMadrugada() {
   if(!getKey()){ir('config');return;}
+  ir('pre-temp');
+  
+  const resultadoEl = document.getElementById('pre-temp-resultado');
+  const statusEl = document.getElementById('pre-temp-status');
+  
+  resultadoEl.textContent = '--°C';
+  statusEl.textContent = 'Consultando satélite...';
+  statusEl.style.color = 'var(--mut)';
+
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT_FABRICA}&longitude=${LNG_FABRICA}&hourly=temperature_2m&timezone=auto`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error();
+    
+    const data = await response.json();
+
+    // Filtra a próxima madrugada (amanhã) das 00h às 06h
+    const amanha = new Date();
+    amanha.setDate(amanha.getDate() + 1);
+    const dataAmanhaStr = amanha.toISOString().split('T')[0];
+
+    const horariosAlvo = [
+      `${dataAmanhaStr}T00:00`, `${dataAmanhaStr}T01:00`, `${dataAmanhaStr}T02:00`,
+      `${dataAmanhaStr}T03:00`, `${dataAmanhaStr}T04:00`, `${dataAmanhaStr}T05:00`,
+      `${dataAmanhaStr}T06:00`
+    ];
+
+    let soma = 0;
+    let pontos = 0;
+
+    data.hourly.time.forEach((tempo, index) => {
+      if (horariosAlvo.includes(tempo)) {
+        soma += data.hourly.temperature_2m[index];
+        pontos++;
+      }
+    });
+
+    if (pontos > 0) {
+      const media = (soma / pontos).toFixed(1);
+      resultadoEl.textContent = `${media.replace('.', ',')}°C`;
+      statusEl.textContent = 'Previsão carregada com sucesso.';
+      statusEl.style.color = 'var(--grn)';
+    } else {
+      throw new Error();
+    }
+  } catch (err) {
+    resultadoEl.textContent = 'Erro';
+    statusEl.textContent = 'Não foi possível ler os dados.';
+    statusEl.style.color = 'var(--red)';
+  }
+}
+
+// Tela de seleção: agora alimentada após o clique do botão de prosseguir
+function escolherTemp(){
   const grid=document.getElementById('temp-grid');
   grid.innerHTML=Object.keys(TEMP_FERMENTO).map(t=>
     `<button class="temp-btn" onclick="setTemp(${t})"><div class="temp-c">${t}°C</div><div class="temp-f">fermento ${TEMP_FERMENTO[t]} g</div></button>`
