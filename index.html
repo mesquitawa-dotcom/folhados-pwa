@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <!-- ════════════════════════════════════════════════════════════
+       FOLHADOS D'OURO — OBS 26/05/2026 (atualização)
+       • Tela inicial: "Porcionamento" abre um submenu de receitas.
+       • Receita 3 adicionada (Bagatelle 3.200 g / Italiana 4.800 g, sem Feuilletage).
+       • Falas: removido "Porcionamento iniciado"; "Total parcial" → "Total";
+         Fermento e Açúcar passam a falar o Total; Água não fala mais a nota de
+         temperatura; conclusão não fala mais "confira o valor total da receita".
+       • Conferência do balde 1 reescrita: "peso total, com o balde de 474 g
+         mais os ingredientes, é ..." (tara 474 g).
+       • Service Worker: cache fdo-v6.
+       ════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#0a0905">
@@ -205,19 +216,11 @@
   </div>
   <div class="modulos-label">Módulos de Produção</div>
   <div class="modulos">
-    <div class="modulo ativo" onclick="iniciarReceita('r1')">
+    <div class="modulo ativo" onclick="ir('receitas')">
       <div class="modulo-icon">⚖️</div>
       <div class="modulo-info">
-        <div class="modulo-nome">Porcionamento — Receita 1</div>
-        <div class="modulo-desc">Trigo 8 kg · Bagatelle 45% · Feuilletage 45% · Italiana 10%</div>
-      </div>
-      <div class="modulo-badge badge-ativo">Ativo</div>
-    </div>
-    <div class="modulo ativo" onclick="iniciarReceita('r2')">
-      <div class="modulo-icon">⚖️</div>
-      <div class="modulo-info">
-        <div class="modulo-nome">Porcionamento — Receita 2</div>
-        <div class="modulo-desc">Trigo 8 kg · Bagatelle 60% · Feuilletage 30% · Italiana 10%</div>
+        <div class="modulo-nome">Porcionamento</div>
+        <div class="modulo-desc">Pesagem por voz · Receitas 1, 2 e 3</div>
       </div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
@@ -255,6 +258,45 @@
   <div class="start-footer">
     <button class="link-btn" onclick="ir('history')">Histórico</button>
     <button class="link-btn" onclick="ir('config')">Config</button>
+  </div>
+</div>
+
+<div id="s-receitas" class="scr off">
+  <div class="start-top">
+    <div class="start-icon">⚖️</div>
+    <div class="start-brand">Folhados d'Ouro</div>
+    <div class="start-title">Porcionamento</div>
+    <div class="start-sub">Selecione a receita</div>
+  </div>
+  <div class="modulos-label">Receitas de Porcionamento</div>
+  <div class="modulos">
+    <div class="modulo ativo" onclick="iniciarReceita('r1')">
+      <div class="modulo-icon">1️⃣</div>
+      <div class="modulo-info">
+        <div class="modulo-nome">Receita 1</div>
+        <div class="modulo-desc">Trigo 8 kg · Bagatelle 45% · Feuilletage 45% · Italiana 10%</div>
+      </div>
+      <div class="modulo-badge badge-ativo">Ativo</div>
+    </div>
+    <div class="modulo ativo" onclick="iniciarReceita('r2')">
+      <div class="modulo-icon">2️⃣</div>
+      <div class="modulo-info">
+        <div class="modulo-nome">Receita 2</div>
+        <div class="modulo-desc">Trigo 8 kg · Bagatelle 60% · Feuilletage 30% · Italiana 10%</div>
+      </div>
+      <div class="modulo-badge badge-ativo">Ativo</div>
+    </div>
+    <div class="modulo ativo" onclick="iniciarReceita('r3')">
+      <div class="modulo-icon">3️⃣</div>
+      <div class="modulo-info">
+        <div class="modulo-nome">Receita 3</div>
+        <div class="modulo-desc">Trigo 8 kg · Bagatelle 40% · Italiana 60% · sem Feuilletage</div>
+      </div>
+      <div class="modulo-badge badge-ativo">Ativo</div>
+    </div>
+  </div>
+  <div class="start-footer">
+    <button class="link-btn" onclick="ir('start')">← Voltar</button>
   </div>
 </div>
 
@@ -354,31 +396,48 @@ const TEMP_FERMENTO = {15:120,16:112,17:104,18:96,19:90,20:84,21:78,22:74,23:68,
 const PESO_BALDE1 = 474;
 
 // Gera os passos de uma receita. Entre as receitas SÓ muda a divisão das farinhas.
+// Farinha com peso 0 (ex.: Feuilletage na Receita 3) é simplesmente omitida.
 // Campo "voz" define o que é falado em cada passo:
-//   'solo'       -> nome + peso
-//   'total'      -> nome + peso + total parcial do balde
-//   'baldetotal' -> nome + peso + total do balde
-//   'det'        -> nome + peso + detalhe (ex.: água gelada)
+//   'solo'  -> nome + peso
+//   'total' -> nome + peso + total acumulado do balde até aqui ("Total, ...")
+//   'det'   -> nome + peso + detalhe falado
 function gerarReceita(bag, feu, ita){
-  const arr=[
-    {id:1, grupo:'BALDE 1 · FARINHAS', cat:'FARINHA',  nome:'Bagatelle',     g:bag,  voz:'solo',       det:'Primeira farinha do balde 1'},
-    {id:2, grupo:'BALDE 1 · FARINHAS', cat:'FARINHA',  nome:'Feuilletage',   g:feu,  voz:'total',      det:'Segunda farinha do balde 1'},
-    {id:3, grupo:'BALDE 1 · FARINHAS', cat:'FARINHA',  nome:'Italiana 00',   g:ita,  voz:'total',      det:'Última farinha do balde 1'},
-    {id:4, grupo:'BALDE 1 · FARINHAS', cat:'FERMENTO', nome:'Fermento seco', g:84,   voz:'solo',       det:'Quantidade conforme a temperatura da noite'},
-    {id:5, grupo:'BALDE 1 · FARINHAS', cat:'AÇÚCAR',   nome:'Açúcar',        g:900,  voz:'baldetotal', det:'No balde 1, logo após o fermento'},
-    {id:6, grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Água com gelo', g:3520, voz:'det',        det:'Temperatura baixa é essencial'},
-    {id:7, grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Leite em pó',   g:174,  voz:'solo',       det:'No balde 2, junto com a água'},
-    {id:8, grupo:'PARA BATIMENTO',     cat:'SAL',      nome:'Sal refinado',  g:174,  voz:'solo',       det:'No batimento — antes da manteiga'},
-    {id:9, grupo:'PARA BATIMENTO',     cat:'GORDURA',  nome:'Manteiga',      g:112,  voz:'solo',       det:'No batimento — após o sal'},
-    {id:10,grupo:'APROVEITAMENTO',     cat:'APROVEITA',nome:'Aproveitamento',g:2500, voz:'solo',       det:'Massa antiga incorporada à massa nova'},
-  ];
-  arr.forEach(p=>p.qty=formatPeso(p.g)); // formatPeso é hoisted (declaração de função)
+  // Monta a lista de farinhas presentes (ignora as que têm peso 0)
+  const farinhas=[
+    {nome:'Bagatelle',   g:bag},
+    {nome:'Feuilletage', g:feu},
+    {nome:'Italiana 00', g:ita},
+  ].filter(f=>f.g>0);
+
+  const arr=[];
+  farinhas.forEach((f,idx)=>{
+    arr.push({
+      grupo:'BALDE 1 · FARINHAS', cat:'FARINHA', nome:f.nome, g:f.g,
+      voz: idx===0 ? 'solo' : 'total',  // primeira farinha sem total; demais com total
+      det: idx===0 ? 'Primeira farinha do balde 1'
+         : (idx===farinhas.length-1 ? 'Última farinha do balde 1' : 'Farinha do balde 1')
+    });
+  });
+
+  // Fermento e Açúcar agora também anunciam o total acumulado do balde 1
+  arr.push({grupo:'BALDE 1 · FARINHAS', cat:'FERMENTO', nome:'Fermento seco', g:84,   voz:'total', det:'Quantidade conforme a temperatura da noite'});
+  arr.push({grupo:'BALDE 1 · FARINHAS', cat:'AÇÚCAR',   nome:'Açúcar',        g:900,  voz:'total', det:'No balde 1, logo após o fermento'});
+  // Balde 2: água (não fala mais "temperatura baixa é essencial") + leite
+  arr.push({grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Água com gelo', g:3520, voz:'solo',  det:'Água gelada no balde 2'});
+  arr.push({grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Leite em pó',   g:174,  voz:'solo',  det:'No balde 2, junto com a água'});
+  // Para o batimento
+  arr.push({grupo:'PARA BATIMENTO',     cat:'SAL',      nome:'Sal refinado',  g:174,  voz:'solo',  det:'No batimento — antes da manteiga'});
+  arr.push({grupo:'PARA BATIMENTO',     cat:'GORDURA',  nome:'Manteiga',      g:112,  voz:'solo',  det:'No batimento — após o sal'});
+  arr.push({grupo:'APROVEITAMENTO',     cat:'APROVEITA',nome:'Aproveitamento',g:2500, voz:'solo',  det:'Massa antiga incorporada à massa nova'});
+
+  arr.forEach((p,idx)=>{p.id=idx+1; p.qty=formatPeso(p.g);}); // ids sequenciais; formatPeso é hoisted
   return arr;
 }
 
 const RECEITAS = {
   r1: { nome:'Receita 1', rotulo:'R1', farinhas:'Bagatelle 45%, Feuilletage 45%, Italiana 10%', passos: gerarReceita(3600,3600,800) },
   r2: { nome:'Receita 2', rotulo:'R2', farinhas:'Bagatelle 60%, Feuilletage 30%, Italiana 10%', passos: gerarReceita(4800,2400,800) },
+  r3: { nome:'Receita 3', rotulo:'R3', farinhas:'Bagatelle 3200 g, Italiana 4800 g (sem Feuilletage)', passos: gerarReceita(3200,0,4800) },
 };
 
 // Receita ativa (apontador para o array de passos). Trocada ao escolher o módulo.
@@ -439,9 +498,9 @@ const getOp=()=>LS.g('fdo_op','Padeiro');
 function ir(id){document.querySelectorAll('.scr').forEach(s=>s.classList.add('off'));document.getElementById('s-'+id).classList.remove('off');if(id==='history')renderHist();}
 function salvarConfig(){const k=document.getElementById('inp-key').value.trim();if(!k){alert('Insira a chave API');return;}LS.s('fdo_key',k);const op=document.getElementById('inp-op').value.trim();if(op)LS.s('fdo_op',op);ir('start');}
 
-// Escolhe qual receita rodar (r1 ou r2), ajusta o cabeçalho e vai para a previsão de temperatura
+// Escolhe qual receita rodar (r1, r2 ou r3), ajusta o cabeçalho e vai para a previsão de temperatura
 function iniciarReceita(rid){
-  st.receita = (rid==='r2') ? 'r2' : 'r1';
+  st.receita = RECEITAS[rid] ? rid : 'r1';
   RECEITA = RECEITAS[st.receita].passos;
   const h=document.getElementById('hdr-rec');
   if(h) h.textContent='Porcionamento · '+RECEITAS[st.receita].rotulo;
@@ -537,7 +596,7 @@ function iniciarVoz(){
     processarComando(txt,r);
   };
   try{rec.start();}catch(e){}
-  setTimeout(()=>{falar(`Porcionamento iniciado. ${st.temp} graus previstos. Balde 1. `+frasePasso(0));},900);
+  setTimeout(()=>{falar(`${st.temp} graus previstos. Balde 1. `+frasePasso(0));},900);
 }
 
 function processarComando(txt,alt){
@@ -594,9 +653,8 @@ function grupoFala(g){return g.replace(' · ',' ');}
 function frasePasso(i){
   const p=RECEITA[i];
   const peso=falaPeso(p.g);
-  if(p.voz==='total')      return `${p.nome}, ${peso}. Total parcial, ${falaPeso(baldeTotalAte(i))}.`;
-  if(p.voz==='baldetotal') return `${p.nome}, ${peso}. Total do balde, ${falaPeso(baldeTotalAte(i))}.`;
-  if(p.voz==='det')        return `${p.nome}, ${peso}. ${p.det}`;
+  if(p.voz==='total') return `${p.nome}, ${peso}. Total, ${falaPeso(baldeTotalAte(i))}.`;
+  if(p.voz==='det')   return `${p.nome}, ${peso}. ${p.det}`;
   return `${p.nome}, ${peso}.`; // 'solo'
 }
 
@@ -611,11 +669,11 @@ function avancar(){
   const p=RECEITA[st.step];
   let pre='Concluído. ';
   if(p.grupo!==gAnt){
-    // Ao terminar o BALDE 1, fala a conferência do total (ingredientes + balde de 474 g)
+    // Ao terminar o BALDE 1, fala a conferência do peso total (balde de 474 g + ingredientes)
     if(gAnt.indexOf('BALDE 1')===0){
-      const ing=baldeTotalAte(st.step-1);
-      const alvo=ing+PESO_BALDE1;
-      const chk=`Fim do balde 1. Confira o total do balde: ingredientes somam ${falaPeso(ing)}. Com o balde de ${falaPeso(PESO_BALDE1)}, a balança deve marcar ${falaPeso(alvo)}.`;
+      const ing=baldeTotalAte(st.step-1);     // soma dos ingredientes do balde 1
+      const alvo=ing+PESO_BALDE1;              // o que a balança deve marcar (com o balde)
+      const chk=`Conferir. Peso total, com o balde de ${falaPeso(PESO_BALDE1)} mais os ingredientes, é ${falaPeso(alvo)}.`;
       mostrarAI(chk);
       pre=`Concluído. ${chk} Próximo, ${grupoFala(p.grupo)}. `;
     }else{
@@ -658,7 +716,7 @@ function concluir(){
   salvarSessao(true);pararVoz();
   const tot=formatPeso(totalGeral());
   document.getElementById('done-tot').innerHTML=`<div class="done-conf">Confira o valor total na balança</div><div class="done-val">${tot}</div>`;
-  falar(`Porcionamento concluído. Confira o valor total da receita: ${tot}.`);
+  falar('Porcionamento concluído.');
   setTimeout(()=>ir('done'),1500);
 }
 function encerrar(){salvarSessao(false);pararVoz();ir('start');}

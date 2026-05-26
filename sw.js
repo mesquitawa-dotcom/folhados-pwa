@@ -1,6 +1,10 @@
 // Folhados d'Ouro — Service Worker
+// OBS 26/05/2026: cache fdo-v6 — submenu de receitas na tela inicial;
+//                 Receita 3 (sem Feuilletage); ajustes de falas;
+//                 conferência do balde 1 reescrita (tara 474 g).
+//                 Gemini e Open-Meteo nunca são cacheados.
 // IMPORTANTE: a cada publicação, troque a versão (fdo-vN) para o celular atualizar.
-const CACHE = 'fdo-v5';
+const CACHE = 'fdo-v6';
 
 self.addEventListener('install', e => {
   e.waitUntil(
