@@ -1,5 +1,5 @@
 {
-  "_obs": "OBS 26/05/2026: tela inicial com submenu de receitas; Receita 3 (Bagatelle 3200/Italiana 4800, sem Feuilletage); ajustes de falas; conferencia balde 1 reescrita (tara 474 g); cache sw fdo-v6.",
+  "_obs": "OBS 27/05/2026: divisão por voz (dividir X por 8 etc.); Wake Lock (tela não apaga); pergunta pós-secos do balde 1 (continua receita ou outro balde de secos); contador de baldes de secos; cache sw fdo-v7.",
   "name": "Folhados d'Ouro — Produção",
   "short_name": "Folhados d'Ouro",
   "description": "Checklist por voz para produção de croissants",

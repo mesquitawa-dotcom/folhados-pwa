@@ -2,15 +2,17 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — OBS 26/05/2026 (atualização)
-       • Tela inicial: "Porcionamento" abre um submenu de receitas.
-       • Receita 3 adicionada (Bagatelle 3.200 g / Italiana 4.800 g, sem Feuilletage).
-       • Falas: removido "Porcionamento iniciado"; "Total parcial" → "Total";
-         Fermento e Açúcar passam a falar o Total; Água não fala mais a nota de
-         temperatura; conclusão não fala mais "confira o valor total da receita".
-       • Conferência do balde 1 reescrita: "peso total, com o balde de 474 g
-         mais os ingredientes, é ..." (tara 474 g).
-       • Service Worker: cache fdo-v6.
+       FOLHADOS D'OURO — OBS 27/05/2026 (atualização)
+       • Divisão por voz: "dividir X por 8", "divida X por 8" e "X dividido
+         por 8" funcionam durante a sessão e respondem por voz.
+       • Wake Lock: tela não apaga durante o porcionamento. Ao voltar de
+         outro app, o microfone religa sozinho (limitação do navegador:
+         em segundo plano o reconhecimento de voz fica pausado).
+       • Pós-secos: ao terminar o balde 1 (farinhas, fermento e açúcar),
+         pergunta "continua a receita ou outro balde de secos?". "Só
+         secos" reinicia a parte dos secos com a mesma temperatura.
+       • Contador visual de baldes de secos quando >1.
+       • Service Worker: cache fdo-v7.
        ════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -82,6 +84,22 @@
       min-height:3rem;display:flex;align-items:center;justify-content:center}
     .nbtn.next{background:linear-gradient(135deg,#3a2005,#7a4a0a);color:var(--gl);border-color:#5a3008}
     .nbtn:active{opacity:.7;transform:scale(.97)}
+
+    /* ══ PÓS-SECOS — pergunta de continuação ══ */
+    .nav-secos{display:none;flex-direction:column;gap:.5rem;margin:.7rem 1rem;flex-shrink:0}
+    .nav-secos.show{display:flex}
+    .nbtn.secos{padding:1.1rem .6rem;font-size:.9rem;letter-spacing:.08rem;min-height:3.4rem;line-height:1.2}
+    .nbtn.secos-novo{background:var(--bg3);border-color:#5a3008;color:var(--gl)}
+    .nbtn.secos-continuar{background:linear-gradient(135deg,#3a2005,#7a4a0a);color:var(--gl);border-color:#5a3008}
+    .pergunta-secos{margin:0 1rem .5rem;padding:.9rem 1rem;background:rgba(248,113,113,.08);
+      border:1px solid #5a1a0e;border-left:.25rem solid var(--red);border-radius:.4rem;
+      font-size:.95rem;color:#f5b8a8;line-height:1.5;flex-shrink:0;display:none}
+    .pergunta-secos.show{display:block}
+
+    /* Contador de baldes de secos no header */
+    .secos-badge{display:inline-block;margin-left:.4rem;padding:.1rem .45rem;font-size:.6rem;
+      letter-spacing:.1rem;text-transform:uppercase;color:#0a0905;background:var(--gold);
+      border-radius:.2rem;vertical-align:middle;font-weight:bold}
 
     /* ══ STEP LIST ══ */
     .list{flex:1;overflow-y:auto;padding:0 1rem .8rem}
@@ -337,7 +355,7 @@
 
 <div id="s-active" class="scr off">
   <div class="hdr">
-    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title" id="hdr-rec">Porcionamento · R1</div></div>
+    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title"><span id="hdr-rec">Porcionamento · R1</span><span id="secos-badge" class="secos-badge" style="display:none"></span></div></div>
     <div style="text-align:right"><div class="hdr-pct" id="pct">0%</div><div class="hdr-sub">Concluído</div></div>
   </div>
   <div class="pb"><div class="pb-fill" id="pb" style="width:0%"></div></div>
@@ -354,10 +372,15 @@
     <div class="cur-det" id="c-det"></div>
     <div class="cur-tot" id="c-tot"></div>
   </div>
-  <div class="nav">
+  <div class="pergunta-secos" id="pergunta-secos"></div>
+  <div class="nav" id="nav-normal">
     <button class="nbtn" onclick="irPasso(st.step-1)">← Voltar</button>
     <button class="nbtn" onclick="repetir()">🔊 Repetir</button>
     <button class="nbtn next" onclick="avancar()">Próximo →</button>
+  </div>
+  <div class="nav-secos" id="nav-secos">
+    <button class="nbtn secos secos-novo" onclick="iniciarOutroBaldeSecos()">+ Outro balde de secos</button>
+    <button class="nbtn secos secos-continuar" onclick="continuarReceita()">Continuar receita →</button>
   </div>
   <div class="list" id="lista"></div>
   <div class="ai" id="ai-box" style="display:none">
@@ -486,11 +509,15 @@ const CMD = {
   avancar: ['próximo','proximo','próxima','proxima','prossiga','prossegue','seguinte','continua','continuar','continue','feito','fiz','pesei','pesado','adicionei','adicionado','coloquei','colocado','botei','ok','okay','sim','certo','correto','isso','isso aí','isso ai','isso mesmo','pronto','concluído','concluido','concluí','terminei','terminado','finalizei','tá','ta','ta bom','tá bom','beleza','joia','jóia','perfeito','show','pode','pode ir','vai','vamos','bora','manda','manda ver','check','done','next','avança','avançar','passa','passou','avance'],
   voltar: ['voltar','volta','volte','retorna','retornar','anterior','antes','atrás','atras','errei','errou','errado','engano','enganei','desfaz','desfazer','back'],
   repetir: ['repetir','repete','repita','de novo','denovo','outra vez','novamente','como é','como e','qual','qual era','qual é','não entendi','nao entendi','fala de novo','diz de novo','diga novamente','quanto','quanto é','quanto e'],
-  pausar: ['pausa','pausar','espera','aguarda','para','pare','calma','peraí','perai','segura']
+  pausar: ['pausa','pausar','espera','aguarda','para','pare','calma','peraí','perai','segura'],
+  // Pergunta pós-secos do balde 1: "só secos" = repetir os secos com a mesma temperatura
+  so_secos: ['só secos','so secos','só os secos','so os secos','apenas secos','outro balde','outro balde de secos','novo balde','novo balde de secos','mais um balde','mais um balde de secos','mais secos','só mais secos','so mais secos','repete secos','repetir secos','de novo secos','novamente secos','outro balde de farinha','outro balde de farinhas','outra fornada de secos','outra batida de secos','mais uma de secos','só farinha','so farinha','só farinhas','so farinhas'],
+  // Pergunta pós-secos do balde 1: "continua" = ir para os líquidos
+  continua_receita: ['continua receita','continuar receita','continue receita','continua a receita','continuar a receita','continue a receita','segue receita','seguir receita','segue a receita','seguir a receita','vai para receita','prossegue receita','prosseguir receita','receita','líquidos','liquidos','vai pros líquidos','vai pros liquidos','vai para os líquidos','vai para os liquidos','balde dois','balde 2','vai pro balde 2','vai para o balde 2','próximo balde','proximo balde','próximo grupo','proximo grupo','seguir adiante','seguir em frente','normal','segue normal']
 };
 function matchCmd(txt,g){return CMD[g].some(p=>txt.includes(p));}
 
-const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0,temp:null,receita:'r1'};
+const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0,temp:null,receita:'r1',modo:'normal',baldeSecos:1,wakeLock:null};
 const LS={g:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch{return d}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 const getKey=()=>LS.g('fdo_key','');
 const getOp=()=>LS.g('fdo_op','Padeiro');
@@ -577,7 +604,44 @@ function setTemp(t){
   iniciar();
 }
 
-function iniciar(){if(!getKey()){ir('config');return;}st.step=0;st.done=new Set();st.sessionStart=Date.now();ir('active');renderLista();atualizarUI();setDot('off','Iniciando mic...');iniciarVoz();}
+function iniciar(){
+  if(!getKey()){ir('config');return;}
+  st.step=0;
+  st.done=new Set();
+  st.modo='normal';
+  st.baldeSecos=1;
+  st.sessionStart=Date.now();
+  ir('active');
+  mostrarPerguntaSecos(false);
+  renderLista();
+  atualizarUI();
+  setDot('off','Iniciando mic...');
+  pedirWakeLock();
+  iniciarVoz();
+}
+
+// ─── WAKE LOCK: mantém a tela ligada durante a sessão ───
+async function pedirWakeLock(){
+  if(!('wakeLock' in navigator)) return;
+  try{
+    st.wakeLock=await navigator.wakeLock.request('screen');
+    st.wakeLock.addEventListener('release',()=>{st.wakeLock=null;});
+  }catch(e){/* silenciar */}
+}
+function liberarWakeLock(){
+  if(st.wakeLock){try{st.wakeLock.release();}catch(e){}st.wakeLock=null;}
+}
+// Quando o app volta a ficar visível, re-pega o wake lock e religa o mic
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'){
+    // App voltou ao foco
+    if(st.sessionStart && !st.wakeLock) pedirWakeLock();
+    // Se a sessão está ativa e o mic caiu, tenta religar
+    if(st.sessionStart && !st.rec){
+      setTimeout(()=>{try{iniciarVoz();}catch(e){}},300);
+    }
+  }
+});
 
 function iniciarVoz(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -599,9 +663,111 @@ function iniciarVoz(){
   setTimeout(()=>{falar(`${st.temp} graus previstos. Balde 1. `+frasePasso(0));},900);
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// DIVISÃO POR VOZ — funciona durante a sessão ativa
+// Aceita: "dividir X por Y" / "divida X por Y" / "X dividido por Y" /
+//         "quanto é X dividido por Y" / "X por Y" (precedido por palavra-gatilho)
+// Y também aceita por extenso: "oito", "quatro", "dois", etc.
+// ─────────────────────────────────────────────────────────────────────
+const NUM_PT = {
+  'zero':0,'um':1,'uma':1,'dois':2,'duas':2,'três':3,'tres':3,'quatro':4,
+  'cinco':5,'seis':6,'meia':6,'sete':7,'oito':8,'nove':9,'dez':10,
+  'onze':11,'doze':12,'treze':13,'quatorze':14,'catorze':14,'quinze':15,
+  'dezesseis':16,'dezessete':17,'dezoito':18,'dezenove':19,'vinte':20
+};
+// Tenta converter um trecho de texto em número (digital ou por extenso simples)
+function parseNum(s){
+  if(s==null) return NaN;
+  s=s.toString().trim().toLowerCase();
+  if(!s) return NaN;
+  // Palavra por extenso direta
+  if(NUM_PT[s]!==undefined) return NUM_PT[s];
+  // Limpa unidades e caracteres
+  s=s.replace(/\s+(kg|g|gramas?|quilos?|kilos?)\b/g,'');
+  s=s.replace(/[^\d.,]/g,'');
+  if(!s) return NaN;
+  // Convenção brasileira: vírgula é decimal, ponto é separador de milhar
+  if(s.indexOf(',')>=0){
+    s=s.replace(/\./g,'').replace(',','.');
+  } else if(s.indexOf('.')>=0){
+    // Ponto sozinho: se tem exatamente 3 dígitos após e algo antes, é milhar
+    const partes=s.split('.');
+    if(partes.length===2 && partes[1].length===3 && partes[0].length>=1){
+      s=s.replace('.','');
+    } else if(partes.length>2){
+      s=s.replace(/\./g,'');
+    }
+  }
+  const n=parseFloat(s);
+  return isNaN(n)?NaN:n;
+}
+// Detecta um pedido de divisão e devolve {a, b} ou null
+function parsearDivisao(txt){
+  if(!txt) return null;
+  const t=txt.toLowerCase()
+    .replace(/[!?¡¿]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+  // Padrão 1: "dividir/divida/divide X por Y"
+  let m=t.match(/(?:dividir|divida|divide)\s+([\d.,]+|[a-záéíóúâêôãõç]+)\s+por\s+([\d.,]+|[a-záéíóúâêôãõç]+)/);
+  if(m){
+    const a=parseNum(m[1]), b=parseNum(m[2]);
+    if(!isNaN(a)&&!isNaN(b)&&b!==0) return {a,b};
+  }
+  // Padrão 2: "X dividido/dividida por Y" (também "quanto é X dividido por Y")
+  m=t.match(/([\d.,]+|[a-záéíóúâêôãõç]+)\s+dividid[oa]\s+por\s+([\d.,]+|[a-záéíóúâêôãõç]+)/);
+  if(m){
+    const a=parseNum(m[1]), b=parseNum(m[2]);
+    if(!isNaN(a)&&!isNaN(b)&&b!==0) return {a,b};
+  }
+  return null;
+}
+// Formata número para fala em pt-BR (vírgula decimal, gramas inteiras)
+function falaNumero(n){
+  if(Number.isInteger(n)) return n.toString();
+  // Arredonda em até 3 casas e remove zeros à direita
+  let s=n.toFixed(3).replace(/0+$/,'').replace(/\.$/,'');
+  return s.replace('.',',');
+}
+// Responde a divisão por voz e mostra na tela
+function responderDivisao(a,b){
+  const r=a/b;
+  const aStr=falaNumero(a);
+  const bStr=falaNumero(b);
+  const rStr=falaNumero(r);
+  const msg=`${aStr} dividido por ${bStr} é ${rStr}.`;
+  mostrarAI(msg);
+  falar(msg);
+}
+
 function processarComando(txt,alt){
   const todas=[txt];
   if(alt)for(let i=1;i<alt.length;i++)todas.push(alt[i].transcript.trim().toLowerCase());
+
+  // 1) SEMPRE checa pedido de divisão primeiro, em qualquer estado da sessão
+  for(const t of todas){
+    const d=parsearDivisao(t);
+    if(d){responderDivisao(d.a,d.b);return;}
+  }
+
+  // 2) Modo PÓS-SECOS: aguardando escolha entre "outro balde de secos" ou continuar
+  if(st.modo==='pos_secos'){
+    // Verifica "só secos" primeiro (mais específico)
+    for(const t of todas){
+      if(matchCmd(t,'so_secos')){iniciarOutroBaldeSecos();return;}
+    }
+    // Depois verifica continuar (inclui também "continua", "próximo", "feito" etc.)
+    for(const t of todas){
+      if(matchCmd(t,'continua_receita')||matchCmd(t,'avancar')){continuarReceita();return;}
+      if(matchCmd(t,'voltar')){irPasso(st.step-1);st.modo='normal';mostrarPerguntaSecos(false);return;}
+      if(matchCmd(t,'repetir')){repetirPerguntaSecos();return;}
+      if(matchCmd(t,'pausar')){speechSynthesis?.cancel();return;}
+    }
+    // Em modo pós-secos, não cai para pergunta livre ao Gemini (evita confusão)
+    return;
+  }
+
+  // 3) Comandos normais
   for(const t of todas){
     if(matchCmd(t,'avancar')){avancar();return;}
     if(matchCmd(t,'voltar')){irPasso(st.step-1);return;}
@@ -660,8 +826,42 @@ function frasePasso(i){
 
 function irPasso(n){st.step=Math.max(0,Math.min(n,RECEITA.length-1));atualizarUI();falar(frasePasso(st.step));}
 
+// Verifica se o passo `i` é o ÚLTIMO dos secos do balde 1
+function ehUltimoSecos(i){
+  if(i<0||i>=RECEITA.length) return false;
+  const g=RECEITA[i].grupo||'';
+  if(!g.startsWith('BALDE 1')) return false;
+  const prox=RECEITA[i+1];
+  return !prox || !(prox.grupo||'').startsWith('BALDE 1');
+}
+// Índice do primeiro passo do balde 1 (primeira farinha)
+function primeiroSecosIdx(){
+  for(let i=0;i<RECEITA.length;i++){
+    if((RECEITA[i].grupo||'').startsWith('BALDE 1')) return i;
+  }
+  return 0;
+}
+
 function avancar(){
+  // Em modo pós-secos, o botão "Próximo" significa "continuar a receita"
+  if(st.modo==='pos_secos'){continuarReceita();return;}
+
   const gAnt=RECEITA[st.step].grupo;
+
+  // CASO ESPECIAL: terminando o último dos secos do balde 1 → perguntar
+  if(ehUltimoSecos(st.step)){
+    st.done.add(st.step);
+    st.modo='pos_secos';
+    atualizarUI();
+    const ing=baldeTotalAte(st.step);
+    const alvo=ing+PESO_BALDE1;
+    const chk=`Balde ${st.baldeSecos} de secos concluído. Conferir: peso total, com o balde de ${falaPeso(PESO_BALDE1)} mais os ingredientes, é ${falaPeso(alvo)}.`;
+    const pergunta=` Continua a receita ou faz outro balde de secos?`;
+    mostrarPerguntaSecos(true, chk+pergunta);
+    falar(chk+pergunta);
+    return;
+  }
+
   st.done.add(st.step);
   const n=st.step+1;
   if(n>=RECEITA.length){concluir();return;}
@@ -669,18 +869,62 @@ function avancar(){
   const p=RECEITA[st.step];
   let pre='Concluído. ';
   if(p.grupo!==gAnt){
-    // Ao terminar o BALDE 1, fala a conferência do peso total (balde de 474 g + ingredientes)
-    if(gAnt.indexOf('BALDE 1')===0){
-      const ing=baldeTotalAte(st.step-1);     // soma dos ingredientes do balde 1
-      const alvo=ing+PESO_BALDE1;              // o que a balança deve marcar (com o balde)
-      const chk=`Conferir. Peso total, com o balde de ${falaPeso(PESO_BALDE1)} mais os ingredientes, é ${falaPeso(alvo)}.`;
-      mostrarAI(chk);
-      pre=`Concluído. ${chk} Próximo, ${grupoFala(p.grupo)}. `;
-    }else{
-      pre=`Concluído. Próximo, ${grupoFala(p.grupo)}. `;
-    }
+    pre=`Concluído. Próximo, ${grupoFala(p.grupo)}. `;
   }
   falar(pre+frasePasso(st.step));
+}
+
+// ─── PÓS-SECOS: continuar a receita normalmente (vai pro balde 2) ───
+function continuarReceita(){
+  st.modo='normal';
+  mostrarPerguntaSecos(false);
+  const n=st.step+1;
+  if(n>=RECEITA.length){concluir();return;}
+  st.step=n;
+  atualizarUI();
+  const p=RECEITA[st.step];
+  falar(`Próximo, ${grupoFala(p.grupo)}. `+frasePasso(st.step));
+}
+
+// ─── PÓS-SECOS: iniciar outro balde de secos com a mesma temperatura ───
+function iniciarOutroBaldeSecos(){
+  st.modo='normal';
+  st.baldeSecos=(st.baldeSecos||1)+1;
+  mostrarPerguntaSecos(false);
+  // Desmarca todos os passos do balde 1 (secos) e volta pro primeiro
+  const inicio=primeiroSecosIdx();
+  for(let i=inicio;i<RECEITA.length;i++){
+    if((RECEITA[i].grupo||'').startsWith('BALDE 1')) st.done.delete(i);
+    else break;
+  }
+  st.step=inicio;
+  atualizarUI();
+  falar(`Balde ${st.baldeSecos} de secos. ${st.temp} graus previstos. `+frasePasso(st.step));
+}
+
+// Repete a pergunta de continuar / outro balde
+function repetirPerguntaSecos(){
+  const ing=baldeTotalAte(st.step);
+  const alvo=ing+PESO_BALDE1;
+  const chk=`Balde ${st.baldeSecos} de secos concluído. Conferir: peso total, com o balde de ${falaPeso(PESO_BALDE1)} mais os ingredientes, é ${falaPeso(alvo)}. Continua a receita ou faz outro balde de secos?`;
+  falar(chk);
+}
+
+// Alterna entre a navegação normal e a barra de pergunta pós-secos
+function mostrarPerguntaSecos(mostrar, texto){
+  const cx=document.getElementById('pergunta-secos');
+  const nNor=document.getElementById('nav-normal');
+  const nSec=document.getElementById('nav-secos');
+  if(mostrar){
+    if(texto){cx.textContent=texto;}
+    cx.classList.add('show');
+    nNor.style.display='none';
+    nSec.classList.add('show');
+  }else{
+    cx.classList.remove('show');
+    nNor.style.display='flex';
+    nSec.classList.remove('show');
+  }
 }
 
 function repetir(){falar(frasePasso(st.step));}
@@ -699,6 +943,12 @@ function atualizarUI(){
   document.getElementById('c-qty').textContent=p.qty;
   document.getElementById('c-det').textContent=p.det;
   document.getElementById('c-tot').textContent='Total do balde até aqui: '+formatPeso(baldeTotalAte(st.step));
+  // Badge do contador de baldes de secos (só aparece a partir do 2º balde)
+  const badge=document.getElementById('secos-badge');
+  if(badge){
+    if(st.baldeSecos>1){badge.textContent=st.baldeSecos+'x secos';badge.style.display='inline-block';}
+    else{badge.style.display='none';}
+  }
   renderLista();
 }
 
@@ -713,16 +963,16 @@ function renderLista(){
 }
 
 function concluir(){
-  salvarSessao(true);pararVoz();
+  salvarSessao(true);pararVoz();liberarWakeLock();st.sessionStart=0;
   const tot=formatPeso(totalGeral());
   document.getElementById('done-tot').innerHTML=`<div class="done-conf">Confira o valor total na balança</div><div class="done-val">${tot}</div>`;
   falar('Porcionamento concluído.');
   setTimeout(()=>ir('done'),1500);
 }
-function encerrar(){salvarSessao(false);pararVoz();ir('start');}
+function encerrar(){salvarSessao(false);pararVoz();liberarWakeLock();st.sessionStart=0;st.modo='normal';st.baldeSecos=1;mostrarPerguntaSecos(false);ir('start');}
 function pararVoz(){if(st.rec){st.rec.onend=null;try{st.rec.stop();}catch(e){}st.rec=null;}speechSynthesis?.cancel();}
-function salvarSessao(ok){const all=LS.g('fdo_sess',[]);all.unshift({data:new Date().toLocaleString('pt-BR'),modulo:'Porcionamento '+(RECEITAS[st.receita]?RECEITAS[st.receita].rotulo:'R1'),op:getOp(),temp:st.temp,total_g:totalGeral(),concluidos:st.done.size,total:RECEITA.length,dur:Math.round((Date.now()-st.sessionStart)/60000),ok});LS.s('fdo_sess',all.slice(0,60));}
-function renderHist(){const all=LS.g('fdo_sess',[]);const el=document.getElementById('hist-list');if(!all.length){el.innerHTML='<div style="padding:2rem;text-align:center;color:var(--mut);font-size:.9rem">Nenhuma sessão ainda</div>';return;}el.innerHTML=all.map(s=>`<div class="hi"><div class="hi-d">${s.data} · ${s.dur} min · ${s.modulo||'—'} · ${s.op||'—'}${s.temp?(' · '+s.temp+'°C'):''}</div><div class="hi-i">${s.concluidos}/${s.total} passos ${s.ok?'✅':'⚠️'}${s.total_g?(' · total '+formatPeso(s.total_g)):''}</div></div>`).join('');}
+function salvarSessao(ok){const all=LS.g('fdo_sess',[]);all.unshift({data:new Date().toLocaleString('pt-BR'),modulo:'Porcionamento '+(RECEITAS[st.receita]?RECEITAS[st.receita].rotulo:'R1'),op:getOp(),temp:st.temp,baldes_secos:st.baldeSecos||1,total_g:totalGeral(),concluidos:st.done.size,total:RECEITA.length,dur:Math.round((Date.now()-st.sessionStart)/60000),ok});LS.s('fdo_sess',all.slice(0,60));}
+function renderHist(){const all=LS.g('fdo_sess',[]);const el=document.getElementById('hist-list');if(!all.length){el.innerHTML='<div style="padding:2rem;text-align:center;color:var(--mut);font-size:.9rem">Nenhuma sessão ainda</div>';return;}el.innerHTML=all.map(s=>`<div class="hi"><div class="hi-d">${s.data} · ${s.dur} min · ${s.modulo||'—'} · ${s.op||'—'}${s.temp?(' · '+s.temp+'°C'):''}${(s.baldes_secos&&s.baldes_secos>1)?(' · '+s.baldes_secos+'x secos'):''}</div><div class="hi-i">${s.concluidos}/${s.total} passos ${s.ok?'✅':'⚠️'}${s.total_g?(' · total '+formatPeso(s.total_g)):''}</div></div>`).join('');}
 
 (function(){
   if(!getKey())ir('config');else ir('start');
