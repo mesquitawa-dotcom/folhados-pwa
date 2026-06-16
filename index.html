@@ -2,28 +2,26 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — OBS 15/06/2026 (atualização v8)
-       • CONTROLE DE LOTES: cada porcionamento concluído vira um LOTE
-         numerado (sequencial, nº nunca reaproveitado). O lote guarda
-         todas as etapas (porcionamento, batimento e futuras). Apagar um
-         lote apaga TODOS os processos dele (com confirmação). O menu
-         "Histórico" virou "Lotes".
-       • SENHA DE ACESSO (PIN): teclado numérico para entrar nos módulos.
-         PIN padrão 123789, configurável. Pedido 1x por abertura do app
-         (rápido para produção). Pode ser desativado em Config.
-       • BOTÃO LIGA/DESLIGA DO AUTOFALANTE (🔊/🔇) na tela ativa e no
-         batimento; também por voz ("desligar som"/"ligar som").
-       • MÓDULO BATER A MASSA (início): lista os lotes porcionados ainda
-         NÃO batidos, seleciona um, puxa a temperatura ambiente de outro
-         batimento do mesmo dia para confirmar, e conclui mantendo o
-         mesmo nº de lote. (Os passos detalhados virão depois.)
-       • RECEITAS: Receita 2 → "Receita 2 - MASSA 3 KG" (Bagatelle 3500 g,
-         Italiana 4270 g, sem Feuilletage, açúcar 876 g, água 3500 g).
-         Receita 3 → "Receita 3 - PADRÃO" (água 3600 g).
-       --- mantido da v7 ---
-       • Divisão por voz ("dividir X por 8" etc.). Wake Lock. Pós-secos
-         com contador de baldes. Gemini/Open-Meteo nunca cacheados.
-       • Service Worker: cache fdo-v8.
+       FOLHADOS D'OURO — OBS 16/06/2026 (atualização v9)
+       NOVIDADES v9:
+       • ETIQUETA 60×50 mm (Tomate MDK-022 via Bluetooth): imprime nº do
+         lote, receita, data e hora. Disponível ao concluir o porcionamento
+         e em cada cartão da tela Lotes (botão 🏷). Também salva a imagem.
+       • CALCULADORA grande (operações básicas) no rodapé do menu.
+       • REINICIAR NUMERAÇÃO dos lotes (próximo vira #1) na tela Lotes.
+       • MÓDULO FERMENTAÇÃO: registra temperatura mínima e máxima do lote;
+         os lotes seguintes do mesmo dia puxam a 1ª leitura p/ confirmar.
+       • Conclusão do porcionamento mostra "LOTE #N" grande + voz dita o
+         número ("marque o número N na massa").
+       • SENHA agora só no Porcionamento (Bater a Massa e Fermentação livres).
+       • Navegação: botões "⌂ Início" e "← Voltar" nas telas internas.
+       --- base v8/v7 ---
+       • Lotes numerados (apagar = cascata). PIN 123789 (config, 1x/abertura).
+         Autofalante 🔊/🔇 (botão + voz). Bater a Massa puxa temp. do dia.
+       • Receita 2 = "MASSA 3 KG" (Bagatelle 3500, Italiana 4270, açúcar 876,
+         água 3500). Receita 3 = "PADRÃO" (água 3600). Receita 1 inalterada.
+       • Divisão por voz. Wake Lock. Pós-secos. Gemini/Open-Meteo sem cache.
+       • Service Worker: cache fdo-v9.
        ════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -289,6 +287,41 @@
     .cfg-row{display:flex;align-items:center;gap:.6rem;font-size:.82rem;color:var(--mut)}
     .cfg-row input[type=checkbox]{width:1.2rem;height:1.2rem;accent-color:var(--gold);flex-shrink:0}
     .cfg-sep{border-top:1px solid var(--brd);margin:.4rem 0 .2rem}
+
+    /* Número do lote grande na tela de conclusão */
+    .done-lote-big{font-size:3.2rem;font-weight:bold;color:var(--gold);text-align:center;
+      line-height:1;letter-spacing:-.02em;margin:.2rem 0;text-shadow:0 0 1.2rem rgba(201,151,58,.35)}
+
+    /* Botão de etiqueta no cartão do lote */
+    .lote-etq{background:rgba(201,151,58,.12);border:1px solid rgba(201,151,58,.3);color:var(--gold);
+      font-size:1rem;width:2.1rem;height:2.1rem;border-radius:.35rem;cursor:pointer;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center}
+    .lote-etq:active{opacity:.7}
+
+    /* ════ CALCULADORA ════ */
+    .calc-wrap{flex:1;display:flex;flex-direction:column;padding:1rem;gap:.8rem;overflow:hidden}
+    .calc-display{background:var(--bg3);border:1px solid var(--brd);border-radius:.5rem;
+      padding:1.2rem 1rem;text-align:right;flex-shrink:0}
+    .calc-prev{font-size:1rem;color:var(--mut);min-height:1.3rem;overflow:hidden;text-overflow:ellipsis}
+    .calc-cur{font-size:2.8rem;color:var(--gl);font-weight:bold;line-height:1.1;
+      overflow:hidden;text-overflow:ellipsis;letter-spacing:-.02em}
+    .calc-pad{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;min-height:0}
+    .calc-key{font-family:Georgia,serif;font-weight:bold;font-size:1.5rem;border-radius:.5rem;
+      border:1px solid var(--brd);background:var(--bg3);color:var(--text);cursor:pointer;
+      display:flex;align-items:center;justify-content:center}
+    .calc-key:active{opacity:.7;transform:scale(.97)}
+    .calc-key.fn{background:#161208;color:var(--mut);font-size:1.2rem}
+    .calc-key.op{background:linear-gradient(135deg,#3a2005,#6a3f0a);color:var(--gl)}
+    .calc-key.eq{background:linear-gradient(135deg,#6a3808,var(--gold));color:#0a0905}
+    .calc-key.zero{grid-column:span 1}
+
+    /* ════ ETIQUETA ════ */
+    .etq-body{flex:1;display:flex;flex-direction:column;gap:.9rem;padding:1.2rem;overflow-y:auto;align-items:center}
+    .etq-preview-box{background:#fff;border-radius:.4rem;padding:.5rem;box-shadow:0 .2rem 1rem rgba(0,0,0,.5)}
+    .etq-preview{display:block;width:min(78vw,18rem);height:auto;image-rendering:pixelated}
+    .etq-status{font-size:.82rem;color:var(--mut);text-align:center;min-height:1.2rem;line-height:1.5;width:100%}
+    .etq-status.ok{color:var(--grn)} .etq-status.err{color:var(--red)}
+    #s-etiqueta .btn-main{width:100%}
   </style>
 </head>
 <body>
@@ -303,7 +336,7 @@
   <div class="cfg-sep"></div>
   <div class="cfg-s" style="font-size:.75rem">🔒 Senha de acesso (PIN numérico):</div>
   <input id="inp-pin" class="inp" type="tel" inputmode="numeric" maxlength="8" placeholder="123789" autocomplete="off">
-  <label class="cfg-row"><input type="checkbox" id="chk-pin"> Exigir senha ao entrar nos módulos</label>
+  <label class="cfg-row"><input type="checkbox" id="chk-pin"> Exigir senha no Porcionamento</label>
   <button class="btn-main" onclick="salvarConfig()">Salvar e Continuar</button>
   <button class="link-btn" style="margin-top:.3rem;width:100%;text-align:center" onclick="ir('start')">← Voltar</button>
 </div>
@@ -340,10 +373,10 @@
       <div class="modulo-info"><div class="modulo-nome">Modelagem</div><div class="modulo-desc">Corte, enrolamento e pesagem</div></div>
       <div class="modulo-badge badge-breve">Em breve</div>
     </div>
-    <div class="modulo inativo">
-      <div class="modulo-icon">📐</div>
-      <div class="modulo-info"><div class="modulo-nome">Fermentação</div><div class="modulo-desc">Tempo, temperatura e umidade</div></div>
-      <div class="modulo-badge badge-breve">Em breve</div>
+    <div class="modulo ativo" onclick="entrarFermentacao()">
+      <div class="modulo-icon">🌡️</div>
+      <div class="modulo-info"><div class="modulo-nome">Fermentação</div><div class="modulo-desc">Registra temperatura mínima e máxima do lote</div></div>
+      <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
     <div class="modulo inativo">
       <div class="modulo-icon">🔥</div>
@@ -357,6 +390,7 @@
     </div>
   </div>
   <div class="start-footer">
+    <button class="link-btn" onclick="abrirCalc('start')">🧮 Calculadora</button>
     <button class="link-btn" onclick="ir('history')">Lotes</button>
     <button class="link-btn" onclick="ir('config')">Config</button>
   </div>
@@ -383,7 +417,7 @@
       <div class="modulo-icon">2️⃣</div>
       <div class="modulo-info">
         <div class="modulo-nome">Receita 2 - MASSA 3 KG</div>
-        <div class="modulo-desc">Bagatelle 3500 g · Italiana 4270 g · sem Feuilletage</div>
+        <div class="modulo-desc">Massa de 3 kg · Bagatelle 3500 g · Italiana 4270 g · sem Feuilletage</div>
       </div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
@@ -433,6 +467,7 @@
   <div class="temp-grid" id="temp-grid"></div>
   <div class="start-footer">
     <button class="link-btn" onclick="ir('pre-temp')">← Voltar</button>
+    <button class="link-btn" onclick="ir('start')">⌂ Início</button>
   </div>
 </div>
 
@@ -477,23 +512,24 @@
 </div>
 
 <div id="s-done" class="scr off">
-  <div style="font-size:3.5rem">✅</div>
-  <div style="font-size:1.4rem;color:var(--gl);font-weight:bold;text-align:center">Porcionamento Concluído!</div>
-  <div id="done-lote" style="font-size:1.1rem;color:var(--gold);font-weight:bold;text-align:center"></div>
+  <div style="font-size:2.6rem">✅</div>
+  <div style="font-size:1.2rem;color:var(--gl);font-weight:bold;text-align:center">Porcionamento Concluído!</div>
+  <div class="done-lote-big" id="done-lote">LOTE #—</div>
+  <div style="font-size:.9rem;color:var(--gold);text-align:center;font-weight:bold;letter-spacing:.05rem">✍️ Marque este número na massa</div>
   <div class="done-tot" id="done-tot"></div>
-  <div style="font-size:.95rem;color:var(--mut);text-align:center;line-height:1.8">
-    Lote salvo — disponível em Bater a Massa<br>
-    <span style="font-size:.75rem;letter-spacing:.2rem;text-transform:uppercase">Próxima etapa: Bater a Massa</span>
-  </div>
-  <button class="btn-main" style="width:auto;padding:1rem 2.5rem;margin-top:1rem" onclick="ir('start')">← Início</button>
+  <button class="btn-main" style="width:auto;padding:1rem 2rem;margin-top:.6rem" onclick="abrirEtiqueta(st.ultimoLoteId)">🏷 Imprimir Etiqueta</button>
+  <button class="link-btn" style="width:auto;padding:.8rem 2rem" onclick="ir('start')">← Início</button>
 </div>
 
 <div id="s-history" class="scr off">
   <div class="hdr">
     <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Lotes de Produção</div></div>
-    <button class="link-btn" onclick="ir('start')">← Voltar</button>
+    <button class="link-btn" onclick="ir('start')">← Início</button>
   </div>
   <div class="hist-list" id="hist-list"></div>
+  <div class="bot">
+    <button class="btn-danger" onclick="reiniciarNumeracaoLotes()">🔄 Reiniciar numeração dos lotes</button>
+  </div>
 </div>
 
 <!-- ═══ PIN / SENHA DE ACESSO ═══ -->
@@ -553,8 +589,113 @@
     </div>
     <button class="btn-main" onclick="concluirBatimento()">Confirmar e concluir batimento ✓</button>
   </div>
-  <div class="bot">
-    <button class="btn-danger" onclick="ir('batimento-lotes')">← Voltar aos lotes</button>
+  <div class="bot" style="display:flex;gap:.5rem">
+    <button class="btn-danger" style="flex:1" onclick="ir('batimento-lotes')">← Lotes</button>
+    <button class="btn-danger" style="flex:1" onclick="ir('start')">⌂ Início</button>
+  </div>
+</div>
+
+<!-- ═══ CALCULADORA ═══ -->
+<div id="s-calc" class="scr off">
+  <div class="hdr">
+    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Calculadora</div></div>
+    <button class="link-btn" onclick="calcVoltar()">← Voltar</button>
+  </div>
+  <div class="calc-wrap">
+    <div class="calc-display">
+      <div class="calc-prev" id="calc-prev"></div>
+      <div class="calc-cur" id="calc-cur">0</div>
+    </div>
+    <div class="calc-pad">
+      <button class="calc-key fn" onclick="calcLimpar()">C</button>
+      <button class="calc-key fn" onclick="calcApagar()">⌫</button>
+      <button class="calc-key fn" onclick="calcPct()">%</button>
+      <button class="calc-key op" onclick="calcOp('/')">÷</button>
+      <button class="calc-key" onclick="calcNum('7')">7</button>
+      <button class="calc-key" onclick="calcNum('8')">8</button>
+      <button class="calc-key" onclick="calcNum('9')">9</button>
+      <button class="calc-key op" onclick="calcOp('*')">×</button>
+      <button class="calc-key" onclick="calcNum('4')">4</button>
+      <button class="calc-key" onclick="calcNum('5')">5</button>
+      <button class="calc-key" onclick="calcNum('6')">6</button>
+      <button class="calc-key op" onclick="calcOp('-')">−</button>
+      <button class="calc-key" onclick="calcNum('1')">1</button>
+      <button class="calc-key" onclick="calcNum('2')">2</button>
+      <button class="calc-key" onclick="calcNum('3')">3</button>
+      <button class="calc-key op" onclick="calcOp('+')">+</button>
+      <button class="calc-key zero" onclick="calcNum('0')">0</button>
+      <button class="calc-key" onclick="calcDot()">,</button>
+      <button class="calc-key eq" onclick="calcIgual()">=</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ETIQUETA (impressão) ═══ -->
+<div id="s-etiqueta" class="scr off">
+  <div class="hdr">
+    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Etiqueta do Lote</div></div>
+    <button class="link-btn" onclick="fecharEtiqueta()">← Voltar</button>
+  </div>
+  <div class="etq-body">
+    <div class="etq-preview-box">
+      <img id="etq-img" class="etq-preview" alt="Pré-visualização da etiqueta">
+    </div>
+    <div class="etq-status" id="etq-status"></div>
+    <button class="btn-main" id="etq-print-btn" onclick="imprimirBluetooth()">🖨 Imprimir na MDK-022 (Bluetooth)</button>
+    <button class="link-btn" style="width:100%" onclick="baixarEtiqueta()">💾 Salvar imagem da etiqueta</button>
+  </div>
+</div>
+
+<!-- ═══ FERMENTAÇÃO — seleção de lote ═══ -->
+<div id="s-fermentacao-lotes" class="scr off">
+  <div class="start-top">
+    <div class="start-icon">🌡️</div>
+    <div class="start-brand">Folhados d'Ouro</div>
+    <div class="start-title">Fermentação</div>
+    <div class="start-sub">Selecione o lote</div>
+  </div>
+  <div class="modulos-label">Lotes aguardando registro de fermentação</div>
+  <div class="modulos" id="ferm-lotes-list"></div>
+  <div class="start-footer">
+    <button class="link-btn" onclick="ir('start')">⌂ Início</button>
+  </div>
+</div>
+
+<!-- ═══ FERMENTAÇÃO — registro de um lote ═══ -->
+<div id="s-fermentacao" class="scr off">
+  <div class="hdr">
+    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Fermentação</div></div>
+    <button class="link-btn" onclick="ir('fermentacao-lotes')">← Voltar</button>
+  </div>
+  <div class="bat-body">
+    <div class="bat-card">
+      <div class="bat-card-lbl">Lote selecionado</div>
+      <div class="bat-lote-num" id="ferm-lote-num">#—</div>
+      <div class="bat-lote-rec" id="ferm-lote-rec">—</div>
+      <div class="bat-note" id="ferm-lote-meta"></div>
+    </div>
+    <div class="bat-card">
+      <div class="bat-card-lbl">Temperatura mínima</div>
+      <div class="step-ctrl">
+        <button class="step-pm" onclick="ajustarTempFerm('min',-1)">−</button>
+        <div class="step-val"><span id="ferm-min-val">24</span><small>°C</small></div>
+        <button class="step-pm" onclick="ajustarTempFerm('min',1)">+</button>
+      </div>
+    </div>
+    <div class="bat-card">
+      <div class="bat-card-lbl">Temperatura máxima</div>
+      <div class="step-ctrl">
+        <button class="step-pm" onclick="ajustarTempFerm('max',-1)">−</button>
+        <div class="step-val"><span id="ferm-max-val">28</span><small>°C</small></div>
+        <button class="step-pm" onclick="ajustarTempFerm('max',1)">+</button>
+      </div>
+      <div class="bat-note" id="ferm-temp-note">Defina as temperaturas da fermentação.</div>
+    </div>
+    <button class="btn-main" onclick="concluirFermentacao()">Confirmar e concluir fermentação ✓</button>
+  </div>
+  <div class="bot" style="display:flex;gap:.5rem">
+    <button class="btn-danger" style="flex:1" onclick="ir('fermentacao-lotes')">← Lotes</button>
+    <button class="btn-danger" style="flex:1" onclick="ir('start')">⌂ Início</button>
   </div>
 </div>
 
@@ -674,7 +815,9 @@ const CMD = {
 function matchCmd(txt,g){return CMD[g].some(p=>txt.includes(p));}
 
 const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0,temp:null,receita:'r1',modo:'normal',baldeSecos:1,wakeLock:null,
-  pinBuf:'',pinAlvo:null,batLote:null,batTemp:20,batStart:0};
+  pinBuf:'',pinAlvo:null,batLote:null,batTemp:20,batStart:0,
+  ultimoLoteId:null,calcRet:'start',etqLote:null,etqRet:'start',
+  fermLote:null,fermStart:0,fermMin:24,fermMax:28};
 // Desbloqueio por sessão do app: o PIN é pedido só 1x por abertura (rápido p/ produção)
 let sessaoDesbloqueada=false;
 const LS={g:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch{return d}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
@@ -712,7 +855,8 @@ function pinAtivo(){ return LS.g('fdo_pin_ativo',true)===true; }
 
 // Entradas dos módulos protegidos pelo PIN
 function entrarPorcionamento(){ exigirAcesso(()=>ir('receitas')); }
-function entrarBatimento(){ exigirAcesso(abrirBatimentoLotes); }
+function entrarBatimento(){ abrirBatimentoLotes(); }      // sem senha — só Porcionamento exige PIN
+function entrarFermentacao(){ abrirFermentacaoLotes(); }  // sem senha
 
 // Roda fn direto se já desbloqueado / sem PIN; senão mostra o teclado
 function exigirAcesso(fn){
@@ -929,6 +1073,236 @@ function concluirBatimento(){
   falar(`Batimento do lote ${lote.num} concluído.`);
   st.batLote=null;
   abrirBatimentoLotes();
+}
+
+// ════════════════════════════════════════════════════════════
+// CALCULADORA — grande, operações básicas (vírgula decimal pt-BR)
+// ════════════════════════════════════════════════════════════
+let calcCur='0', calcAcc=null, calcOpv=null, calcReset=false;
+function abrirCalc(ret){ st.calcRet=ret||'start'; calcLimpar(); ir('calc'); }
+function calcVoltar(){ ir(st.calcRet||'start'); }
+function calcSimbolo(op){ return op==='*'?'×':op==='/'?'÷':op==='-'?'−':'+'; }
+function calcRender(){
+  document.getElementById('calc-cur').textContent=String(calcCur).replace('.',',');
+  document.getElementById('calc-prev').textContent=(calcAcc!=null?String(calcAcc).replace('.',',')+' '+calcSimbolo(calcOpv):'');
+}
+function calcNum(n){
+  if(calcReset||calcCur==='Erro'){ calcCur='0'; calcReset=false; }
+  calcCur=(calcCur==='0')?n:(calcCur.length<14?calcCur+n:calcCur);
+  calcRender();
+}
+function calcDot(){ if(calcReset||calcCur==='Erro'){calcCur='0';calcReset=false;} if(!calcCur.includes('.'))calcCur+='.'; calcRender(); }
+function calcApagar(){ if(calcReset||calcCur==='Erro')return; calcCur=calcCur.length>1?calcCur.slice(0,-1):'0'; calcRender(); }
+function calcLimpar(){ calcCur='0'; calcAcc=null; calcOpv=null; calcReset=false; calcRender(); }
+function calcPct(){ const v=parseFloat(calcCur); if(isFinite(v)){calcCur=String(v/100);} calcReset=false; calcRender(); }
+function calcCalcula(a,b,op){ a=parseFloat(a); b=parseFloat(b); let r;
+  if(op==='+')r=a+b; else if(op==='-')r=a-b; else if(op==='*')r=a*b; else r=(b===0?NaN:a/b);
+  if(!isFinite(r))return 'Erro';
+  return String(Math.round(r*1e8)/1e8);
+}
+function calcOp(op){
+  if(calcCur==='Erro'){ calcLimpar(); }
+  if(calcOpv!=null && !calcReset){ calcAcc=calcCalcula(calcAcc,calcCur,calcOpv); calcCur=calcAcc; }
+  else { calcAcc=calcCur; }
+  calcOpv=op; calcReset=true; calcRender();
+}
+function calcIgual(){
+  if(calcOpv==null||calcCur==='Erro')return;
+  calcCur=calcCalcula(calcAcc,calcCur,calcOpv);
+  calcAcc=null; calcOpv=null; calcReset=true; calcRender();
+}
+
+// ════════════════════════════════════════════════════════════
+// ETIQUETA 60×50 mm — impressão na Tomate MDK-022 via Bluetooth.
+// Conteúdo: número do lote, receita, data e horário.
+// ════════════════════════════════════════════════════════════
+const ETQ_W=480, ETQ_H=400; // 60×50 mm @ 203 dpi (8 pontos/mm)
+let etqCanvas=null;
+function loteEtqDados(lote){
+  let data='—', hora='—';
+  if(lote.criadoTs){ const d=new Date(lote.criadoTs); data=d.toLocaleDateString('pt-BR'); hora=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+  else if(lote.criado){ const p=String(lote.criado).split(' '); data=p[0]||lote.criado; hora=(p[1]||'').slice(0,5); }
+  return { num:lote.num, receita:lote.receitaNome||lote.rotulo||'', data, hora };
+}
+function desenharEtiqueta(lote){
+  const c=document.createElement('canvas'); c.width=ETQ_W; c.height=ETQ_H;
+  const x=c.getContext('2d');
+  x.fillStyle='#fff'; x.fillRect(0,0,ETQ_W,ETQ_H);
+  x.fillStyle='#000'; x.strokeStyle='#000'; x.lineWidth=4;
+  x.strokeRect(10,10,ETQ_W-20,ETQ_H-20);
+  const d=loteEtqDados(lote);
+  x.textAlign='center';
+  x.font='bold 34px Arial, sans-serif'; x.fillText('LOTE', ETQ_W/2, 82);
+  x.font='bold 118px Arial, sans-serif'; x.fillText('#'+d.num, ETQ_W/2, 208);
+  x.font='26px Arial, sans-serif';
+  let rec=d.receita; if(rec.length>32) rec=rec.slice(0,32);
+  x.fillText(rec, ETQ_W/2, 268);
+  x.font='bold 32px Arial, sans-serif';
+  x.fillText(d.data+'    '+d.hora, ETQ_W/2, 332);
+  return c;
+}
+function abrirEtiqueta(id){
+  const lote=LS.g('fdo_lotes',[]).find(l=>l.id===id);
+  if(!lote){ alert('Lote não encontrado.'); return; }
+  st.etqLote=id;
+  const atual=document.querySelector('.scr:not(.off)');
+  st.etqRet = (atual&&atual.id==='s-history')?'history':((atual&&atual.id==='s-done')?'done':'start');
+  etqCanvas=desenharEtiqueta(lote);
+  document.getElementById('etq-img').src=etqCanvas.toDataURL('image/png');
+  const sEl=document.getElementById('etq-status'); sEl.className='etq-status';
+  sEl.textContent = navigator.bluetooth ? 'Pronto. Ligue a impressora e toque em Imprimir.' : 'Para Bluetooth use o Chrome no Android. Você também pode salvar a imagem e imprimir pelo app da impressora.';
+  ir('etiqueta');
+}
+function fecharEtiqueta(){ ir(st.etqRet||'start'); }
+function baixarEtiqueta(){
+  if(!etqCanvas)return;
+  const lote=LS.g('fdo_lotes',[]).find(l=>l.id===st.etqLote);
+  const a=document.createElement('a');
+  a.download='etiqueta_lote_'+(lote?lote.num:'x')+'.png';
+  a.href=etqCanvas.toDataURL('image/png'); a.click();
+}
+// Canvas -> raster 1-bit -> bytes ESC/POS (GS v 0)
+function etiquetaParaEscpos(){
+  const x=etqCanvas.getContext('2d');
+  const img=x.getImageData(0,0,ETQ_W,ETQ_H).data;
+  const bpl=ETQ_W/8;
+  const raster=new Uint8Array(bpl*ETQ_H);
+  for(let y=0;y<ETQ_H;y++){
+    for(let bx=0;bx<bpl;bx++){
+      let b=0;
+      for(let bit=0;bit<8;bit++){
+        const px=bx*8+bit; const i=(y*ETQ_W+px)*4;
+        const lum=(img[i]+img[i+1]+img[i+2])/3;
+        if(lum<128) b|=(0x80>>bit);
+      }
+      raster[y*bpl+bx]=b;
+    }
+  }
+  const init=[0x1B,0x40,0x1B,0x61,0x01];
+  const cab=[0x1D,0x76,0x30,0x00,bpl&0xFF,(bpl>>8)&0xFF,ETQ_H&0xFF,(ETQ_H>>8)&0xFF];
+  const fim=[0x0A,0x0A,0x0A,0x0A];
+  const out=new Uint8Array(init.length+cab.length+raster.length+fim.length);
+  let o=0; out.set(init,o);o+=init.length; out.set(cab,o);o+=cab.length; out.set(raster,o);o+=raster.length; out.set(fim,o);
+  return out;
+}
+async function imprimirBluetooth(){
+  const sEl=document.getElementById('etq-status');
+  const setS=(t,cls)=>{ sEl.textContent=t; sEl.className='etq-status'+(cls?(' '+cls):''); };
+  if(!navigator.bluetooth){ setS('Este navegador não suporta Bluetooth. Use o Chrome no Android, ou salve a imagem e imprima pelo app da impressora.','err'); return; }
+  try{
+    setS('Procurando a impressora… escolha a MDK-022 na lista.');
+    const dev=await navigator.bluetooth.requestDevice({
+      acceptAllDevices:true,
+      optionalServices:[0x18F0,0xFFE0,0xFF00,0xFEE7,0xAE30,'49535343-fe7d-4ae5-8fa9-9fafd205e455','e7810a71-73ae-499d-8c15-faa9aef0c3f2']
+    });
+    setS('Conectando…');
+    const server=await dev.gatt.connect();
+    const servs=await server.getPrimaryServices();
+    let ch=null;
+    for(const s of servs){
+      const cs=await s.getCharacteristics();
+      for(const c of cs){ if(c.properties.write||c.properties.writeWithoutResponse){ ch=c; break; } }
+      if(ch) break;
+    }
+    if(!ch){ setS('Não encontrei um canal de impressão nesta impressora. Ela pode usar Bluetooth comum (não suportado pelo navegador). Salve a imagem e imprima pelo app.','err'); return; }
+    setS('Enviando etiqueta…');
+    const dados=etiquetaParaEscpos();
+    const semResp=ch.properties.writeWithoutResponse;
+    const TAM=180;
+    for(let i=0;i<dados.length;i+=TAM){
+      const parte=dados.slice(i,i+TAM);
+      if(semResp && ch.writeValueWithoutResponse) await ch.writeValueWithoutResponse(parte);
+      else await ch.writeValue(parte);
+      await new Promise(r=>setTimeout(r,18));
+    }
+    setS('Etiqueta enviada! ✓','ok');
+    setTimeout(()=>{ try{dev.gatt.disconnect();}catch(e){} },1200);
+  }catch(err){
+    if(err && err.name==='NotFoundError') setS('Nenhuma impressora selecionada.');
+    else setS('Falha: '+(err.message||err.name||'erro')+'. Tente de novo ou salve a imagem.','err');
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// FERMENTAÇÃO — registra temperatura mínima e máxima do lote.
+// 1º lote do dia define; os próximos puxam a leitura p/ confirmar.
+// ════════════════════════════════════════════════════════════
+function lotesPendentesFermentacao(){
+  return LS.g('fdo_lotes',[]).filter(l=>{
+    const e=l.etapas||{};
+    return e.batimento && e.batimento.feito && !(e.fermentacao && e.fermentacao.feito);
+  });
+}
+function abrirFermentacaoLotes(){ renderFermLotes(); ir('fermentacao-lotes'); }
+function renderFermLotes(){
+  const lotes=lotesPendentesFermentacao();
+  const el=document.getElementById('ferm-lotes-list');
+  if(!lotes.length){
+    el.innerHTML='<div class="bat-empty"><div class="bat-empty-icon">✅</div><div>Nenhum lote aguardando fermentação.</div><div style="font-size:.78rem">Conclua o batimento de um lote primeiro.</div></div>';
+    return;
+  }
+  el.innerHTML=lotes.map(l=>{
+    const b=(l.etapas&&l.etapas.batimento)||{};
+    const sub=[l.criado||'', b.tempAmbiente!=null?('amb. '+b.tempAmbiente+'°C'):''].filter(Boolean).join(' · ');
+    return `<div class="modulo ativo" onclick="abrirFermentacao('${l.id}')">
+      <div class="modulo-icon">🌡️</div>
+      <div class="modulo-info">
+        <div class="modulo-nome">Lote #${l.num} · ${l.receitaNome||l.rotulo||''}</div>
+        <div class="modulo-desc">${sub}</div>
+      </div>
+      <div class="modulo-badge badge-ativo">Fermentar</div>
+    </div>`;
+  }).join('');
+}
+function tempFermentacaoDoDia(){
+  const hoje=new Date().toDateString();
+  for(const l of LS.g('fdo_lotes',[])){
+    const f=l.etapas&&l.etapas.fermentacao;
+    if(f&&f.feito&&f.tempMin!=null&&f.emTs&&new Date(f.emTs).toDateString()===hoje) return {min:f.tempMin,max:f.tempMax};
+  }
+  return null;
+}
+function abrirFermentacao(id){
+  const lote=LS.g('fdo_lotes',[]).find(l=>l.id===id);
+  if(!lote){ abrirFermentacaoLotes(); return; }
+  st.fermLote=id; st.fermStart=Date.now();
+  const b=(lote.etapas&&lote.etapas.batimento)||{};
+  document.getElementById('ferm-lote-num').textContent='#'+lote.num;
+  document.getElementById('ferm-lote-rec').textContent=lote.receitaNome||lote.rotulo||'';
+  document.getElementById('ferm-lote-meta').textContent=[lote.criado||'', b.op?('op. '+b.op):''].filter(Boolean).join(' · ');
+  const tDia=tempFermentacaoDoDia();
+  const note=document.getElementById('ferm-temp-note');
+  if(tDia){ st.fermMin=tDia.min; st.fermMax=tDia.max; note.textContent='Puxado de uma fermentação de hoje — confirme ou ajuste.'; note.classList.add('puxado'); }
+  else{ st.fermMin=24; st.fermMax=28; note.textContent='Defina as temperaturas da fermentação.'; note.classList.remove('puxado'); }
+  document.getElementById('ferm-min-val').textContent=st.fermMin;
+  document.getElementById('ferm-max-val').textContent=st.fermMax;
+  ir('fermentacao');
+  falar(`Fermentação do lote ${lote.num}. `+(tDia?`Mínima ${st.fermMin} e máxima ${st.fermMax} graus de hoje. Confirme ou ajuste.`:'Defina a temperatura mínima e máxima.'));
+}
+function ajustarTempFerm(campo,d){
+  if(campo==='min'){ st.fermMin=Math.max(0,Math.min(60,(st.fermMin||24)+d)); document.getElementById('ferm-min-val').textContent=st.fermMin; }
+  else{ st.fermMax=Math.max(0,Math.min(60,(st.fermMax||28)+d)); document.getElementById('ferm-max-val').textContent=st.fermMax; }
+}
+function concluirFermentacao(){
+  const todos=LS.g('fdo_lotes',[]);
+  const lote=todos.find(l=>l.id===st.fermLote);
+  if(!lote){ abrirFermentacaoLotes(); return; }
+  if(st.fermMax<st.fermMin){ alert('A temperatura máxima não pode ser menor que a mínima.'); return; }
+  const agora=new Date();
+  lote.etapas=lote.etapas||{};
+  lote.etapas.fermentacao={ feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(), op:getOp(), tempMin:st.fermMin, tempMax:st.fermMax, dur:Math.round((Date.now()-(st.fermStart||Date.now()))/60000) };
+  LS.s('fdo_lotes',todos);
+  falar(`Fermentação do lote ${lote.num} registrada. Mínima ${st.fermMin}, máxima ${st.fermMax} graus.`);
+  st.fermLote=null;
+  abrirFermentacaoLotes();
+}
+
+// Reiniciar numeração dos lotes — o próximo criado será #1
+function reiniciarNumeracaoLotes(){
+  const ok=confirm('Reiniciar a numeração dos lotes?\n\nO próximo lote criado será o #1.\nOs lotes que já estão na lista continuam guardados (com os números atuais).');
+  if(!ok) return;
+  LS.s('fdo_lote_seq',0);
+  alert('Numeração reiniciada. O próximo lote será o #1.');
 }
 
 // Escolhe qual receita rodar (r1, r2 ou r3), ajusta o cabeçalho e vai para a previsão de temperatura
@@ -1373,11 +1747,12 @@ function renderLista(){
 function concluir(){
   salvarSessao(true);
   const lote=criarLotePorcionamento();
+  st.ultimoLoteId=lote.id;
   pararVoz();liberarWakeLock();st.sessionStart=0;
   const tot=formatPeso(totalGeral());
-  document.getElementById('done-lote').textContent='Lote #'+lote.num+' criado';
+  document.getElementById('done-lote').textContent='LOTE #'+lote.num;
   document.getElementById('done-tot').innerHTML=`<div class="done-conf">Confira o valor total na balança</div><div class="done-val">${tot}</div>`;
-  falar(`Porcionamento concluído. Lote ${lote.num} criado.`);
+  falar(`Porcionamento concluído. Lote número ${lote.num}. Marque o número ${lote.num} na massa.`);
   setTimeout(()=>ir('done'),1500);
 }
 function encerrar(){salvarSessao(false);pararVoz();liberarWakeLock();st.sessionStart=0;st.modo='normal';st.baldeSecos=1;mostrarPerguntaSecos(false);ir('start');}
@@ -1409,6 +1784,7 @@ function renderHist(){
       <div class="lote-head">
         <span class="lote-num">Lote #${l.num}</span>
         <span class="lote-rec">${l.receitaNome||l.rotulo||'—'}</span>
+        <button class="lote-etq" onclick="abrirEtiqueta('${l.id}')" title="Imprimir etiqueta">🏷</button>
         <button class="lote-del" onclick="apagarLote('${l.id}')" title="Apagar lote">🗑</button>
       </div>
       <div class="lote-meta">${meta}</div>
