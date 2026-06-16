@@ -1,5 +1,5 @@
 {
-  "_obs": "OBS 27/05/2026: divisão por voz (dividir X por 8 etc.); Wake Lock (tela não apaga); pergunta pós-secos do balde 1 (continua receita ou outro balde de secos); contador de baldes de secos; cache sw fdo-v7.",
+  "_obs": "OBS 15/06/2026 (fdo-v8): controle de LOTES numerados/apagáveis (menu Lotes); senha PIN (padrão 123789) ao entrar nos módulos; botão liga/desliga do autofalante; módulo Bater a Massa (seleção de lote porcionado + confirmação da temperatura ambiente do dia); Receita 2 -> 'Receita 2 - MASSA 3 KG' (Bagatelle 3500, Italiana 4270, sem Feuilletage, açúcar 876, água 3500); Receita 3 -> 'Receita 3 - PADRÃO' (água 3600).",
   "name": "Folhados d'Ouro — Produção",
   "short_name": "Folhados d'Ouro",
   "description": "Checklist por voz para produção de croissants",

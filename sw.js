@@ -1,14 +1,16 @@
 // Folhados d'Ouro — Service Worker
-// OBS 27/05/2026: cache fdo-v7 —
-//   • Divisão por voz ("dividir X por 8", "X dividido por 8" etc.).
-//   • Wake Lock: tela não apaga durante o porcionamento.
-//   • Auto-retomada do mic ao voltar de outro app (limitação do navegador:
-//     em segundo plano o reconhecimento de voz fica pausado).
-//   • Pós-secos: pergunta "continua receita ou outro balde de secos?"
-//     ao terminar o balde 1, preservando a temperatura/fermento.
-//   Gemini e Open-Meteo nunca são cacheados.
+// OBS 15/06/2026: cache fdo-v8 —
+//   • Controle de LOTES (numerados, apagáveis com cascata) no menu "Lotes".
+//   • Senha de acesso por PIN (padrão 123789) ao entrar nos módulos.
+//   • Botão liga/desliga do autofalante (TTS) + comando de voz.
+//   • Módulo Bater a Massa (início): seleção de lote porcionado + confirmação
+//     da temperatura ambiente puxada de outro batimento do dia.
+//   • Receita 2 → "Receita 2 - MASSA 3 KG"; Receita 3 → "Receita 3 - PADRÃO".
+//   --- mantido da v7 ---
+//   • Divisão por voz, Wake Lock, pós-secos com contador de baldes.
+//   • Gemini e Open-Meteo nunca são cacheados.
 // IMPORTANTE: a cada publicação, troque a versão (fdo-vN) para o celular atualizar.
-const CACHE = 'fdo-v7';
+const CACHE = 'fdo-v8';
 
 self.addEventListener('install', e => {
   e.waitUntil(

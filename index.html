@@ -2,17 +2,28 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — OBS 27/05/2026 (atualização)
-       • Divisão por voz: "dividir X por 8", "divida X por 8" e "X dividido
-         por 8" funcionam durante a sessão e respondem por voz.
-       • Wake Lock: tela não apaga durante o porcionamento. Ao voltar de
-         outro app, o microfone religa sozinho (limitação do navegador:
-         em segundo plano o reconhecimento de voz fica pausado).
-       • Pós-secos: ao terminar o balde 1 (farinhas, fermento e açúcar),
-         pergunta "continua a receita ou outro balde de secos?". "Só
-         secos" reinicia a parte dos secos com a mesma temperatura.
-       • Contador visual de baldes de secos quando >1.
-       • Service Worker: cache fdo-v7.
+       FOLHADOS D'OURO — OBS 15/06/2026 (atualização v8)
+       • CONTROLE DE LOTES: cada porcionamento concluído vira um LOTE
+         numerado (sequencial, nº nunca reaproveitado). O lote guarda
+         todas as etapas (porcionamento, batimento e futuras). Apagar um
+         lote apaga TODOS os processos dele (com confirmação). O menu
+         "Histórico" virou "Lotes".
+       • SENHA DE ACESSO (PIN): teclado numérico para entrar nos módulos.
+         PIN padrão 123789, configurável. Pedido 1x por abertura do app
+         (rápido para produção). Pode ser desativado em Config.
+       • BOTÃO LIGA/DESLIGA DO AUTOFALANTE (🔊/🔇) na tela ativa e no
+         batimento; também por voz ("desligar som"/"ligar som").
+       • MÓDULO BATER A MASSA (início): lista os lotes porcionados ainda
+         NÃO batidos, seleciona um, puxa a temperatura ambiente de outro
+         batimento do mesmo dia para confirmar, e conclui mantendo o
+         mesmo nº de lote. (Os passos detalhados virão depois.)
+       • RECEITAS: Receita 2 → "Receita 2 - MASSA 3 KG" (Bagatelle 3500 g,
+         Italiana 4270 g, sem Feuilletage, açúcar 876 g, água 3500 g).
+         Receita 3 → "Receita 3 - PADRÃO" (água 3600 g).
+       --- mantido da v7 ---
+       • Divisão por voz ("dividir X por 8" etc.). Wake Lock. Pós-secos
+         com contador de baldes. Gemini/Open-Meteo nunca cacheados.
+       • Service Worker: cache fdo-v8.
        ════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -210,6 +221,74 @@
     ::-webkit-scrollbar-track{background:var(--bg)}
     ::-webkit-scrollbar-thumb{background:var(--brd);border-radius:.1rem}
     @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+    @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-.5rem)}40%,80%{transform:translateX(.5rem)}}
+
+    /* ════ BOTÃO AUTOFALANTE (liga/desliga TTS) ════ */
+    .tts-btn{flex-shrink:0;width:2.1rem;height:2.1rem;border-radius:.4rem;border:1px solid var(--brd);
+      background:var(--bg3);color:var(--gold);font-size:1rem;cursor:pointer;line-height:1;
+      display:flex;align-items:center;justify-content:center;padding:0}
+    .tts-btn.muted{color:var(--red);border-color:#5a1a0e;background:rgba(248,113,113,.08)}
+    .tts-btn:active{transform:scale(.92)}
+
+    /* ════ PIN / SENHA ════ */
+    #s-pin{padding:0}
+    .pin-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+      gap:1.2rem;padding:1rem 1.2rem}
+    .pin-dots{display:flex;gap:.7rem;min-height:1.2rem;align-items:center}
+    .pin-dot{width:1rem;height:1rem;border-radius:50%;border:.13rem solid var(--mut);background:transparent}
+    .pin-dot.on{background:var(--gold);border-color:var(--gold)}
+    .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;width:100%;max-width:18rem}
+    .pin-key{padding:1.1rem 0;border-radius:.6rem;border:1px solid var(--brd);background:var(--bg3);
+      color:var(--gl);font-family:Georgia,serif;font-size:1.7rem;font-weight:bold;cursor:pointer;
+      min-height:3.8rem;display:flex;align-items:center;justify-content:center}
+    .pin-key:active{opacity:.7;transform:scale(.96)}
+    .pin-key.aux{font-size:1.1rem;color:var(--mut);background:var(--bg2)}
+    .pin-err{min-height:1.2rem;font-size:.85rem;color:var(--red);text-align:center}
+    .pin-wrap.err .pin-dots{animation:shake .35s}
+
+    /* ════ LOTES (antigo Histórico) ════ */
+    .lote-card{background:var(--bg3);border:1px solid var(--brd);border-radius:.5rem;
+      padding:.85rem 1rem;margin-bottom:.6rem}
+    .lote-head{display:flex;align-items:center;gap:.6rem;margin-bottom:.45rem}
+    .lote-num{font-size:1.05rem;font-weight:bold;color:var(--gold);flex-shrink:0}
+    .lote-rec{font-size:.8rem;color:var(--gl);font-weight:bold;flex:1;min-width:0;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .lote-del{flex-shrink:0;width:2.1rem;height:2.1rem;border-radius:.4rem;border:.1rem solid #5a1a0e;
+      background:transparent;color:#f08060;font-size:1rem;cursor:pointer;display:flex;
+      align-items:center;justify-content:center;padding:0}
+    .lote-del:active{transform:scale(.92)}
+    .lote-meta{font-size:.72rem;color:var(--mut);letter-spacing:.03rem;margin-bottom:.5rem;line-height:1.5}
+    .lote-etapas{display:flex;flex-wrap:wrap;gap:.4rem}
+    .etapa-chip{font-size:.6rem;letter-spacing:.08rem;text-transform:uppercase;font-weight:bold;
+      padding:.28rem .55rem;border-radius:.25rem;border:1px solid var(--brd)}
+    .etapa-chip.ok{background:rgba(74,222,128,.12);color:var(--grn);border-color:rgba(74,222,128,.35)}
+    .etapa-chip.pend{background:rgba(42,30,8,.5);color:#6a5a3a}
+
+    /* ════ BATER A MASSA ════ */
+    #s-batimento-lotes{padding:0}
+    #s-batimento{padding:0}
+    .bat-body{flex:1;overflow-y:auto;padding:0 1.2rem 1.2rem;display:flex;flex-direction:column;gap:1rem}
+    .bat-card{background:var(--bg3);border:1px solid var(--brd);border-radius:.6rem;padding:1.3rem 1.2rem}
+    .bat-card-lbl{font-size:.65rem;letter-spacing:.18rem;text-transform:uppercase;color:var(--mut);margin-bottom:.5rem}
+    .bat-lote-num{font-size:2rem;font-weight:bold;color:var(--gold);line-height:1}
+    .bat-lote-rec{font-size:.95rem;color:var(--gl);margin-top:.25rem}
+    .bat-note{font-size:.78rem;color:var(--mut);line-height:1.5;margin-top:.4rem}
+    .bat-note.puxado{color:var(--gl)}
+    .step-ctrl{display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:.8rem}
+    .step-pm{width:3.4rem;height:3.4rem;border-radius:50%;border:1px solid var(--brd);background:var(--bg2);
+      color:var(--gold);font-size:1.9rem;font-weight:bold;cursor:pointer;line-height:1;
+      display:flex;align-items:center;justify-content:center;padding:0}
+    .step-pm:active{transform:scale(.92);opacity:.8}
+    .step-val{font-size:2.6rem;font-weight:bold;color:var(--gold);min-width:5rem;text-align:center;line-height:1}
+    .step-val small{font-size:1.1rem;color:var(--mut)}
+    .bat-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:.6rem;padding:2rem;text-align:center;color:var(--mut)}
+    .bat-empty-icon{font-size:2.6rem;opacity:.7}
+
+    /* Bloco PIN dentro do Config */
+    .cfg-row{display:flex;align-items:center;gap:.6rem;font-size:.82rem;color:var(--mut)}
+    .cfg-row input[type=checkbox]{width:1.2rem;height:1.2rem;accent-color:var(--gold);flex-shrink:0}
+    .cfg-sep{border-top:1px solid var(--brd);margin:.4rem 0 .2rem}
   </style>
 </head>
 <body>
@@ -221,6 +300,10 @@
   <input id="inp-key" class="inp" type="password" placeholder="AIza..." autocomplete="off">
   <div class="cfg-s" style="font-size:.75rem;margin-top:-.2rem">Operador (opcional):</div>
   <input id="inp-op" class="inp" type="text" placeholder="Wagner">
+  <div class="cfg-sep"></div>
+  <div class="cfg-s" style="font-size:.75rem">🔒 Senha de acesso (PIN numérico):</div>
+  <input id="inp-pin" class="inp" type="tel" inputmode="numeric" maxlength="8" placeholder="123789" autocomplete="off">
+  <label class="cfg-row"><input type="checkbox" id="chk-pin"> Exigir senha ao entrar nos módulos</label>
   <button class="btn-main" onclick="salvarConfig()">Salvar e Continuar</button>
   <button class="link-btn" style="margin-top:.3rem;width:100%;text-align:center" onclick="ir('start')">← Voltar</button>
 </div>
@@ -234,7 +317,7 @@
   </div>
   <div class="modulos-label">Módulos de Produção</div>
   <div class="modulos">
-    <div class="modulo ativo" onclick="ir('receitas')">
+    <div class="modulo ativo" onclick="entrarPorcionamento()">
       <div class="modulo-icon">⚖️</div>
       <div class="modulo-info">
         <div class="modulo-nome">Porcionamento</div>
@@ -242,10 +325,10 @@
       </div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
-    <div class="modulo inativo">
+    <div class="modulo ativo" onclick="entrarBatimento()">
       <div class="modulo-icon">🥣</div>
-      <div class="modulo-info"><div class="modulo-nome">Bater a Massa</div><div class="modulo-desc">Velocidades, tempos e temperatura</div></div>
-      <div class="modulo-badge badge-breve">Em breve</div>
+      <div class="modulo-info"><div class="modulo-nome">Bater a Massa</div><div class="modulo-desc">Seleciona o lote porcionado e confirma variáveis</div></div>
+      <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
     <div class="modulo inativo">
       <div class="modulo-icon">📐</div>
@@ -274,7 +357,7 @@
     </div>
   </div>
   <div class="start-footer">
-    <button class="link-btn" onclick="ir('history')">Histórico</button>
+    <button class="link-btn" onclick="ir('history')">Lotes</button>
     <button class="link-btn" onclick="ir('config')">Config</button>
   </div>
 </div>
@@ -299,16 +382,16 @@
     <div class="modulo ativo" onclick="iniciarReceita('r2')">
       <div class="modulo-icon">2️⃣</div>
       <div class="modulo-info">
-        <div class="modulo-nome">Receita 2</div>
-        <div class="modulo-desc">Trigo 8 kg · Bagatelle 60% · Feuilletage 30% · Italiana 10%</div>
+        <div class="modulo-nome">Receita 2 - MASSA 3 KG</div>
+        <div class="modulo-desc">Bagatelle 3500 g · Italiana 4270 g · sem Feuilletage</div>
       </div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
     <div class="modulo ativo" onclick="iniciarReceita('r3')">
       <div class="modulo-icon">3️⃣</div>
       <div class="modulo-info">
-        <div class="modulo-nome">Receita 3</div>
-        <div class="modulo-desc">Trigo 8 kg · Bagatelle 40% · Italiana 60% · sem Feuilletage</div>
+        <div class="modulo-nome">Receita 3 - PADRÃO</div>
+        <div class="modulo-desc">Bagatelle 3200 g · Italiana 4800 g · sem Feuilletage</div>
       </div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
@@ -363,6 +446,7 @@
     <div class="dot off" id="mic-dot"></div>
     <span class="sb-txt" id="sb-txt">Iniciando...</span>
     <span class="sb-tr" id="sb-tr"></span>
+    <button class="tts-btn" id="tts-btn" onclick="toggleTTS()" title="Ligar/desligar autofalante">🔊</button>
   </div>
   <div class="gb" id="gb">—</div>
   <div class="cur">
@@ -395,9 +479,10 @@
 <div id="s-done" class="scr off">
   <div style="font-size:3.5rem">✅</div>
   <div style="font-size:1.4rem;color:var(--gl);font-weight:bold;text-align:center">Porcionamento Concluído!</div>
+  <div id="done-lote" style="font-size:1.1rem;color:var(--gold);font-weight:bold;text-align:center"></div>
   <div class="done-tot" id="done-tot"></div>
   <div style="font-size:.95rem;color:var(--mut);text-align:center;line-height:1.8">
-    Sessão salva no histórico<br>
+    Lote salvo — disponível em Bater a Massa<br>
     <span style="font-size:.75rem;letter-spacing:.2rem;text-transform:uppercase">Próxima etapa: Bater a Massa</span>
   </div>
   <button class="btn-main" style="width:auto;padding:1rem 2.5rem;margin-top:1rem" onclick="ir('start')">← Início</button>
@@ -405,10 +490,72 @@
 
 <div id="s-history" class="scr off">
   <div class="hdr">
-    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Histórico</div></div>
+    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Lotes de Produção</div></div>
     <button class="link-btn" onclick="ir('start')">← Voltar</button>
   </div>
   <div class="hist-list" id="hist-list"></div>
+</div>
+
+<!-- ═══ PIN / SENHA DE ACESSO ═══ -->
+<div id="s-pin" class="scr off">
+  <div class="start-top">
+    <div class="start-icon">🔒</div>
+    <div class="start-brand">Folhados d'Ouro</div>
+    <div class="start-title">Acesso à Produção</div>
+    <div class="start-sub" id="pin-sub">Digite a senha</div>
+  </div>
+  <div class="pin-wrap" id="pin-wrap">
+    <div class="pin-dots" id="pin-dots"></div>
+    <div class="pin-pad" id="pin-pad"></div>
+    <div class="pin-err" id="pin-err"></div>
+  </div>
+  <div class="start-footer">
+    <button class="link-btn" onclick="cancelarPin()">← Voltar</button>
+  </div>
+</div>
+
+<!-- ═══ BATER A MASSA — seleção de lote ═══ -->
+<div id="s-batimento-lotes" class="scr off">
+  <div class="start-top">
+    <div class="start-icon">🥣</div>
+    <div class="start-brand">Folhados d'Ouro</div>
+    <div class="start-title">Bater a Massa</div>
+    <div class="start-sub">Selecione o lote porcionado</div>
+  </div>
+  <div class="modulos-label">Lotes aguardando batimento</div>
+  <div class="modulos" id="bat-lotes-list"></div>
+  <div class="start-footer">
+    <button class="link-btn" onclick="ir('start')">← Voltar</button>
+  </div>
+</div>
+
+<!-- ═══ BATER A MASSA — batimento de um lote ═══ -->
+<div id="s-batimento" class="scr off">
+  <div class="hdr">
+    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Bater a Massa</div></div>
+    <button class="tts-btn" id="tts-btn-bat" onclick="toggleTTS()" title="Ligar/desligar autofalante">🔊</button>
+  </div>
+  <div class="bat-body">
+    <div class="bat-card">
+      <div class="bat-card-lbl">Lote selecionado</div>
+      <div class="bat-lote-num" id="bat-lote-num">#—</div>
+      <div class="bat-lote-rec" id="bat-lote-rec">—</div>
+      <div class="bat-note" id="bat-lote-meta"></div>
+    </div>
+    <div class="bat-card">
+      <div class="bat-card-lbl">Temperatura ambiente</div>
+      <div class="step-ctrl">
+        <button class="step-pm" onclick="ajustarTempBat(-1)">−</button>
+        <div class="step-val"><span id="bat-temp-val">20</span><small>°C</small></div>
+        <button class="step-pm" onclick="ajustarTempBat(1)">+</button>
+      </div>
+      <div class="bat-note" id="bat-temp-note">Defina a temperatura ambiente.</div>
+    </div>
+    <button class="btn-main" onclick="concluirBatimento()">Confirmar e concluir batimento ✓</button>
+  </div>
+  <div class="bot">
+    <button class="btn-danger" onclick="ir('batimento-lotes')">← Voltar aos lotes</button>
+  </div>
 </div>
 
 <script>
@@ -424,7 +571,16 @@ const PESO_BALDE1 = 474;
 //   'solo'  -> nome + peso
 //   'total' -> nome + peso + total acumulado do balde até aqui ("Total, ...")
 //   'det'   -> nome + peso + detalhe falado
-function gerarReceita(bag, feu, ita){
+function gerarReceita(bag, feu, ita, opts){
+  opts = opts || {};
+  // Valores compartilhados (padrão). Cada receita pode sobrescrever via opts.
+  const vAgua     = (opts.agua     != null) ? opts.agua     : 3520;
+  const vAcucar   = (opts.acucar   != null) ? opts.acucar   : 900;
+  const vLeite    = (opts.leite    != null) ? opts.leite    : 174;
+  const vSal      = (opts.sal      != null) ? opts.sal      : 174;
+  const vManteiga = (opts.manteiga != null) ? opts.manteiga : 112;
+  const vAprov    = (opts.aprov    != null) ? opts.aprov    : 2500;
+
   // Monta a lista de farinhas presentes (ignora as que têm peso 0)
   const farinhas=[
     {nome:'Bagatelle',   g:bag},
@@ -442,25 +598,25 @@ function gerarReceita(bag, feu, ita){
     });
   });
 
-  // Fermento e Açúcar agora também anunciam o total acumulado do balde 1
-  arr.push({grupo:'BALDE 1 · FARINHAS', cat:'FERMENTO', nome:'Fermento seco', g:84,   voz:'total', det:'Quantidade conforme a temperatura da noite'});
-  arr.push({grupo:'BALDE 1 · FARINHAS', cat:'AÇÚCAR',   nome:'Açúcar',        g:900,  voz:'total', det:'No balde 1, logo após o fermento'});
-  // Balde 2: água (não fala mais "temperatura baixa é essencial") + leite
-  arr.push({grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Água com gelo', g:3520, voz:'solo',  det:'Água gelada no balde 2'});
-  arr.push({grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Leite em pó',   g:174,  voz:'solo',  det:'No balde 2, junto com a água'});
+  // Fermento e Açúcar também anunciam o total acumulado do balde 1
+  arr.push({grupo:'BALDE 1 · FARINHAS', cat:'FERMENTO', nome:'Fermento seco', g:84,       voz:'total', det:'Quantidade conforme a temperatura da noite'});
+  arr.push({grupo:'BALDE 1 · FARINHAS', cat:'AÇÚCAR',   nome:'Açúcar',        g:vAcucar,  voz:'total', det:'No balde 1, logo após o fermento'});
+  // Balde 2: água + leite
+  arr.push({grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Água com gelo', g:vAgua,    voz:'solo',  det:'Água gelada no balde 2'});
+  arr.push({grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Leite em pó',   g:vLeite,   voz:'solo',  det:'No balde 2, junto com a água'});
   // Para o batimento
-  arr.push({grupo:'PARA BATIMENTO',     cat:'SAL',      nome:'Sal refinado',  g:174,  voz:'solo',  det:'No batimento — antes da manteiga'});
-  arr.push({grupo:'PARA BATIMENTO',     cat:'GORDURA',  nome:'Manteiga',      g:112,  voz:'solo',  det:'No batimento — após o sal'});
-  arr.push({grupo:'APROVEITAMENTO',     cat:'APROVEITA',nome:'Aproveitamento',g:2500, voz:'solo',  det:'Massa antiga incorporada à massa nova'});
+  arr.push({grupo:'PARA BATIMENTO',     cat:'SAL',      nome:'Sal refinado',  g:vSal,     voz:'solo',  det:'No batimento — antes da manteiga'});
+  arr.push({grupo:'PARA BATIMENTO',     cat:'GORDURA',  nome:'Manteiga',      g:vManteiga,voz:'solo',  det:'No batimento — após o sal'});
+  arr.push({grupo:'APROVEITAMENTO',     cat:'APROVEITA',nome:'Aproveitamento',g:vAprov,   voz:'solo',  det:'Massa antiga incorporada à massa nova'});
 
   arr.forEach((p,idx)=>{p.id=idx+1; p.qty=formatPeso(p.g);}); // ids sequenciais; formatPeso é hoisted
   return arr;
 }
 
 const RECEITAS = {
-  r1: { nome:'Receita 1', rotulo:'R1', farinhas:'Bagatelle 45%, Feuilletage 45%, Italiana 10%', passos: gerarReceita(3600,3600,800) },
-  r2: { nome:'Receita 2', rotulo:'R2', farinhas:'Bagatelle 60%, Feuilletage 30%, Italiana 10%', passos: gerarReceita(4800,2400,800) },
-  r3: { nome:'Receita 3', rotulo:'R3', farinhas:'Bagatelle 3200 g, Italiana 4800 g (sem Feuilletage)', passos: gerarReceita(3200,0,4800) },
+  r1: { nome:'Receita 1',            rotulo:'R1', farinhas:'Bagatelle 45%, Feuilletage 45%, Italiana 10%',     passos: gerarReceita(3600,3600,800) },
+  r2: { nome:'Receita 2 - MASSA 3 KG', rotulo:'R2', farinhas:'Bagatelle 3500 g, Italiana 4270 g (sem Feuilletage)', passos: gerarReceita(3500,0,4270,{agua:3500, acucar:876}) },
+  r3: { nome:'Receita 3 - PADRÃO',     rotulo:'R3', farinhas:'Bagatelle 3200 g, Italiana 4800 g (sem Feuilletage)', passos: gerarReceita(3200,0,4800,{agua:3600}) },
 };
 
 // Receita ativa (apontador para o array de passos). Trocada ao escolher o módulo.
@@ -517,13 +673,263 @@ const CMD = {
 };
 function matchCmd(txt,g){return CMD[g].some(p=>txt.includes(p));}
 
-const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0,temp:null,receita:'r1',modo:'normal',baldeSecos:1,wakeLock:null};
+const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0,temp:null,receita:'r1',modo:'normal',baldeSecos:1,wakeLock:null,
+  pinBuf:'',pinAlvo:null,batLote:null,batTemp:20,batStart:0};
+// Desbloqueio por sessão do app: o PIN é pedido só 1x por abertura (rápido p/ produção)
+let sessaoDesbloqueada=false;
 const LS={g:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch{return d}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 const getKey=()=>LS.g('fdo_key','');
 const getOp=()=>LS.g('fdo_op','Padeiro');
 
-function ir(id){document.querySelectorAll('.scr').forEach(s=>s.classList.add('off'));document.getElementById('s-'+id).classList.remove('off');if(id==='history')renderHist();}
-function salvarConfig(){const k=document.getElementById('inp-key').value.trim();if(!k){alert('Insira a chave API');return;}LS.s('fdo_key',k);const op=document.getElementById('inp-op').value.trim();if(op)LS.s('fdo_op',op);ir('start');}
+function ir(id){document.querySelectorAll('.scr').forEach(s=>s.classList.add('off'));document.getElementById('s-'+id).classList.remove('off');if(id==='history')renderHist();if(id==='config')carregarConfig();}
+function carregarConfig(){
+  const k=getKey(); if(k)document.getElementById('inp-key').value=k;
+  const op=LS.g('fdo_op',''); if(op)document.getElementById('inp-op').value=op;
+  document.getElementById('inp-pin').value=getPin();
+  document.getElementById('chk-pin').checked=pinAtivo();
+}
+function salvarConfig(){
+  const k=document.getElementById('inp-key').value.trim();
+  if(!k){alert('Insira a chave API');return;}
+  LS.s('fdo_key',k);
+  const op=document.getElementById('inp-op').value.trim();if(op)LS.s('fdo_op',op);
+  // PIN: só dígitos; se vazio, mantém o atual. Mínimo de 4 dígitos.
+  let pin=(document.getElementById('inp-pin').value||'').replace(/\D/g,'');
+  if(pin){
+    if(pin.length<4){alert('A senha precisa ter pelo menos 4 dígitos.');return;}
+    LS.s('fdo_pin',pin);
+  }
+  LS.s('fdo_pin_ativo',document.getElementById('chk-pin').checked);
+  ir('start');
+}
+
+// ════════════════════════════════════════════════════════════
+// SENHA DE ACESSO (PIN numérico)
+// PIN padrão 123789. Pedido 1x por abertura do app (rápido p/ produção).
+// ════════════════════════════════════════════════════════════
+function getPin(){ const p=LS.g('fdo_pin',null); return (p==null||p==='')?'123789':String(p); }
+function pinAtivo(){ return LS.g('fdo_pin_ativo',true)===true; }
+
+// Entradas dos módulos protegidos pelo PIN
+function entrarPorcionamento(){ exigirAcesso(()=>ir('receitas')); }
+function entrarBatimento(){ exigirAcesso(abrirBatimentoLotes); }
+
+// Roda fn direto se já desbloqueado / sem PIN; senão mostra o teclado
+function exigirAcesso(fn){
+  if(!pinAtivo() || sessaoDesbloqueada){ fn(); return; }
+  st.pinAlvo=fn; st.pinBuf='';
+  document.getElementById('pin-err').textContent='';
+  document.getElementById('pin-sub').textContent='Digite a senha';
+  renderPinPad(); atualizarPinDots(); ir('pin');
+}
+function renderPinPad(){
+  const pad=document.getElementById('pin-pad');
+  if(pad.dataset.pronto) return; // monta só uma vez
+  const teclas=['1','2','3','4','5','6','7','8','9','limpar','0','apagar'];
+  pad.innerHTML=teclas.map(t=>{
+    if(t==='limpar') return `<button class="pin-key aux" onclick="pinLimpar()">limpar</button>`;
+    if(t==='apagar') return `<button class="pin-key aux" onclick="pinApagar()">⌫</button>`;
+    return `<button class="pin-key" onclick="pinDigito('${t}')">${t}</button>`;
+  }).join('');
+  pad.dataset.pronto='1';
+}
+function atualizarPinDots(){
+  const alvo=getPin().length; let h='';
+  for(let i=0;i<alvo;i++) h+=`<div class="pin-dot${i<st.pinBuf.length?' on':''}"></div>`;
+  document.getElementById('pin-dots').innerHTML=h;
+}
+function pinDigito(d){
+  if(st.pinBuf.length>=getPin().length) return;
+  st.pinBuf+=d; atualizarPinDots();
+  if(st.pinBuf.length===getPin().length) setTimeout(verificarPin,120);
+}
+function pinApagar(){ st.pinBuf=st.pinBuf.slice(0,-1); atualizarPinDots(); document.getElementById('pin-err').textContent=''; }
+function pinLimpar(){ st.pinBuf=''; atualizarPinDots(); document.getElementById('pin-err').textContent=''; }
+function verificarPin(){
+  if(st.pinBuf===getPin()){
+    sessaoDesbloqueada=true;
+    const fn=st.pinAlvo; st.pinAlvo=null; st.pinBuf='';
+    if(typeof fn==='function') fn(); else ir('start');
+  }else{
+    st.pinBuf=''; atualizarPinDots();
+    document.getElementById('pin-err').textContent='Senha incorreta. Tente de novo.';
+    const w=document.getElementById('pin-wrap');
+    w.classList.remove('err'); void w.offsetWidth; w.classList.add('err');
+  }
+}
+function cancelarPin(){ st.pinAlvo=null; st.pinBuf=''; ir('start'); }
+
+// ════════════════════════════════════════════════════════════
+// AUTOFALANTE — liga/desliga o TTS (botão na tela + por voz)
+// ════════════════════════════════════════════════════════════
+function ttsAtivo(){ return LS.g('fdo_tts',true)===true; }
+function toggleTTS(){
+  const novo=!ttsAtivo();
+  LS.s('fdo_tts',novo);
+  if(!novo){ try{speechSynthesis.cancel();}catch(e){} }
+  atualizarBotoesTTS();
+  if(novo) falar('Som ligado.'); else mostrarAI('Som desligado.');
+}
+function atualizarBotoesTTS(){
+  const on=ttsAtivo();
+  ['tts-btn','tts-btn-bat'].forEach(id=>{
+    const b=document.getElementById(id); if(!b) return;
+    b.textContent=on?'🔊':'🔇'; b.classList.toggle('muted',!on);
+  });
+}
+// Comandos de voz para o som (checados no modo normal)
+const SOM_OFF=['desligar som','desliga o som','desliga som','desligar o som','desligar áudio','desligar audio','silenciar','silencia','mudo','sem som','desligar voz','desliga a voz','desligar a voz','desligar autofalante','desliga o autofalante','desligar o autofalante'];
+const SOM_ON =['ligar som','liga o som','liga som','ligar o som','ligar áudio','ligar audio','ligar voz','liga a voz','ligar a voz','ligar autofalante','liga o autofalante','ligar o autofalante','ativar som'];
+function ehComandoSom(t){ if(SOM_OFF.some(p=>t.includes(p))) return false; if(SOM_ON.some(p=>t.includes(p))) return true; return null; }
+function aplicarComandoSom(ligar){
+  if(ttsAtivo()!==ligar) toggleTTS();
+  else { atualizarBotoesTTS(); if(ligar) falar('Som já está ligado.'); else mostrarAI('Som já está desligado.'); }
+}
+
+// ════════════════════════════════════════════════════════════
+// CONTROLE DE LOTES
+// Cada porcionamento concluído gera um LOTE numerado (sequencial,
+// nº nunca reaproveitado). O lote guarda todas as etapas; apagar o
+// lote apaga TODOS os processos dele.
+// ════════════════════════════════════════════════════════════
+const ETAPAS_ORDEM=['porcionamento','batimento','laminacao','modelagem','fermentacao','forneamento','expedicao'];
+function nomeEtapa(k){ return {porcionamento:'Porcionado',batimento:'Batido',laminacao:'Laminado',modelagem:'Modelado',fermentacao:'Fermentado',forneamento:'Forneado',expedicao:'Expedido'}[k]||k; }
+
+function proxLoteNum(){ const n=LS.g('fdo_lote_seq',0)+1; LS.s('fdo_lote_seq',n); return n; }
+
+function criarLotePorcionamento(){
+  const r=RECEITAS[st.receita]||RECEITAS.r1;
+  const agora=new Date();
+  const lote={
+    num:proxLoteNum(), id:'lote_'+agora.getTime(),
+    receita:st.receita, receitaNome:r.nome, rotulo:r.rotulo,
+    criado:agora.toLocaleString('pt-BR'), criadoTs:agora.getTime(),
+    etapas:{ porcionamento:{
+      feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(),
+      op:getOp(), temp:st.temp, baldes_secos:st.baldeSecos||1,
+      total_g:totalGeral(), concluidos:st.done.size, total:RECEITA.length,
+      dur:Math.round((Date.now()-st.sessionStart)/60000)
+    }}
+  };
+  const todos=LS.g('fdo_lotes',[]);
+  todos.unshift(lote);
+  LS.s('fdo_lotes',todos.slice(0,200));
+  return lote;
+}
+
+function apagarLote(id){
+  const todos=LS.g('fdo_lotes',[]);
+  const lote=todos.find(l=>l.id===id);
+  if(!lote) return;
+  const ok=confirm(`Apagar o Lote #${lote.num} e TODOS os seus processos (porcionamento, batimento e demais etapas)?\n\nEsta ação não pode ser desfeita.`);
+  if(!ok) return;
+  LS.s('fdo_lotes',todos.filter(l=>l.id!==id));
+  renderHist();
+}
+
+// Migra sessões antigas concluídas (fdo_sess) para lotes — só uma vez
+function migrarLotesAntigos(){
+  if(LS.g('fdo_migrou_lotes',false)) return;
+  const todos=LS.g('fdo_lotes',[]);
+  if(todos.length===0){
+    const sess=LS.g('fdo_sess',[]).filter(s=>s.ok);
+    const ordenado=sess.slice().reverse(); // mais antigo primeiro p/ numerar em ordem
+    let seq=LS.g('fdo_lote_seq',0);
+    const novos=[];
+    ordenado.forEach((s,i)=>{
+      seq++;
+      const ts=Date.now()-(ordenado.length-i)*1000;
+      novos.push({
+        num:seq, id:'lote_mig_'+seq, receita:'',
+        receitaNome:s.modulo||'Porcionamento', rotulo:(s.modulo||'').replace('Porcionamento ',''),
+        criado:s.data||'—', criadoTs:ts,
+        etapas:{ porcionamento:{ feito:true, em:s.data||'—', emTs:ts, op:s.op||'—', temp:s.temp||null, baldes_secos:s.baldes_secos||1, total_g:s.total_g||0, concluidos:s.concluidos||0, total:s.total||0, dur:s.dur||0 } }
+      });
+    });
+    if(novos.length){ novos.reverse().forEach(l=>todos.push(l)); LS.s('fdo_lotes',todos); LS.s('fdo_lote_seq',seq); }
+  }
+  LS.s('fdo_migrou_lotes',true);
+}
+
+// ════════════════════════════════════════════════════════════
+// BATER A MASSA (início)
+// Lista os lotes porcionados ainda NÃO batidos, puxa a temperatura
+// ambiente de outro batimento do mesmo dia p/ confirmar, e conclui
+// mantendo o mesmo nº de lote.
+// ════════════════════════════════════════════════════════════
+function lotesPendentesBatimento(){
+  return LS.g('fdo_lotes',[]).filter(l=>{
+    const e=l.etapas||{};
+    return e.porcionamento && e.porcionamento.feito && !(e.batimento && e.batimento.feito);
+  });
+}
+function abrirBatimentoLotes(){ renderBatLotes(); ir('batimento-lotes'); }
+function renderBatLotes(){
+  const lotes=lotesPendentesBatimento();
+  const el=document.getElementById('bat-lotes-list');
+  if(!lotes.length){
+    el.innerHTML='<div class="bat-empty"><div class="bat-empty-icon">✅</div><div>Nenhum lote aguardando batimento.</div><div style="font-size:.78rem">Conclua um porcionamento para gerar um lote.</div></div>';
+    return;
+  }
+  el.innerHTML=lotes.map(l=>{
+    const p=(l.etapas&&l.etapas.porcionamento)||{};
+    const sub=[l.criado||'', p.temp?(p.temp+'°C'):'', p.total_g?formatPeso(p.total_g):''].filter(Boolean).join(' · ');
+    return `<div class="modulo ativo" onclick="abrirBatimento('${l.id}')">
+      <div class="modulo-icon">🥣</div>
+      <div class="modulo-info">
+        <div class="modulo-nome">Lote #${l.num} · ${l.receitaNome||l.rotulo||''}</div>
+        <div class="modulo-desc">${sub}</div>
+      </div>
+      <div class="modulo-badge badge-ativo">Bater</div>
+    </div>`;
+  }).join('');
+}
+// Puxa a temperatura ambiente de um batimento já feito HOJE (variável do dia)
+function tempAmbienteDoDia(){
+  const hoje=new Date().toDateString();
+  for(const l of LS.g('fdo_lotes',[])){
+    const b=l.etapas&&l.etapas.batimento;
+    if(b&&b.feito&&b.tempAmbiente!=null&&b.emTs&&new Date(b.emTs).toDateString()===hoje) return b.tempAmbiente;
+  }
+  return null;
+}
+function abrirBatimento(id){
+  const lote=LS.g('fdo_lotes',[]).find(l=>l.id===id);
+  if(!lote){ abrirBatimentoLotes(); return; }
+  st.batLote=id; st.batStart=Date.now();
+  const p=(lote.etapas&&lote.etapas.porcionamento)||{};
+  document.getElementById('bat-lote-num').textContent='#'+lote.num;
+  document.getElementById('bat-lote-rec').textContent=lote.receitaNome||lote.rotulo||'';
+  document.getElementById('bat-lote-meta').textContent=[lote.criado||'', p.op?('op. '+p.op):'', p.total_g?('total '+formatPeso(p.total_g)):''].filter(Boolean).join(' · ');
+  const tDia=tempAmbienteDoDia();
+  const note=document.getElementById('bat-temp-note');
+  if(tDia!=null){ st.batTemp=tDia; note.textContent='Puxado de um batimento de hoje — confirme ou ajuste.'; note.classList.add('puxado'); }
+  else{ st.batTemp=20; note.textContent='Defina a temperatura ambiente.'; note.classList.remove('puxado'); }
+  document.getElementById('bat-temp-val').textContent=st.batTemp;
+  atualizarBotoesTTS();
+  ir('batimento');
+  falar(`Batimento do lote ${lote.num}. `+(tDia!=null?`Temperatura ambiente de hoje, ${st.batTemp} graus. Confirme ou ajuste.`:'Defina a temperatura ambiente.'));
+}
+function ajustarTempBat(d){
+  st.batTemp=Math.max(0,Math.min(45,(st.batTemp||20)+d));
+  document.getElementById('bat-temp-val').textContent=st.batTemp;
+}
+function concluirBatimento(){
+  const todos=LS.g('fdo_lotes',[]);
+  const lote=todos.find(l=>l.id===st.batLote);
+  if(!lote){ abrirBatimentoLotes(); return; }
+  const agora=new Date();
+  lote.etapas=lote.etapas||{};
+  lote.etapas.batimento={
+    feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(),
+    op:getOp(), tempAmbiente:st.batTemp,
+    dur:Math.round((Date.now()-(st.batStart||Date.now()))/60000)
+  };
+  LS.s('fdo_lotes',todos);
+  falar(`Batimento do lote ${lote.num} concluído.`);
+  st.batLote=null;
+  abrirBatimentoLotes();
+}
 
 // Escolhe qual receita rodar (r1, r2 ou r3), ajusta o cabeçalho e vai para a previsão de temperatura
 function iniciarReceita(rid){
@@ -769,6 +1175,7 @@ function processarComando(txt,alt){
 
   // 3) Comandos normais
   for(const t of todas){
+    const som=ehComandoSom(t); if(som!==null){ aplicarComandoSom(som); return; }
     if(matchCmd(t,'avancar')){avancar();return;}
     if(matchCmd(t,'voltar')){irPasso(st.step-1);return;}
     if(matchCmd(t,'repetir')){repetir();return;}
@@ -792,6 +1199,7 @@ async function perguntarGemini(pergunta){
 }
 
 function falar(texto){
+  if(!ttsAtivo())return;
   if(!window.speechSynthesis)return;
   speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(texto);
@@ -963,21 +1371,62 @@ function renderLista(){
 }
 
 function concluir(){
-  salvarSessao(true);pararVoz();liberarWakeLock();st.sessionStart=0;
+  salvarSessao(true);
+  const lote=criarLotePorcionamento();
+  pararVoz();liberarWakeLock();st.sessionStart=0;
   const tot=formatPeso(totalGeral());
+  document.getElementById('done-lote').textContent='Lote #'+lote.num+' criado';
   document.getElementById('done-tot').innerHTML=`<div class="done-conf">Confira o valor total na balança</div><div class="done-val">${tot}</div>`;
-  falar('Porcionamento concluído.');
+  falar(`Porcionamento concluído. Lote ${lote.num} criado.`);
   setTimeout(()=>ir('done'),1500);
 }
 function encerrar(){salvarSessao(false);pararVoz();liberarWakeLock();st.sessionStart=0;st.modo='normal';st.baldeSecos=1;mostrarPerguntaSecos(false);ir('start');}
 function pararVoz(){if(st.rec){st.rec.onend=null;try{st.rec.stop();}catch(e){}st.rec=null;}speechSynthesis?.cancel();}
 function salvarSessao(ok){const all=LS.g('fdo_sess',[]);all.unshift({data:new Date().toLocaleString('pt-BR'),modulo:'Porcionamento '+(RECEITAS[st.receita]?RECEITAS[st.receita].rotulo:'R1'),op:getOp(),temp:st.temp,baldes_secos:st.baldeSecos||1,total_g:totalGeral(),concluidos:st.done.size,total:RECEITA.length,dur:Math.round((Date.now()-st.sessionStart)/60000),ok});LS.s('fdo_sess',all.slice(0,60));}
-function renderHist(){const all=LS.g('fdo_sess',[]);const el=document.getElementById('hist-list');if(!all.length){el.innerHTML='<div style="padding:2rem;text-align:center;color:var(--mut);font-size:.9rem">Nenhuma sessão ainda</div>';return;}el.innerHTML=all.map(s=>`<div class="hi"><div class="hi-d">${s.data} · ${s.dur} min · ${s.modulo||'—'} · ${s.op||'—'}${s.temp?(' · '+s.temp+'°C'):''}${(s.baldes_secos&&s.baldes_secos>1)?(' · '+s.baldes_secos+'x secos'):''}</div><div class="hi-i">${s.concluidos}/${s.total} passos ${s.ok?'✅':'⚠️'}${s.total_g?(' · total '+formatPeso(s.total_g)):''}</div></div>`).join('');}
+function renderHist(){
+  const todos=LS.g('fdo_lotes',[]);
+  const el=document.getElementById('hist-list');
+  if(!todos.length){
+    el.innerHTML='<div style="padding:2rem;text-align:center;color:var(--mut);font-size:.9rem">Nenhum lote ainda.<br>Conclua um porcionamento para criar o primeiro lote.</div>';
+    return;
+  }
+  el.innerHTML=todos.map(l=>{
+    const p=(l.etapas&&l.etapas.porcionamento)||{};
+    const meta=[
+      l.criado||'—',
+      p.op?('op. '+p.op):'',
+      p.temp?(p.temp+'°C'):'',
+      (p.baldes_secos&&p.baldes_secos>1)?(p.baldes_secos+'x secos'):'',
+      p.total_g?('total '+formatPeso(p.total_g)):''
+    ].filter(Boolean).join(' · ');
+    const feitas=ETAPAS_ORDEM.filter(k=>l.etapas&&l.etapas[k]&&l.etapas[k].feito);
+    const mostradas=Array.from(new Set(['porcionamento','batimento'].concat(feitas)));
+    const chips=mostradas.map(k=>{
+      const ok=l.etapas&&l.etapas[k]&&l.etapas[k].feito;
+      return `<span class="etapa-chip ${ok?'ok':'pend'}">${ok?'✓ ':''}${nomeEtapa(k)}</span>`;
+    }).join('');
+    return `<div class="lote-card">
+      <div class="lote-head">
+        <span class="lote-num">Lote #${l.num}</span>
+        <span class="lote-rec">${l.receitaNome||l.rotulo||'—'}</span>
+        <button class="lote-del" onclick="apagarLote('${l.id}')" title="Apagar lote">🗑</button>
+      </div>
+      <div class="lote-meta">${meta}</div>
+      <div class="lote-etapas">${chips}</div>
+    </div>`;
+  }).join('');
+}
 
 (function(){
+  // PIN padrão na primeira execução
+  if(LS.g('fdo_pin',null)===null) LS.s('fdo_pin','123789');
+  if(LS.g('fdo_pin_ativo',null)===null) LS.s('fdo_pin_ativo',true);
+  // Migra sessões antigas concluídas para o sistema de lotes (uma vez)
+  migrarLotesAntigos();
   if(!getKey())ir('config');else ir('start');
   const op=LS.g('fdo_op','');
   if(op)document.getElementById('inp-op').value=op;
+  atualizarBotoesTTS();
   speechSynthesis?.getVoices();
   speechSynthesis?.addEventListener('voiceschanged',()=>speechSynthesis.getVoices());
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
