@@ -2,26 +2,30 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — OBS 16/06/2026 (atualização v9)
-       NOVIDADES v9:
-       • ETIQUETA 60×50 mm (Tomate MDK-022 via Bluetooth): imprime nº do
-         lote, receita, data e hora. Disponível ao concluir o porcionamento
-         e em cada cartão da tela Lotes (botão 🏷). Também salva a imagem.
-       • CALCULADORA grande (operações básicas) no rodapé do menu.
-       • REINICIAR NUMERAÇÃO dos lotes (próximo vira #1) na tela Lotes.
-       • MÓDULO FERMENTAÇÃO: registra temperatura mínima e máxima do lote;
-         os lotes seguintes do mesmo dia puxam a 1ª leitura p/ confirmar.
-       • Conclusão do porcionamento mostra "LOTE #N" grande + voz dita o
-         número ("marque o número N na massa").
-       • SENHA agora só no Porcionamento (Bater a Massa e Fermentação livres).
-       • Navegação: botões "⌂ Início" e "← Voltar" nas telas internas.
-       --- base v8/v7 ---
-       • Lotes numerados (apagar = cascata). PIN 123789 (config, 1x/abertura).
-         Autofalante 🔊/🔇 (botão + voz). Bater a Massa puxa temp. do dia.
-       • Receita 2 = "MASSA 3 KG" (Bagatelle 3500, Italiana 4270, açúcar 876,
-         água 3500). Receita 3 = "PADRÃO" (água 3600). Receita 1 inalterada.
-       • Divisão por voz. Wake Lock. Pós-secos. Gemini/Open-Meteo sem cache.
-       • Service Worker: cache fdo-v9.
+       FOLHADOS D'OURO — OBS 16/06/2026 (atualização v10)
+       NOVIDADES v10:
+       • BATER A MASSA completo: após escolher o lote e a temperatura,
+         confere o peso do BALDE 1 (secos+balde) e do BALDE 2 (líquidos),
+         inicia na Velocidade 1 e CRONOMETRA. Avisos por voz/alarme:
+         (T1) sal e manteiga; (T2) fermento+farinha; (T3) massa antiga
+         aos 20°C; (T4) ponto de véu aos 22°C. "Finalizar" calcula o tempo
+         total; depois pede o PESO TOTAL (digitar ou falar) e mostra o
+         resultado dividido pelas partes (÷8). Tempos parametrizáveis no
+         Config: lento inicial=4, fermento=6, massa=3, ponto de véu=2.
+       • CALCULADORA acessível também DENTRO do Porcionamento e do Bater a
+         Massa (botão 🧮) e por voz ("calculadora"). Não avança passos
+         enquanto aberta; "fechar/voltar" por voz a encerra.
+       • ETIQUETA agora inclui os LÍQUIDOS do balde 2 (água/gelo e leite).
+       • Balde 1 concluído: botão verde "Continuar receita →" em destaque
+         para avançar clicando (além da voz).
+       • Receita 2 (Massa 3 kg): APROVEITAMENTO = 3000 g.
+       --- base v9/v8/v7 ---
+       • Etiqueta 60×50 (MDK-022 BT / salvar imagem). Lotes numerados
+         (apagar = cascata; reiniciar numeração). Fermentação (mín/máx,
+         puxa do dia). PIN só no Porcionamento (123789). Autofalante 🔊/🔇.
+         "⌂ Início"/"← Voltar" nas telas. Divisão por voz. Wake Lock.
+       • Receitas: R1 inalterada; R2 "MASSA 3 KG"; R3 "PADRÃO" (água 3600).
+       • Service Worker: cache fdo-v10.
        ════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -193,7 +197,7 @@
     .temp-f{font-size:.72rem;color:var(--mut)}
 
     /* ══ CONFIG ══ */
-    #s-config{padding:2rem 1.3rem;gap:.9rem;justify-content:center}
+    #s-config{padding:1.5rem 1.3rem;gap:.7rem;justify-content:flex-start;overflow-y:auto}
     .cfg-t{font-size:1.1rem;color:var(--gl);font-weight:bold}
     .cfg-s{font-size:.8rem;color:var(--mut);line-height:1.6}
     .inp{background:var(--bg3);border:.1rem solid var(--brd);color:var(--text);
@@ -322,6 +326,20 @@
     .etq-status{font-size:.82rem;color:var(--mut);text-align:center;min-height:1.2rem;line-height:1.5;width:100%}
     .etq-status.ok{color:var(--grn)} .etq-status.err{color:var(--red)}
     #s-etiqueta .btn-main{width:100%}
+
+    /* Grade de configuração dos tempos */
+    .cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;width:100%}
+    .cfg-mini{display:flex;flex-direction:column;gap:.2rem;font-size:.7rem;color:var(--mut);
+      text-transform:uppercase;letter-spacing:.03rem;width:100%}
+    .cfg-mini .inp{font-size:1.1rem;text-align:center;padding:.6rem}
+
+    /* Fases do batimento */
+    .bat-fase{display:flex;flex-direction:column;gap:.7rem}
+    .bat-peso-alvo{font-size:2.4rem;color:var(--gold);font-weight:bold;text-align:center;line-height:1.1;letter-spacing:-.02em}
+    .bat-cron{font-size:3.6rem;color:var(--gl);font-weight:bold;text-align:center;line-height:1;
+      letter-spacing:.02em;font-variant-numeric:tabular-nums;margin:.2rem 0}
+    .bat-aviso{font-size:1rem;color:var(--gold);text-align:center;line-height:1.4;min-height:1.4rem;font-weight:bold}
+    .bat-divisao{font-size:1.5rem;color:var(--grn);font-weight:bold;text-align:center;margin-top:.6rem;min-height:1.6rem}
   </style>
 </head>
 <body>
@@ -337,6 +355,15 @@
   <div class="cfg-s" style="font-size:.75rem">🔒 Senha de acesso (PIN numérico):</div>
   <input id="inp-pin" class="inp" type="tel" inputmode="numeric" maxlength="8" placeholder="123789" autocomplete="off">
   <label class="cfg-row"><input type="checkbox" id="chk-pin"> Exigir senha no Porcionamento</label>
+  <div class="cfg-sep"></div>
+  <div class="cfg-s" style="font-size:.75rem">⏱ Tempos do batimento (minutos, somados em sequência):</div>
+  <div class="cfg-grid">
+    <label class="cfg-mini">Batimento inicial lento<input id="inp-bt1" class="inp" type="number" min="0" placeholder="4"></label>
+    <label class="cfg-mini">Colocar fermento<input id="inp-bt2" class="inp" type="number" min="0" placeholder="6"></label>
+    <label class="cfg-mini">Colocar a massa<input id="inp-bt3" class="inp" type="number" min="0" placeholder="3"></label>
+    <label class="cfg-mini">Ver ponto de véu<input id="inp-bt4" class="inp" type="number" min="0" placeholder="2"></label>
+  </div>
+  <label class="cfg-mini" style="margin-top:.1rem">Dividir massa em (partes p/ gelar)<input id="inp-bdiv" class="inp" type="number" min="1" placeholder="8"></label>
   <button class="btn-main" onclick="salvarConfig()">Salvar e Continuar</button>
   <button class="link-btn" style="margin-top:.3rem;width:100%;text-align:center" onclick="ir('start')">← Voltar</button>
 </div>
@@ -481,6 +508,7 @@
     <div class="dot off" id="mic-dot"></div>
     <span class="sb-txt" id="sb-txt">Iniciando...</span>
     <span class="sb-tr" id="sb-tr"></span>
+    <button class="tts-btn" onclick="abrirCalc('active')" title="Calculadora">🧮</button>
     <button class="tts-btn" id="tts-btn" onclick="toggleTTS()" title="Ligar/desligar autofalante">🔊</button>
   </div>
   <div class="gb" id="gb">—</div>
@@ -498,8 +526,8 @@
     <button class="nbtn next" onclick="avancar()">Próximo →</button>
   </div>
   <div class="nav-secos" id="nav-secos">
+    <button class="nbtn next secos-continuar" onclick="continuarReceita()">Continuar receita →</button>
     <button class="nbtn secos secos-novo" onclick="iniciarOutroBaldeSecos()">+ Outro balde de secos</button>
-    <button class="nbtn secos secos-continuar" onclick="continuarReceita()">Continuar receita →</button>
   </div>
   <div class="list" id="lista"></div>
   <div class="ai" id="ai-box" style="display:none">
@@ -569,7 +597,10 @@
 <div id="s-batimento" class="scr off">
   <div class="hdr">
     <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Bater a Massa</div></div>
-    <button class="tts-btn" id="tts-btn-bat" onclick="toggleTTS()" title="Ligar/desligar autofalante">🔊</button>
+    <div style="display:flex;gap:.4rem">
+      <button class="tts-btn" onclick="abrirCalc('batimento')" title="Calculadora">🧮</button>
+      <button class="tts-btn" id="tts-btn-bat" onclick="toggleTTS()" title="Ligar/desligar autofalante">🔊</button>
+    </div>
   </div>
   <div class="bat-body">
     <div class="bat-card">
@@ -578,16 +609,66 @@
       <div class="bat-lote-rec" id="bat-lote-rec">—</div>
       <div class="bat-note" id="bat-lote-meta"></div>
     </div>
-    <div class="bat-card">
-      <div class="bat-card-lbl">Temperatura ambiente</div>
-      <div class="step-ctrl">
-        <button class="step-pm" onclick="ajustarTempBat(-1)">−</button>
-        <div class="step-val"><span id="bat-temp-val">20</span><small>°C</small></div>
-        <button class="step-pm" onclick="ajustarTempBat(1)">+</button>
+
+    <!-- FASE 1: temperatura ambiente -->
+    <div class="bat-fase" id="bat-fase-temp">
+      <div class="bat-card">
+        <div class="bat-card-lbl">Temperatura ambiente</div>
+        <div class="step-ctrl">
+          <button class="step-pm" onclick="ajustarTempBat(-1)">−</button>
+          <div class="step-val"><span id="bat-temp-val">20</span><small>°C</small></div>
+          <button class="step-pm" onclick="ajustarTempBat(1)">+</button>
+        </div>
+        <div class="bat-note" id="bat-temp-note">Defina a temperatura ambiente.</div>
       </div>
-      <div class="bat-note" id="bat-temp-note">Defina a temperatura ambiente.</div>
+      <button class="btn-main" onclick="batConfirmarTemp()">Confirmar temperatura →</button>
     </div>
-    <button class="btn-main" onclick="concluirBatimento()">Confirmar e concluir batimento ✓</button>
+
+    <!-- FASE 2: conferir balde 1 -->
+    <div class="bat-fase" id="bat-fase-balde1" style="display:none">
+      <div class="bat-card">
+        <div class="bat-card-lbl">Conferir peso do Balde 1 (secos)</div>
+        <div class="bat-peso-alvo" id="bat-b1-alvo">—</div>
+        <div class="bat-note" id="bat-b1-det"></div>
+      </div>
+      <button class="btn-main" onclick="batConferirBalde1()">Conferido ✓ Seguir</button>
+    </div>
+
+    <!-- FASE 3: conferir balde 2 -->
+    <div class="bat-fase" id="bat-fase-balde2" style="display:none">
+      <div class="bat-card">
+        <div class="bat-card-lbl">Conferir peso do Balde 2 (líquidos)</div>
+        <div class="bat-peso-alvo" id="bat-b2-alvo">—</div>
+        <div class="bat-note" id="bat-b2-det"></div>
+      </div>
+      <button class="btn-main" onclick="batConferirBalde2()">Conferido ✓ Iniciar</button>
+    </div>
+
+    <!-- FASE 4: batida cronometrada -->
+    <div class="bat-fase" id="bat-fase-batendo" style="display:none">
+      <div class="bat-card">
+        <div class="bat-card-lbl">Batimento — Velocidade 1</div>
+        <div class="bat-cron" id="bat-cron">00:00</div>
+        <div class="bat-aviso" id="bat-aviso">Toque em iniciar para começar a contar.</div>
+      </div>
+      <button class="btn-main" id="bat-start-btn" onclick="batIniciarBatida()">▶ Iniciar batida (Vel. 1)</button>
+      <button class="btn-danger" id="bat-fim-btn" style="display:none" onclick="batFinalizarBatida()">■ Finalizar batida</button>
+    </div>
+
+    <!-- FASE 5: peso total + divisão -->
+    <div class="bat-fase" id="bat-fase-peso" style="display:none">
+      <div class="bat-card">
+        <div class="bat-card-lbl">Tempo total da batida</div>
+        <div class="bat-peso-alvo" id="bat-tempo-total">—</div>
+      </div>
+      <div class="bat-card">
+        <div class="bat-card-lbl">Peso total da massa (gramas)</div>
+        <input id="bat-peso-inp" class="inp" type="number" inputmode="numeric" placeholder="ex: 15540" oninput="batAtualizarDivisao()">
+        <button class="link-btn" style="width:100%;margin-top:.5rem" onclick="batFalarPeso()">🎤 Falar o peso</button>
+        <div class="bat-divisao" id="bat-divisao"></div>
+      </div>
+      <button class="btn-main" onclick="batConcluirComPeso()">Concluir batimento ✓</button>
+    </div>
   </div>
   <div class="bot" style="display:flex;gap:.5rem">
     <button class="btn-danger" style="flex:1" onclick="ir('batimento-lotes')">← Lotes</button>
@@ -756,7 +837,7 @@ function gerarReceita(bag, feu, ita, opts){
 
 const RECEITAS = {
   r1: { nome:'Receita 1',            rotulo:'R1', farinhas:'Bagatelle 45%, Feuilletage 45%, Italiana 10%',     passos: gerarReceita(3600,3600,800) },
-  r2: { nome:'Receita 2 - MASSA 3 KG', rotulo:'R2', farinhas:'Bagatelle 3500 g, Italiana 4270 g (sem Feuilletage)', passos: gerarReceita(3500,0,4270,{agua:3500, acucar:876}) },
+  r2: { nome:'Receita 2 - MASSA 3 KG', rotulo:'R2', farinhas:'Bagatelle 3500 g, Italiana 4270 g (sem Feuilletage)', passos: gerarReceita(3500,0,4270,{agua:3500, acucar:876, aprov:3000}) },
   r3: { nome:'Receita 3 - PADRÃO',     rotulo:'R3', farinhas:'Bagatelle 3200 g, Italiana 4800 g (sem Feuilletage)', passos: gerarReceita(3200,0,4800,{agua:3600}) },
 };
 
@@ -816,7 +897,7 @@ function matchCmd(txt,g){return CMD[g].some(p=>txt.includes(p));}
 
 const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0,temp:null,receita:'r1',modo:'normal',baldeSecos:1,wakeLock:null,
   pinBuf:'',pinAlvo:null,batLote:null,batTemp:20,batStart:0,
-  ultimoLoteId:null,calcRet:'start',etqLote:null,etqRet:'start',
+  ultimoLoteId:null,calcRet:'start',calcAberta:false,etqLote:null,etqRet:'start',
   fermLote:null,fermStart:0,fermMin:24,fermMax:28};
 // Desbloqueio por sessão do app: o PIN é pedido só 1x por abertura (rápido p/ produção)
 let sessaoDesbloqueada=false;
@@ -830,6 +911,11 @@ function carregarConfig(){
   const op=LS.g('fdo_op',''); if(op)document.getElementById('inp-op').value=op;
   document.getElementById('inp-pin').value=getPin();
   document.getElementById('chk-pin').checked=pinAtivo();
+  document.getElementById('inp-bt1').value=getBatT1();
+  document.getElementById('inp-bt2').value=getBatT2();
+  document.getElementById('inp-bt3').value=getBatT3();
+  document.getElementById('inp-bt4').value=getBatT4();
+  document.getElementById('inp-bdiv').value=getBatDiv();
 }
 function salvarConfig(){
   const k=document.getElementById('inp-key').value.trim();
@@ -843,6 +929,13 @@ function salvarConfig(){
     LS.s('fdo_pin',pin);
   }
   LS.s('fdo_pin_ativo',document.getElementById('chk-pin').checked);
+  // Tempos do batimento (minutos) e divisor de partes
+  const numPos=(id,def)=>{ const v=parseInt(document.getElementById(id).value,10); return (isFinite(v)&&v>=0)?v:def; };
+  LS.s('fdo_bat_t1',numPos('inp-bt1',4));
+  LS.s('fdo_bat_t2',numPos('inp-bt2',6));
+  LS.s('fdo_bat_t3',numPos('inp-bt3',3));
+  LS.s('fdo_bat_t4',numPos('inp-bt4',2));
+  const dv=parseInt(document.getElementById('inp-bdiv').value,10); LS.s('fdo_bat_div',(isFinite(dv)&&dv>=1)?dv:8);
   ir('start');
 }
 
@@ -1037,10 +1130,50 @@ function tempAmbienteDoDia(){
   }
   return null;
 }
+// Parâmetros (configuráveis) dos tempos do batimento, em minutos
+function getBatT1(){ return Number(LS.g('fdo_bat_t1',4))||4; }   // batida lenta inicial → sal e manteiga
+function getBatT2(){ return Number(LS.g('fdo_bat_t2',6))||6; }   // depois → fermento + farinha
+function getBatT3(){ return Number(LS.g('fdo_bat_t3',3))||3; }   // depois → massa antiga (20°C)
+function getBatT4(){ return Number(LS.g('fdo_bat_t4',2))||2; }   // depois → ponto de véu (22°C)
+function getBatDiv(){ return Number(LS.g('fdo_bat_div',8))||8; } // partes para gelar
+
+// Pesos esperados a partir da receita do lote
+function pesoBalde1Lote(lote){
+  const r=RECEITAS[lote.receita]; if(!r) return null;
+  const t=(lote.etapas&&lote.etapas.porcionamento)?lote.etapas.porcionamento.temp:null;
+  let s=0;
+  r.passos.forEach(p=>{ if((p.grupo||'').startsWith('BALDE 1')){
+    if(p.cat==='FERMENTO'){ s += (t!=null&&TEMP_FERMENTO[t]!=null)?TEMP_FERMENTO[t]:p.g; }
+    else s+=p.g;
+  }});
+  return s;
+}
+function pesoBalde2Lote(lote){
+  const r=RECEITAS[lote.receita]; if(!r) return null;
+  let s=0; r.passos.forEach(p=>{ if((p.grupo||'').startsWith('BALDE 2')) s+=p.g; });
+  return s;
+}
+
+let batCronInt=null, batBatStartMs=0, batAvisados=[], batTempoSeg=0;
+
+function setBatFase(f){
+  ['temp','balde1','balde2','batendo','peso'].forEach(x=>{
+    const el=document.getElementById('bat-fase-'+x); if(el) el.style.display=(x===f?'':'none');
+  });
+}
 function abrirBatimento(id){
   const lote=LS.g('fdo_lotes',[]).find(l=>l.id===id);
   if(!lote){ abrirBatimentoLotes(); return; }
   st.batLote=id; st.batStart=Date.now();
+  // reset cronômetro / fases
+  if(batCronInt){clearInterval(batCronInt);batCronInt=null;}
+  batAvisados=[]; batTempoSeg=0;
+  document.getElementById('bat-cron').textContent='00:00';
+  document.getElementById('bat-aviso').textContent='Toque em iniciar para começar a contar.';
+  document.getElementById('bat-start-btn').style.display='';
+  document.getElementById('bat-fim-btn').style.display='none';
+  document.getElementById('bat-peso-inp').value='';
+  document.getElementById('bat-divisao').textContent='';
   const p=(lote.etapas&&lote.etapas.porcionamento)||{};
   document.getElementById('bat-lote-num').textContent='#'+lote.num;
   document.getElementById('bat-lote-rec').textContent=lote.receitaNome||lote.rotulo||'';
@@ -1050,6 +1183,7 @@ function abrirBatimento(id){
   if(tDia!=null){ st.batTemp=tDia; note.textContent='Puxado de um batimento de hoje — confirme ou ajuste.'; note.classList.add('puxado'); }
   else{ st.batTemp=20; note.textContent='Defina a temperatura ambiente.'; note.classList.remove('puxado'); }
   document.getElementById('bat-temp-val').textContent=st.batTemp;
+  setBatFase('temp');
   atualizarBotoesTTS();
   ir('batimento');
   falar(`Batimento do lote ${lote.num}. `+(tDia!=null?`Temperatura ambiente de hoje, ${st.batTemp} graus. Confirme ou ajuste.`:'Defina a temperatura ambiente.'));
@@ -1058,19 +1192,121 @@ function ajustarTempBat(d){
   st.batTemp=Math.max(0,Math.min(45,(st.batTemp||20)+d));
   document.getElementById('bat-temp-val').textContent=st.batTemp;
 }
-function concluirBatimento(){
+function batLoteAtual(){ return LS.g('fdo_lotes',[]).find(l=>l.id===st.batLote); }
+
+function batConfirmarTemp(){
+  const lote=batLoteAtual(); if(!lote){abrirBatimentoLotes();return;}
+  // Balde 1
+  const b1=pesoBalde1Lote(lote);
+  const a1=document.getElementById('bat-b1-alvo'), d1=document.getElementById('bat-b1-det');
+  if(b1!=null){ a1.textContent=formatPeso(b1+PESO_BALDE1); d1.textContent='Ingredientes do balde 1 ('+formatPeso(b1)+') + balde ('+PESO_BALDE1+' g).'; }
+  else{ a1.textContent='—'; d1.textContent='Confira o balde 1 conforme a receita (lote antigo sem dados).'; }
+  setBatFase('balde1');
+  falar(b1!=null?`Temperatura ${st.batTemp} graus. Confira o peso do balde 1: ${falaPeso(b1+PESO_BALDE1)}.`:'Confira o peso do balde 1.');
+}
+function batConferirBalde1(){
+  const lote=batLoteAtual(); if(!lote){abrirBatimentoLotes();return;}
+  const b2=pesoBalde2Lote(lote);
+  const a2=document.getElementById('bat-b2-alvo'), d2=document.getElementById('bat-b2-det');
+  if(b2!=null){ a2.textContent=formatPeso(b2+PESO_BALDE1); d2.textContent='Líquidos ('+formatPeso(b2)+') + balde ('+PESO_BALDE1+' g). Só líquidos: '+formatPeso(b2)+'.'; }
+  else{ a2.textContent='—'; d2.textContent='Confira os líquidos do balde 2 conforme a receita.'; }
+  setBatFase('balde2');
+  falar(b2!=null?`Balde 1 conferido. Agora o balde 2, líquidos: ${falaPeso(b2+PESO_BALDE1)} com o balde, ou ${falaPeso(b2)} só os líquidos.`:'Confira o balde 2, líquidos.');
+}
+function batConferirBalde2(){
+  setBatFase('batendo');
+  falar('Balde 2 conferido. Inicie o batimento na velocidade 1 e toque em iniciar.');
+}
+function batBeep(){
+  try{
+    const A=window.AudioContext||window.webkitAudioContext; if(!A)return;
+    const ctx=new A(); const o=ctx.createOscillator(), g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination); o.type='square'; o.frequency.value=880;
+    g.gain.setValueAtTime(.25,ctx.currentTime);
+    o.start(); o.stop(ctx.currentTime+.5);
+    o.onended=()=>{try{ctx.close();}catch(e){}};
+  }catch(e){}
+}
+function batAnunciar(txt){
+  document.getElementById('bat-aviso').textContent='⚠️ '+txt;
+  batBeep();
+  setTimeout(()=>falar(txt),350);
+}
+function batAgenda(){
+  const t1=getBatT1(), t2=getBatT2(), t3=getBatT3(), t4=getBatT4();
+  return [
+    {min:t1,          txt:'Colocar o sal e a manteiga.'},
+    {min:t1+t2,       txt:'Colocar lentamente o fermento com porção de farinha bem misturados.'},
+    {min:t1+t2+t3,    txt:'Chegando em 20 graus, coloque a massa antiga.'},
+    {min:t1+t2+t3+t4, txt:'Aos 22 graus, conferir ponto de véu, 80 por cento.'},
+  ];
+}
+function fmtMMSS(seg){ const m=Math.floor(seg/60), s=seg%60; return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
+function batIniciarBatida(){
+  batBatStartMs=Date.now(); batAvisados=[];
+  document.getElementById('bat-start-btn').style.display='none';
+  document.getElementById('bat-fim-btn').style.display='';
+  document.getElementById('bat-aviso').textContent='Cronômetro rodando…';
+  falar('Batida iniciada, velocidade 1.');
+  const agenda=batAgenda();
+  batCronInt=setInterval(()=>{
+    const seg=Math.floor((Date.now()-batBatStartMs)/1000);
+    batTempoSeg=seg;
+    document.getElementById('bat-cron').textContent=fmtMMSS(seg);
+    agenda.forEach((a,i)=>{ if(!batAvisados.includes(i) && seg>=a.min*60){ batAvisados.push(i); batAnunciar(a.txt); } });
+  },1000);
+}
+function batFinalizarBatida(){
+  if(batCronInt){clearInterval(batCronInt);batCronInt=null;}
+  batTempoSeg=Math.floor((Date.now()-batBatStartMs)/1000);
+  document.getElementById('bat-tempo-total').textContent=fmtMMSS(batTempoSeg);
+  setBatFase('peso');
+  falar(`Batida finalizada. Tempo total ${Math.floor(batTempoSeg/60)} minutos e ${batTempoSeg%60} segundos. Informe o peso total da massa.`);
+}
+function batAtualizarDivisao(){
+  const v=parseFloat(document.getElementById('bat-peso-inp').value);
+  const div=getBatDiv();
+  const el=document.getElementById('bat-divisao');
+  if(isFinite(v)&&v>0){ const r=Math.round((v/div)*100)/100; el.textContent=`Cada parte (÷${div}): ${formatPeso(r)}`; return r; }
+  el.textContent=''; return null;
+}
+function batFalarPeso(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ alert('Reconhecimento de voz indisponível. Digite o peso.'); return; }
+  const el=document.getElementById('bat-divisao'); el.textContent='🎤 Ouvindo o peso…';
+  const rec=new SR(); rec.lang='pt-BR'; rec.interimResults=false; rec.maxAlternatives=3;
+  rec.onresult=(e)=>{
+    let achou=null;
+    for(let i=0;i<e.results[0].length;i++){
+      const txt=e.results[0][i].transcript.toLowerCase();
+      const m=txt.replace(/\./g,'').replace(',','.').match(/\d+(\.\d+)?/);
+      if(m){ achou=m[0]; break; }
+    }
+    if(achou){ document.getElementById('bat-peso-inp').value=achou; const r=batAtualizarDivisao(); if(r!=null) falar(`Peso ${achou} gramas. Cada parte, ${falaPeso(Math.round(r))}.`); }
+    else { el.textContent='Não entendi o peso. Tente de novo ou digite.'; }
+  };
+  rec.onerror=()=>{ el.textContent='Não consegui ouvir. Digite o peso.'; };
+  try{ rec.start(); }catch(e){}
+}
+function batConcluirComPeso(){
   const todos=LS.g('fdo_lotes',[]);
   const lote=todos.find(l=>l.id===st.batLote);
   if(!lote){ abrirBatimentoLotes(); return; }
+  const peso=parseFloat(document.getElementById('bat-peso-inp').value);
+  const div=getBatDiv();
+  const porParte=(isFinite(peso)&&peso>0)?Math.round((peso/div)*100)/100:null;
   const agora=new Date();
   lote.etapas=lote.etapas||{};
   lote.etapas.batimento={
     feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(),
     op:getOp(), tempAmbiente:st.batTemp,
+    tempoSeg:batTempoSeg, tempoTxt:fmtMMSS(batTempoSeg),
+    pesoTotal:(isFinite(peso)?peso:null), partes:div, porParte:porParte,
     dur:Math.round((Date.now()-(st.batStart||Date.now()))/60000)
   };
   LS.s('fdo_lotes',todos);
-  falar(`Batimento do lote ${lote.num} concluído.`);
+  if(porParte!=null) falar(`Batimento do lote ${lote.num} concluído. Peso ${Math.round(peso)} gramas. Cada uma das ${div} partes, ${falaPeso(Math.round(porParte))}.`);
+  else falar(`Batimento do lote ${lote.num} concluído.`);
   st.batLote=null;
   abrirBatimentoLotes();
 }
@@ -1079,8 +1315,8 @@ function concluirBatimento(){
 // CALCULADORA — grande, operações básicas (vírgula decimal pt-BR)
 // ════════════════════════════════════════════════════════════
 let calcCur='0', calcAcc=null, calcOpv=null, calcReset=false;
-function abrirCalc(ret){ st.calcRet=ret||'start'; calcLimpar(); ir('calc'); }
-function calcVoltar(){ ir(st.calcRet||'start'); }
+function abrirCalc(ret){ st.calcRet=ret||'start'; st.calcAberta=true; calcLimpar(); ir('calc'); }
+function calcVoltar(){ st.calcAberta=false; ir(st.calcRet||'start'); }
 function calcSimbolo(op){ return op==='*'?'×':op==='/'?'÷':op==='-'?'−':'+'; }
 function calcRender(){
   document.getElementById('calc-cur').textContent=String(calcCur).replace('.',',');
@@ -1124,21 +1360,40 @@ function loteEtqDados(lote){
   else if(lote.criado){ const p=String(lote.criado).split(' '); data=p[0]||lote.criado; hora=(p[1]||'').slice(0,5); }
   return { num:lote.num, receita:lote.receitaNome||lote.rotulo||'', data, hora };
 }
+// Líquidos do balde 2 (água/gelo e leite) a partir da receita do lote
+function loteLiquidos(lote){
+  const r=RECEITAS[lote.receita]; if(!r) return null;
+  let agua=null, leite=null;
+  r.passos.forEach(p=>{ if(p.grupo==='BALDE 2 · LÍQUIDOS'){ if(/gua/i.test(p.nome))agua=p.g; else if(/leite/i.test(p.nome))leite=p.g; } });
+  if(agua==null&&leite==null) return null;
+  return { agua, leite };
+}
 function desenharEtiqueta(lote){
   const c=document.createElement('canvas'); c.width=ETQ_W; c.height=ETQ_H;
   const x=c.getContext('2d');
   x.fillStyle='#fff'; x.fillRect(0,0,ETQ_W,ETQ_H);
   x.fillStyle='#000'; x.strokeStyle='#000'; x.lineWidth=4;
   x.strokeRect(10,10,ETQ_W-20,ETQ_H-20);
-  const d=loteEtqDados(lote);
+  const d=loteEtqDados(lote); const liq=loteLiquidos(lote);
   x.textAlign='center';
-  x.font='bold 34px Arial, sans-serif'; x.fillText('LOTE', ETQ_W/2, 82);
-  x.font='bold 118px Arial, sans-serif'; x.fillText('#'+d.num, ETQ_W/2, 208);
-  x.font='26px Arial, sans-serif';
-  let rec=d.receita; if(rec.length>32) rec=rec.slice(0,32);
-  x.fillText(rec, ETQ_W/2, 268);
-  x.font='bold 32px Arial, sans-serif';
-  x.fillText(d.data+'    '+d.hora, ETQ_W/2, 332);
+  x.font='bold 64px Arial, sans-serif'; x.fillText('LOTE #'+d.num, ETQ_W/2, 78);
+  x.font='24px Arial, sans-serif';
+  let rec=d.receita; if(rec.length>34) rec=rec.slice(0,34);
+  x.fillText(rec, ETQ_W/2, 116);
+  x.font='bold 28px Arial, sans-serif';
+  x.fillText(d.data+'    '+d.hora, ETQ_W/2, 158);
+  // divisória
+  x.lineWidth=2; x.beginPath(); x.moveTo(40,182); x.lineTo(ETQ_W-40,182); x.stroke();
+  if(liq){
+    x.font='bold 22px Arial, sans-serif'; x.fillText('BALDE 2 — LÍQUIDOS', ETQ_W/2, 214);
+    x.font='28px Arial, sans-serif';
+    x.textAlign='left';
+    if(liq.agua!=null)  x.fillText('Água/gelo:  '+formatPeso(liq.agua), 50, 262);
+    if(liq.leite!=null) x.fillText('Leite em pó: '+formatPeso(liq.leite), 50, 308);
+    x.textAlign='center';
+  }else{
+    x.font='22px Arial, sans-serif'; x.fillText('(líquidos conforme a receita)', ETQ_W/2, 250);
+  }
   return c;
 }
 function abrirEtiqueta(id){
@@ -1523,6 +1778,20 @@ function responderDivisao(a,b){
 function processarComando(txt,alt){
   const todas=[txt];
   if(alt)for(let i=1;i<alt.length;i++)todas.push(alt[i].transcript.trim().toLowerCase());
+
+  // 0) CALCULADORA por voz — abrir em qualquer estado; se já aberta, só fechar/dividir
+  const ABRIR_CALC=['calculadora','abrir calculadora','abre a calculadora','abre calculadora','abrir a calculadora'];
+  const FECHAR_CALC=['fechar calculadora','fecha calculadora','fechar a calculadora','fecha a calculadora','voltar','volta','continuar','continua','fechar','fecha'];
+  if(st.calcAberta){
+    for(const t of todas){
+      const d=parsearDivisao(t); if(d){responderDivisao(d.a,d.b);return;}
+      if(FECHAR_CALC.some(p=>t===p||t.includes(p))){ calcVoltar(); return; }
+    }
+    return; // calculadora aberta: não avança passos
+  }
+  for(const t of todas){
+    if(ABRIR_CALC.some(p=>t.includes(p))){ abrirCalc(st.modo==='pos_secos'?'active':'active'); return; }
+  }
 
   // 1) SEMPRE checa pedido de divisão primeiro, em qualquer estado da sessão
   for(const t of todas){
