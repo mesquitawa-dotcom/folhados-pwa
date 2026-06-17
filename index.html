@@ -2,30 +2,27 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — OBS 16/06/2026 (atualização v10)
-       NOVIDADES v10:
-       • BATER A MASSA completo: após escolher o lote e a temperatura,
-         confere o peso do BALDE 1 (secos+balde) e do BALDE 2 (líquidos),
-         inicia na Velocidade 1 e CRONOMETRA. Avisos por voz/alarme:
-         (T1) sal e manteiga; (T2) fermento+farinha; (T3) massa antiga
-         aos 20°C; (T4) ponto de véu aos 22°C. "Finalizar" calcula o tempo
-         total; depois pede o PESO TOTAL (digitar ou falar) e mostra o
-         resultado dividido pelas partes (÷8). Tempos parametrizáveis no
-         Config: lento inicial=4, fermento=6, massa=3, ponto de véu=2.
-       • CALCULADORA acessível também DENTRO do Porcionamento e do Bater a
-         Massa (botão 🧮) e por voz ("calculadora"). Não avança passos
-         enquanto aberta; "fechar/voltar" por voz a encerra.
-       • ETIQUETA agora inclui os LÍQUIDOS do balde 2 (água/gelo e leite).
-       • Balde 1 concluído: botão verde "Continuar receita →" em destaque
-         para avançar clicando (além da voz).
-       • Receita 2 (Massa 3 kg): APROVEITAMENTO = 3000 g.
+       FOLHADOS D'OURO — OBS 16/06/2026 (atualização v11)
+       NOVIDADES v11:
+       • ALARME do batimento muito mais forte: sequência de 6 apitos
+         altos e longos + vibração + voz REPETIDA (toca mesmo com o
+         autofalante desligado). Áudio destravado ao tocar "Iniciar batida".
+       • ORDEM DOS ITENS no porcionamento: Balde 1 (secos) → SAL e
+         MANTEIGA → Balde 2 (água/gelo e leite) → Aproveitamento.
+       • Balde 1 concluído: o cartão do passo é ocultado para os botões
+         "Continuar receita →" / "+ Outro balde" caberem e serem clicáveis.
+       • Botões de navegação (Voltar/Repetir/Próximo) agora encolhem e
+         cabem em telas estreitas (não cortam mais).
+       --- base v10 ---
+       • Bater a Massa cronometrado (confere balde 1 e 2, avisos por tempo,
+         peso ÷8). Tempos no Config (4/6/3/2). Calculadora no porcionamento
+         e batimento + por voz. Etiqueta inclui líquidos do balde 2.
+         Receita 2: aproveitamento 3000 g.
        --- base v9/v8/v7 ---
-       • Etiqueta 60×50 (MDK-022 BT / salvar imagem). Lotes numerados
-         (apagar = cascata; reiniciar numeração). Fermentação (mín/máx,
-         puxa do dia). PIN só no Porcionamento (123789). Autofalante 🔊/🔇.
-         "⌂ Início"/"← Voltar" nas telas. Divisão por voz. Wake Lock.
-       • Receitas: R1 inalterada; R2 "MASSA 3 KG"; R3 "PADRÃO" (água 3600).
-       • Service Worker: cache fdo-v10.
+       • Etiqueta 60×50 (MDK-022 BT/imagem). Lotes (apagar cascata,
+         reiniciar numeração). Fermentação (mín/máx). PIN só no
+         Porcionamento. Autofalante 🔊/🔇. Divisão por voz. Wake Lock.
+       • Service Worker: cache fdo-v11.
        ════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -89,12 +86,12 @@
     .cur-tot{font-size:1rem;color:var(--red);font-weight:bold;margin-top:.55rem;letter-spacing:.02rem}
 
     /* ══ NAV BUTTONS — GRANDES ══ */
-    .nav{display:flex;gap:.5rem;margin:.7rem 1rem;flex-shrink:0}
-    .nbtn{flex:1;padding:1rem .4rem;border-radius:.5rem;
+    .nav{display:flex;gap:.4rem;margin:.7rem .7rem;flex-shrink:0}
+    .nbtn{flex:1 1 0;min-width:0;padding:1rem .3rem;border-radius:.5rem;
       font-family:Georgia,serif;font-weight:bold;
-      font-size:.85rem;letter-spacing:.05rem;text-transform:uppercase;cursor:pointer;
+      font-size:.78rem;letter-spacing:.02rem;text-transform:uppercase;cursor:pointer;
       border:1px solid var(--brd);background:var(--bg3);color:var(--gold);
-      min-height:3rem;display:flex;align-items:center;justify-content:center}
+      min-height:3rem;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.15}
     .nbtn.next{background:linear-gradient(135deg,#3a2005,#7a4a0a);color:var(--gl);border-color:#5a3008}
     .nbtn:active{opacity:.7;transform:scale(.97)}
 
@@ -823,12 +820,12 @@ function gerarReceita(bag, feu, ita, opts){
   // Fermento e Açúcar também anunciam o total acumulado do balde 1
   arr.push({grupo:'BALDE 1 · FARINHAS', cat:'FERMENTO', nome:'Fermento seco', g:84,       voz:'total', det:'Quantidade conforme a temperatura da noite'});
   arr.push({grupo:'BALDE 1 · FARINHAS', cat:'AÇÚCAR',   nome:'Açúcar',        g:vAcucar,  voz:'total', det:'No balde 1, logo após o fermento'});
-  // Balde 2: água + leite
+  // Após o balde 1: sal e manteiga (pesados antes dos líquidos; vão no batimento)
+  arr.push({grupo:'SAL E MANTEIGA',     cat:'SAL',      nome:'Sal refinado',  g:vSal,     voz:'solo',  det:'Pese após o balde 1. Vai no batimento, antes da manteiga'});
+  arr.push({grupo:'SAL E MANTEIGA',     cat:'GORDURA',  nome:'Manteiga',      g:vManteiga,voz:'solo',  det:'Pese após o sal. Vai no batimento'});
+  // Só então o balde 2: água + leite
   arr.push({grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Água com gelo', g:vAgua,    voz:'solo',  det:'Água gelada no balde 2'});
   arr.push({grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Leite em pó',   g:vLeite,   voz:'solo',  det:'No balde 2, junto com a água'});
-  // Para o batimento
-  arr.push({grupo:'PARA BATIMENTO',     cat:'SAL',      nome:'Sal refinado',  g:vSal,     voz:'solo',  det:'No batimento — antes da manteiga'});
-  arr.push({grupo:'PARA BATIMENTO',     cat:'GORDURA',  nome:'Manteiga',      g:vManteiga,voz:'solo',  det:'No batimento — após o sal'});
   arr.push({grupo:'APROVEITAMENTO',     cat:'APROVEITA',nome:'Aproveitamento',g:vAprov,   voz:'solo',  det:'Massa antiga incorporada à massa nova'});
 
   arr.forEach((p,idx)=>{p.id=idx+1; p.qty=formatPeso(p.g);}); // ids sequenciais; formatPeso é hoisted
@@ -1154,7 +1151,7 @@ function pesoBalde2Lote(lote){
   return s;
 }
 
-let batCronInt=null, batBatStartMs=0, batAvisados=[], batTempoSeg=0;
+let batCronInt=null, batBatStartMs=0, batAvisados=[], batTempoSeg=0, batAudioCtx=null;
 
 function setBatFase(f){
   ['temp','balde1','balde2','batendo','peso'].forEach(x=>{
@@ -1217,20 +1214,36 @@ function batConferirBalde2(){
   setBatFase('batendo');
   falar('Balde 2 conferido. Inicie o batimento na velocidade 1 e toque em iniciar.');
 }
+// Alarme forte para ambiente de produção: sequência de apitos longos e altos.
 function batBeep(){
   try{
     const A=window.AudioContext||window.webkitAudioContext; if(!A)return;
-    const ctx=new A(); const o=ctx.createOscillator(), g=ctx.createGain();
-    o.connect(g); g.connect(ctx.destination); o.type='square'; o.frequency.value=880;
-    g.gain.setValueAtTime(.25,ctx.currentTime);
-    o.start(); o.stop(ctx.currentTime+.5);
-    o.onended=()=>{try{ctx.close();}catch(e){}};
+    if(!batAudioCtx) batAudioCtx=new A();
+    const ctx=batAudioCtx;
+    if(ctx.state==='suspended'){ try{ctx.resume();}catch(e){} }
+    // padrão: 6 apitos de 0,45s alternando 1100/750 Hz, com pausas curtas
+    const freqs=[1100,750,1100,750,1100,750];
+    const dur=0.45, gap=0.12; let t=ctx.currentTime+0.05;
+    freqs.forEach(f=>{
+      const o=ctx.createOscillator(), g=ctx.createGain();
+      o.connect(g); g.connect(ctx.destination); o.type='square'; o.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.9,t+0.03);   // bem alto
+      g.gain.setValueAtTime(0.9,t+dur-0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+      o.start(t); o.stop(t+dur);
+      t+=dur+gap;
+    });
   }catch(e){}
 }
+// Avisa: apito forte + vibração + fala (repetida, mesmo com som desligado) + texto
 function batAnunciar(txt){
   document.getElementById('bat-aviso').textContent='⚠️ '+txt;
   batBeep();
-  setTimeout(()=>falar(txt),350);
+  try{ if(navigator.vibrate) navigator.vibrate([400,150,400,150,400]); }catch(e){}
+  // fala depois dos apitos e repete uma vez para não passar batido
+  setTimeout(()=>falarForcado(txt),2600);
+  setTimeout(()=>falarForcado(txt),6500);
 }
 function batAgenda(){
   const t1=getBatT1(), t2=getBatT2(), t3=getBatT3(), t4=getBatT4();
@@ -1243,6 +1256,8 @@ function batAgenda(){
 }
 function fmtMMSS(seg){ const m=Math.floor(seg/60), s=seg%60; return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
 function batIniciarBatida(){
+  // destrava o áudio agora (gesto do usuário) para o alarme tocar alto depois
+  try{ const A=window.AudioContext||window.webkitAudioContext; if(A){ if(!batAudioCtx) batAudioCtx=new A(); if(batAudioCtx.state==='suspended') batAudioCtx.resume(); } }catch(e){}
   batBatStartMs=Date.now(); batAvisados=[];
   document.getElementById('bat-start-btn').style.display='none';
   document.getElementById('bat-fim-btn').style.display='';
@@ -1852,6 +1867,17 @@ function falar(texto){
   if(voz)u.voice=voz;
   speechSynthesis.speak(u);
 }
+// Fala SEMPRE (mesmo com o autofalante desligado) — para alarmes críticos do batimento
+function falarForcado(texto){
+  if(!window.speechSynthesis)return;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  const u=new SpeechSynthesisUtterance(texto);
+  u.lang='pt-BR'; u.rate=1.0; u.pitch=1.0; u.volume=1.0;
+  const v=speechSynthesis.getVoices();
+  const voz=v.find(x=>x.lang==='pt-BR')||v.find(x=>x.lang.startsWith('pt'));
+  if(voz)u.voice=voz;
+  speechSynthesis.speak(u);
+}
 
 function mostrarAI(txt){
   const box=document.getElementById('ai-box');
@@ -1966,15 +1992,22 @@ function mostrarPerguntaSecos(mostrar, texto){
   const cx=document.getElementById('pergunta-secos');
   const nNor=document.getElementById('nav-normal');
   const nSec=document.getElementById('nav-secos');
+  const cur=document.querySelector('.cur');
+  const gb=document.getElementById('gb');
   if(mostrar){
     if(texto){cx.textContent=texto;}
     cx.classList.add('show');
     nNor.style.display='none';
     nSec.classList.add('show');
+    // libera espaço para os botões caberem na tela
+    if(cur) cur.style.display='none';
+    if(gb) gb.style.display='none';
   }else{
     cx.classList.remove('show');
     nNor.style.display='flex';
     nSec.classList.remove('show');
+    if(cur) cur.style.display='';
+    if(gb) gb.style.display='';
   }
 }
 

@@ -10,7 +10,7 @@
 //   • Divisão por voz, Wake Lock, pós-secos com contador de baldes.
 //   • Gemini e Open-Meteo nunca são cacheados.
 // IMPORTANTE: a cada publicação, troque a versão (fdo-vN) para o celular atualizar.
-const CACHE = 'fdo-v10';
+const CACHE = 'fdo-v11';
 
 self.addEventListener('install', e => {
   e.waitUntil(
