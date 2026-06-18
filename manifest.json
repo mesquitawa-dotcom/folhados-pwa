@@ -1,5 +1,5 @@
 {
-  "_obs": "OBS 15/06/2026 (fdo-v8): controle de LOTES numerados/apagáveis (menu Lotes); senha PIN (padrão 123789) ao entrar nos módulos; botão liga/desliga do autofalante; módulo Bater a Massa (seleção de lote porcionado + confirmação da temperatura ambiente do dia); Receita 2 -> 'Receita 2 - MASSA 3 KG' (Bagatelle 3500, Italiana 4270, sem Feuilletage, açúcar 876, água 3500); Receita 3 -> 'Receita 3 - PADRÃO' (água 3600).",
+  "_obs": "OBS 18/06/2026 (fdo-v12): Porcionamento dividido em Secos (gera lote + etiqueta) e Líquidos (continua o lote, sem etiqueta); Bater a Massa só com Secos E Líquidos prontos; Receita 3 PADRÃO Bagatelle 3600 g + Italiana 4400 g; senha própria das Configurações (padrão 456); microfone já ligado no peso do batimento; cronômetro do batimento resiste a segundo plano e só sai por confirmação; impressão MDK-022 com seletor ESC/POS/TSPL/CPCL, teste rápido e diagnóstico Bluetooth.",
   "name": "Folhados d'Ouro — Produção",
   "short_name": "Folhados d'Ouro",
   "description": "Checklist por voz para produção de croissants",

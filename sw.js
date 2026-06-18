@@ -1,16 +1,20 @@
 // Folhados d'Ouro — Service Worker
-// OBS 15/06/2026: cache fdo-v8 —
-//   • Controle de LOTES (numerados, apagáveis com cascata) no menu "Lotes".
-//   • Senha de acesso por PIN (padrão 123789) ao entrar nos módulos.
-//   • Botão liga/desliga do autofalante (TTS) + comando de voz.
-//   • Módulo Bater a Massa (início): seleção de lote porcionado + confirmação
-//     da temperatura ambiente puxada de outro batimento do dia.
-//   • Receita 2 → "Receita 2 - MASSA 3 KG"; Receita 3 → "Receita 3 - PADRÃO".
-//   --- mantido da v7 ---
-//   • Divisão por voz, Wake Lock, pós-secos com contador de baldes.
-//   • Gemini e Open-Meteo nunca são cacheados.
+// OBS 18/06/2026: cache fdo-v12 —
+//   • Porcionamento dividido em DOIS: Secos (gera o lote + etiqueta) e
+//     Líquidos (continua um lote já com os secos prontos; sem etiqueta).
+//   • Bater a Massa só libera lotes com Secos E Líquidos prontos.
+//   • Receita 3 PADRÃO: Bagatelle 3600 g + Italiana 4400 g (sem Feuilletage).
+//   • Senha própria das Configurações (padrão 456), pedida toda vez.
+//   • Bater a Massa: microfone JÁ LIGADO no campo de peso (fala ou digita).
+//   • Cronômetro do batimento resiste a sair do app (retoma ao voltar);
+//     só sai por comando claro (confirmação). Wake Lock durante a batida.
+//   • Impressão MDK-022: seletor de linguagem (ESC/POS · TSPL · CPCL),
+//     teste rápido e diagnóstico de serviços/características Bluetooth.
+//   --- mantido das versões anteriores ---
+//   • Lotes numerados/apagáveis, PIN do Porcionamento, autofalante, calculadora,
+//     previsão de madrugada (Open-Meteo), Gemini no contexto da receita.
 // IMPORTANTE: a cada publicação, troque a versão (fdo-vN) para o celular atualizar.
-const CACHE = 'fdo-v11';
+const CACHE = 'fdo-v12';
 
 self.addEventListener('install', e => {
   e.waitUntil(

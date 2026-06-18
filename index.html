@@ -323,6 +323,17 @@
     .etq-status{font-size:.82rem;color:var(--mut);text-align:center;min-height:1.2rem;line-height:1.5;width:100%}
     .etq-status.ok{color:var(--grn)} .etq-status.err{color:var(--red)}
     #s-etiqueta .btn-main{width:100%}
+    /* Seletor de modo de impressão (ESC/POS · TSPL · CPCL) */
+    .etq-modo-lbl{font-size:.68rem;color:var(--mut);text-transform:uppercase;letter-spacing:.08rem;width:100%;text-align:center}
+    .etq-modos{display:flex;gap:.4rem;width:100%}
+    .etq-modo{flex:1;background:var(--bg3);border:1px solid var(--brd);color:var(--mut);
+      border-radius:.4rem;padding:.55rem .3rem;font-size:.72rem;font-weight:bold;cursor:pointer;
+      text-align:center;line-height:1.2;font-family:inherit}
+    .etq-modo.sel{border-color:var(--gold);color:var(--gl);background:rgba(201,151,58,.12)}
+    .etq-modo small{display:block;font-size:.58rem;font-weight:normal;color:var(--mut);text-transform:uppercase;letter-spacing:.03rem;margin-top:.1rem}
+    .etq-diag{width:100%;background:var(--bg3);border:1px solid var(--brd);border-radius:.4rem;
+      padding:.6rem;font-size:.66rem;color:var(--mut);line-height:1.5;white-space:pre-wrap;
+      word-break:break-all;font-family:ui-monospace,Menlo,Consolas,monospace;max-height:14rem;overflow-y:auto}
 
     /* Grade de configuração dos tempos */
     .cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;width:100%}
@@ -352,6 +363,10 @@
   <div class="cfg-s" style="font-size:.75rem">🔒 Senha de acesso (PIN numérico):</div>
   <input id="inp-pin" class="inp" type="tel" inputmode="numeric" maxlength="8" placeholder="123789" autocomplete="off">
   <label class="cfg-row"><input type="checkbox" id="chk-pin"> Exigir senha no Porcionamento</label>
+  <div class="cfg-sep"></div>
+  <div class="cfg-s" style="font-size:.75rem">🔑 Senha das Configurações (só o gerente):</div>
+  <input id="inp-cfgpin" class="inp" type="tel" inputmode="numeric" maxlength="8" placeholder="456" autocomplete="off">
+  <label class="cfg-row" style="font-size:.72rem;line-height:1.3">Pedida toda vez que abrir as Configurações. Deixe em branco para manter a atual.</label>
   <div class="cfg-sep"></div>
   <div class="cfg-s" style="font-size:.75rem">⏱ Tempos do batimento (minutos, somados em sequência):</div>
   <div class="cfg-grid">
@@ -416,15 +431,46 @@
   <div class="start-footer">
     <button class="link-btn" onclick="abrirCalc('start')">🧮 Calculadora</button>
     <button class="link-btn" onclick="ir('history')">Lotes</button>
-    <button class="link-btn" onclick="ir('config')">Config</button>
+    <button class="link-btn" onclick="entrarConfig()">Config</button>
+  </div>
+</div>
+
+<div id="s-porc-menu" class="scr off">
+  <div class="start-top">
+    <div class="start-icon">⚖️</div>
+    <div class="start-brand">Folhados d'Ouro</div>
+    <div class="start-title">Porcionamento</div>
+    <div class="start-sub">Secos ou Líquidos?</div>
+  </div>
+  <div class="modulos-label">Etapas do porcionamento</div>
+  <div class="modulos">
+    <div class="modulo ativo" onclick="ir('receitas')">
+      <div class="modulo-icon">🧂</div>
+      <div class="modulo-info">
+        <div class="modulo-nome">Porcionamento de Secos</div>
+        <div class="modulo-desc">Farinhas, fermento, açúcar, sal e manteiga · gera o lote e a etiqueta</div>
+      </div>
+      <div class="modulo-badge badge-ativo">Gera lote</div>
+    </div>
+    <div class="modulo ativo" onclick="abrirLiquidosLotes()">
+      <div class="modulo-icon">💧</div>
+      <div class="modulo-info">
+        <div class="modulo-nome">Porcionamento de Líquidos</div>
+        <div class="modulo-desc">Água, leite e aproveitamento · continua um lote já com os secos prontos</div>
+      </div>
+      <div class="modulo-badge badge-ativo">Usa lote</div>
+    </div>
+  </div>
+  <div class="start-footer">
+    <button class="link-btn" onclick="ir('start')">← Início</button>
   </div>
 </div>
 
 <div id="s-receitas" class="scr off">
   <div class="start-top">
-    <div class="start-icon">⚖️</div>
+    <div class="start-icon">🧂</div>
     <div class="start-brand">Folhados d'Ouro</div>
-    <div class="start-title">Porcionamento</div>
+    <div class="start-title">Porcionamento de Secos</div>
     <div class="start-sub">Selecione a receita</div>
   </div>
   <div class="modulos-label">Receitas de Porcionamento</div>
@@ -449,13 +495,28 @@
       <div class="modulo-icon">3️⃣</div>
       <div class="modulo-info">
         <div class="modulo-nome">Receita 3 - PADRÃO</div>
-        <div class="modulo-desc">Bagatelle 3200 g · Italiana 4800 g · sem Feuilletage</div>
+        <div class="modulo-desc">Bagatelle 3600 g · Italiana 4400 g · sem Feuilletage</div>
       </div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
   </div>
   <div class="start-footer">
-    <button class="link-btn" onclick="ir('start')">← Voltar</button>
+    <button class="link-btn" onclick="ir('porc-menu')">← Voltar</button>
+  </div>
+</div>
+
+<!-- ═══ PORCIONAMENTO DE LÍQUIDOS — seleção de lote ═══ -->
+<div id="s-liquidos-lotes" class="scr off">
+  <div class="start-top">
+    <div class="start-icon">💧</div>
+    <div class="start-brand">Folhados d'Ouro</div>
+    <div class="start-title">Porcionamento de Líquidos</div>
+    <div class="start-sub">Selecione o lote com os secos prontos</div>
+  </div>
+  <div class="modulos-label">Lotes aguardando os líquidos</div>
+  <div class="modulos" id="liq-lotes-list"></div>
+  <div class="start-footer">
+    <button class="link-btn" onclick="ir('porc-menu')">← Voltar</button>
   </div>
 </div>
 
@@ -523,7 +584,7 @@
     <button class="nbtn next" onclick="avancar()">Próximo →</button>
   </div>
   <div class="nav-secos" id="nav-secos">
-    <button class="nbtn next secos-continuar" onclick="continuarReceita()">Continuar receita →</button>
+    <button class="nbtn next secos-continuar" onclick="finalizarSecos()">Finalizar e gerar lote →</button>
     <button class="nbtn secos secos-novo" onclick="iniciarOutroBaldeSecos()">+ Outro balde de secos</button>
   </div>
   <div class="list" id="lista"></div>
@@ -537,12 +598,12 @@
 </div>
 
 <div id="s-done" class="scr off">
-  <div style="font-size:2.6rem">✅</div>
-  <div style="font-size:1.2rem;color:var(--gl);font-weight:bold;text-align:center">Porcionamento Concluído!</div>
+  <div style="font-size:2.6rem" id="done-emoji">✅</div>
+  <div style="font-size:1.2rem;color:var(--gl);font-weight:bold;text-align:center" id="done-title">Porcionamento Concluído!</div>
   <div class="done-lote-big" id="done-lote">LOTE #—</div>
-  <div style="font-size:.9rem;color:var(--gold);text-align:center;font-weight:bold;letter-spacing:.05rem">✍️ Marque este número na massa</div>
+  <div id="done-mark" style="font-size:.9rem;color:var(--gold);text-align:center;font-weight:bold;letter-spacing:.05rem">✍️ Marque este número na massa</div>
   <div class="done-tot" id="done-tot"></div>
-  <button class="btn-main" style="width:auto;padding:1rem 2rem;margin-top:.6rem" onclick="abrirEtiqueta(st.ultimoLoteId)">🏷 Imprimir Etiqueta</button>
+  <button class="btn-main" id="done-etq-btn" style="width:auto;padding:1rem 2rem;margin-top:.6rem" onclick="abrirEtiqueta(st.ultimoLoteId)">🏷 Imprimir Etiqueta</button>
   <button class="link-btn" style="width:auto;padding:.8rem 2rem" onclick="ir('start')">← Início</button>
 </div>
 
@@ -562,7 +623,7 @@
   <div class="start-top">
     <div class="start-icon">🔒</div>
     <div class="start-brand">Folhados d'Ouro</div>
-    <div class="start-title">Acesso à Produção</div>
+    <div class="start-title" id="pin-title">Acesso à Produção</div>
     <div class="start-sub" id="pin-sub">Digite a senha</div>
   </div>
   <div class="pin-wrap" id="pin-wrap">
@@ -668,8 +729,8 @@
     </div>
   </div>
   <div class="bot" style="display:flex;gap:.5rem">
-    <button class="btn-danger" style="flex:1" onclick="ir('batimento-lotes')">← Lotes</button>
-    <button class="btn-danger" style="flex:1" onclick="ir('start')">⌂ Início</button>
+    <button class="btn-danger" style="flex:1" onclick="batSair('batimento-lotes')">← Lotes</button>
+    <button class="btn-danger" style="flex:1" onclick="batSair('start')">⌂ Início</button>
   </div>
 </div>
 
@@ -718,9 +779,17 @@
     <div class="etq-preview-box">
       <img id="etq-img" class="etq-preview" alt="Pré-visualização da etiqueta">
     </div>
+    <div class="etq-modo-lbl">Linguagem da impressora (se não imprimir, troque e teste)</div>
+    <div class="etq-modos" id="etq-modos">
+      <button class="etq-modo" data-modo="escpos" onclick="setPrintMode('escpos')">ESC/POS<small>padrão</small></button>
+      <button class="etq-modo" data-modo="tspl" onclick="setPrintMode('tspl')">TSPL<small>etiqueta</small></button>
+      <button class="etq-modo" data-modo="cpcl" onclick="setPrintMode('cpcl')">CPCL<small>etiqueta</small></button>
+    </div>
     <div class="etq-status" id="etq-status"></div>
     <button class="btn-main" id="etq-print-btn" onclick="imprimirBluetooth()">🖨 Imprimir na MDK-022 (Bluetooth)</button>
+    <button class="link-btn" style="width:100%" onclick="imprimirTeste()">🧪 Teste rápido (imprime uma linha)</button>
     <button class="link-btn" style="width:100%" onclick="baixarEtiqueta()">💾 Salvar imagem da etiqueta</button>
+    <div class="etq-diag" id="etq-diag" style="display:none"></div>
   </div>
 </div>
 
@@ -810,20 +879,20 @@ function gerarReceita(bag, feu, ita, opts){
   const arr=[];
   farinhas.forEach((f,idx)=>{
     arr.push({
-      grupo:'BALDE 1 · FARINHAS', cat:'FARINHA', nome:f.nome, g:f.g,
+      grupo:'BALDE 1 · SECOS', cat:'FARINHA', nome:f.nome, g:f.g,
       voz: idx===0 ? 'solo' : 'total',  // primeira farinha sem total; demais com total
-      det: idx===0 ? 'Primeira farinha do balde 1'
-         : (idx===farinhas.length-1 ? 'Última farinha do balde 1' : 'Farinha do balde 1')
+      det: idx===0 ? 'Primeira farinha do balde de secos'
+         : (idx===farinhas.length-1 ? 'Última farinha do balde de secos' : 'Farinha do balde de secos')
     });
   });
 
-  // Fermento e Açúcar também anunciam o total acumulado do balde 1
-  arr.push({grupo:'BALDE 1 · FARINHAS', cat:'FERMENTO', nome:'Fermento seco', g:84,       voz:'total', det:'Quantidade conforme a temperatura da noite'});
-  arr.push({grupo:'BALDE 1 · FARINHAS', cat:'AÇÚCAR',   nome:'Açúcar',        g:vAcucar,  voz:'total', det:'No balde 1, logo após o fermento'});
-  // Após o balde 1: sal e manteiga (pesados antes dos líquidos; vão no batimento)
-  arr.push({grupo:'SAL E MANTEIGA',     cat:'SAL',      nome:'Sal refinado',  g:vSal,     voz:'solo',  det:'Pese após o balde 1. Vai no batimento, antes da manteiga'});
-  arr.push({grupo:'SAL E MANTEIGA',     cat:'GORDURA',  nome:'Manteiga',      g:vManteiga,voz:'solo',  det:'Pese após o sal. Vai no batimento'});
-  // Só então o balde 2: água + leite
+  // Fermento e Açúcar também anunciam o total acumulado do balde de secos
+  arr.push({grupo:'BALDE 1 · SECOS', cat:'FERMENTO', nome:'Fermento seco', g:84,       voz:'total', det:'Quantidade conforme a temperatura da noite'});
+  arr.push({grupo:'BALDE 1 · SECOS', cat:'AÇÚCAR',   nome:'Açúcar',        g:vAcucar,  voz:'total', det:'No balde de secos, logo após o fermento'});
+  // Ainda no PORCIONAMENTO DE SECOS: sal e manteiga (pesados à parte; vão no batimento)
+  arr.push({grupo:'SAL E MANTEIGA',  cat:'SAL',      nome:'Sal refinado',  g:vSal,     voz:'solo',  det:'Pese à parte (não vai no balde de secos). Entra no batimento'});
+  arr.push({grupo:'SAL E MANTEIGA',  cat:'GORDURA',  nome:'Manteiga',      g:vManteiga,voz:'solo',  det:'Pese à parte (não vai no balde de secos). Entra no batimento'});
+  // PORCIONAMENTO DE LÍQUIDOS: balde 2 (água + leite)
   arr.push({grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Água com gelo', g:vAgua,    voz:'solo',  det:'Água gelada no balde 2'});
   arr.push({grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Leite em pó',   g:vLeite,   voz:'solo',  det:'No balde 2, junto com a água'});
   arr.push({grupo:'APROVEITAMENTO',     cat:'APROVEITA',nome:'Aproveitamento',g:vAprov,   voz:'solo',  det:'Massa antiga incorporada à massa nova'});
@@ -832,14 +901,31 @@ function gerarReceita(bag, feu, ita, opts){
   return arr;
 }
 
+// Grupos que pertencem ao PORCIONAMENTO DE SECOS (o resto é PORCIONAMENTO DE LÍQUIDOS)
+const GRUPOS_SECOS=['BALDE 1 · SECOS','SAL E MANTEIGA'];
+function ehGrupoSecos(g){ return GRUPOS_SECOS.indexOf(g||'')>=0; }
+
+// Monta uma receita já dividida em duas fases:
+//  - passos:         lista completa (usada p/ conferência de peso, etiqueta, etc.)
+//  - passosSecos:    farinhas + fermento + açúcar + sal + manteiga  → gera o LOTE + etiqueta
+//  - passosLiquidos: água + leite + aproveitamento                  → continua um lote existente
+function montarReceita(meta, bag, feu, ita, opts){
+  const full=gerarReceita(bag,feu,ita,opts);
+  const secos=full.filter(p=>ehGrupoSecos(p.grupo));
+  const liquidos=full.filter(p=>!ehGrupoSecos(p.grupo));
+  secos.forEach((p,i)=>p.id=i+1);
+  liquidos.forEach((p,i)=>p.id=i+1);
+  return Object.assign({}, meta, {passos:full, passosSecos:secos, passosLiquidos:liquidos});
+}
+
 const RECEITAS = {
-  r1: { nome:'Receita 1',            rotulo:'R1', farinhas:'Bagatelle 45%, Feuilletage 45%, Italiana 10%',     passos: gerarReceita(3600,3600,800) },
-  r2: { nome:'Receita 2 - MASSA 3 KG', rotulo:'R2', farinhas:'Bagatelle 3500 g, Italiana 4270 g (sem Feuilletage)', passos: gerarReceita(3500,0,4270,{agua:3500, acucar:876, aprov:3000}) },
-  r3: { nome:'Receita 3 - PADRÃO',     rotulo:'R3', farinhas:'Bagatelle 3200 g, Italiana 4800 g (sem Feuilletage)', passos: gerarReceita(3200,0,4800,{agua:3600}) },
+  r1: montarReceita({ nome:'Receita 1',              rotulo:'R1', farinhas:'Bagatelle 45%, Feuilletage 45%, Italiana 10%' },            3600,3600,800),
+  r2: montarReceita({ nome:'Receita 2 - MASSA 3 KG', rotulo:'R2', farinhas:'Bagatelle 3500 g, Italiana 4270 g (sem Feuilletage)' },     3500,0,4270,{agua:3500, acucar:876, aprov:3000}),
+  r3: montarReceita({ nome:'Receita 3 - PADRÃO',     rotulo:'R3', farinhas:'Bagatelle 3600 g, Italiana 4400 g (sem Feuilletage)' },     3600,0,4400,{agua:3600}),
 };
 
-// Receita ativa (apontador para o array de passos). Trocada ao escolher o módulo.
-let RECEITA = RECEITAS.r1.passos;
+// Receita ativa (apontador para o array de passos da FASE atual: secos OU líquidos).
+let RECEITA = RECEITAS.r1.passosSecos;
 
 // Coordenadas padrão da fábrica (substitua se necessário)
 const LAT_FABRICA = -20.53;
@@ -870,7 +956,7 @@ Temperatura prevista para a noite: ${st.temp||'?'} graus (define a quantidade de
 INGREDIENTES NA ORDEM EXATA:
 ${montarPassos()}
 
-VALOR TOTAL DA RECEITA: ${formatPeso(totalGeral())}
+VALOR TOTAL DA RECEITA COMPLETA: ${formatPeso(totalReceitaFull(st.receita))}
 
 REGRAS ABSOLUTAS:
 1. Responda APENAS sobre esta receita de porcionamento. Outro tópico → "Foco no porcionamento."
@@ -892,8 +978,8 @@ const CMD = {
 };
 function matchCmd(txt,g){return CMD[g].some(p=>txt.includes(p));}
 
-const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0,temp:null,receita:'r1',modo:'normal',baldeSecos:1,wakeLock:null,
-  pinBuf:'',pinAlvo:null,batLote:null,batTemp:20,batStart:0,
+const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0,temp:null,receita:'r1',modo:'normal',subModulo:'secos',baldeSecos:1,wakeLock:null,
+  pinBuf:'',pinAlvo:null,pinTipo:'producao',batLote:null,liqLote:null,batTemp:20,batStart:0,batRodando:false,batRecPeso:null,
   ultimoLoteId:null,calcRet:'start',calcAberta:false,etqLote:null,etqRet:'start',
   fermLote:null,fermStart:0,fermMin:24,fermMax:28};
 // Desbloqueio por sessão do app: o PIN é pedido só 1x por abertura (rápido p/ produção)
@@ -908,6 +994,7 @@ function carregarConfig(){
   const op=LS.g('fdo_op',''); if(op)document.getElementById('inp-op').value=op;
   document.getElementById('inp-pin').value=getPin();
   document.getElementById('chk-pin').checked=pinAtivo();
+  document.getElementById('inp-cfgpin').value=''; // sempre em branco (preencha só p/ trocar)
   document.getElementById('inp-bt1').value=getBatT1();
   document.getElementById('inp-bt2').value=getBatT2();
   document.getElementById('inp-bt3').value=getBatT3();
@@ -926,6 +1013,12 @@ function salvarConfig(){
     LS.s('fdo_pin',pin);
   }
   LS.s('fdo_pin_ativo',document.getElementById('chk-pin').checked);
+  // Senha das Configurações (mín. 3 dígitos; vazio mantém a atual)
+  let cpin=(document.getElementById('inp-cfgpin').value||'').replace(/\D/g,'');
+  if(cpin){
+    if(cpin.length<3){alert('A senha das Configurações precisa ter pelo menos 3 dígitos.');return;}
+    LS.s('fdo_cfg_pin',cpin);
+  }
   // Tempos do batimento (minutos) e divisor de partes
   const numPos=(id,def)=>{ const v=parseInt(document.getElementById(id).value,10); return (isFinite(v)&&v>=0)?v:def; };
   LS.s('fdo_bat_t1',numPos('inp-bt1',4));
@@ -942,17 +1035,32 @@ function salvarConfig(){
 // ════════════════════════════════════════════════════════════
 function getPin(){ const p=LS.g('fdo_pin',null); return (p==null||p==='')?'123789':String(p); }
 function pinAtivo(){ return LS.g('fdo_pin_ativo',true)===true; }
+// Senha das Configurações (separada; padrão 456). Sempre exigida ao abrir o Config.
+function getCfgPin(){ const p=LS.g('fdo_cfg_pin',null); return (p==null||p==='')?'456':String(p); }
+// PIN esperado conforme o tipo de acesso em andamento
+function pinEsperado(){ return st.pinTipo==='config' ? getCfgPin() : getPin(); }
 
 // Entradas dos módulos protegidos pelo PIN
-function entrarPorcionamento(){ exigirAcesso(()=>ir('receitas')); }
+function entrarPorcionamento(){ exigirAcesso(()=>ir('porc-menu')); }
 function entrarBatimento(){ abrirBatimentoLotes(); }      // sem senha — só Porcionamento exige PIN
 function entrarFermentacao(){ abrirFermentacaoLotes(); }  // sem senha
+// Configurações: senha própria (456), pedida TODA vez. Exceção: 1ª configuração (sem chave) entra direto.
+function entrarConfig(){
+  if(!getKey()){ ir('config'); return; }
+  st.pinTipo='config'; st.pinAlvo=()=>ir('config'); st.pinBuf='';
+  document.getElementById('pin-err').textContent='';
+  document.getElementById('pin-title').textContent='Configurações';
+  document.getElementById('pin-sub').textContent='Senha das Configurações';
+  renderPinPad(); atualizarPinDots(); ir('pin');
+}
 
-// Roda fn direto se já desbloqueado / sem PIN; senão mostra o teclado
+// Roda fn direto se já desbloqueado / sem PIN; senão mostra o teclado (acesso à produção)
 function exigirAcesso(fn){
+  st.pinTipo='producao';
   if(!pinAtivo() || sessaoDesbloqueada){ fn(); return; }
   st.pinAlvo=fn; st.pinBuf='';
   document.getElementById('pin-err').textContent='';
+  document.getElementById('pin-title').textContent='Acesso à Produção';
   document.getElementById('pin-sub').textContent='Digite a senha';
   renderPinPad(); atualizarPinDots(); ir('pin');
 }
@@ -968,20 +1076,21 @@ function renderPinPad(){
   pad.dataset.pronto='1';
 }
 function atualizarPinDots(){
-  const alvo=getPin().length; let h='';
+  const alvo=pinEsperado().length; let h='';
   for(let i=0;i<alvo;i++) h+=`<div class="pin-dot${i<st.pinBuf.length?' on':''}"></div>`;
   document.getElementById('pin-dots').innerHTML=h;
 }
 function pinDigito(d){
-  if(st.pinBuf.length>=getPin().length) return;
+  if(st.pinBuf.length>=pinEsperado().length) return;
   st.pinBuf+=d; atualizarPinDots();
-  if(st.pinBuf.length===getPin().length) setTimeout(verificarPin,120);
+  if(st.pinBuf.length===pinEsperado().length) setTimeout(verificarPin,120);
 }
 function pinApagar(){ st.pinBuf=st.pinBuf.slice(0,-1); atualizarPinDots(); document.getElementById('pin-err').textContent=''; }
 function pinLimpar(){ st.pinBuf=''; atualizarPinDots(); document.getElementById('pin-err').textContent=''; }
 function verificarPin(){
-  if(st.pinBuf===getPin()){
-    sessaoDesbloqueada=true;
+  if(st.pinBuf===pinEsperado()){
+    // Só o acesso à produção fica desbloqueado pela sessão; o Config pede senha sempre.
+    if(st.pinTipo!=='config') sessaoDesbloqueada=true;
     const fn=st.pinAlvo; st.pinAlvo=null; st.pinBuf='';
     if(typeof fn==='function') fn(); else ir('start');
   }else{
@@ -991,7 +1100,7 @@ function verificarPin(){
     w.classList.remove('err'); void w.offsetWidth; w.classList.add('err');
   }
 }
-function cancelarPin(){ st.pinAlvo=null; st.pinBuf=''; ir('start'); }
+function cancelarPin(){ st.pinAlvo=null; st.pinBuf=''; st.pinTipo='producao'; ir('start'); }
 
 // ════════════════════════════════════════════════════════════
 // AUTOFALANTE — liga/desliga o TTS (botão na tela + por voz)
@@ -1026,22 +1135,33 @@ function aplicarComandoSom(ligar){
 // nº nunca reaproveitado). O lote guarda todas as etapas; apagar o
 // lote apaga TODOS os processos dele.
 // ════════════════════════════════════════════════════════════
-const ETAPAS_ORDEM=['porcionamento','batimento','laminacao','modelagem','fermentacao','forneamento','expedicao'];
-function nomeEtapa(k){ return {porcionamento:'Porcionado',batimento:'Batido',laminacao:'Laminado',modelagem:'Modelado',fermentacao:'Fermentado',forneamento:'Forneado',expedicao:'Expedido'}[k]||k; }
+const ETAPAS_ORDEM=['porcionamento_secos','porcionamento_liquidos','batimento','laminacao','modelagem','fermentacao','forneamento','expedicao'];
+function nomeEtapa(k){ return {porcionamento:'Porcionado',porcionamento_secos:'Secos',porcionamento_liquidos:'Líquidos',batimento:'Batido',laminacao:'Laminado',modelagem:'Modelado',fermentacao:'Fermentado',forneamento:'Forneado',expedicao:'Expedido'}[k]||k; }
+
+// Lê o estado das fases do porcionamento, com queda para o formato antigo (porcionamento único)
+function secosFeito(l){ const e=(l&&l.etapas)||{}; return !!((e.porcionamento_secos&&e.porcionamento_secos.feito)||(e.porcionamento&&e.porcionamento.feito)); }
+function liquidosFeito(l){ const e=(l&&l.etapas)||{}; return !!((e.porcionamento_liquidos&&e.porcionamento_liquidos.feito)||(e.porcionamento&&e.porcionamento.feito)); }
+// Dados de exibição do porcionamento (prefere os secos; cai para o antigo)
+function porcInfo(l){ const e=(l&&l.etapas)||{}; return e.porcionamento_secos||e.porcionamento||{}; }
 
 function proxLoteNum(){ const n=LS.g('fdo_lote_seq',0)+1; LS.s('fdo_lote_seq',n); return n; }
 
-function criarLotePorcionamento(){
+// Total geral da receita inteira (secos + líquidos), independente da fase atual
+function totalReceitaFull(rid){ const r=RECEITAS[rid]||RECEITAS[st.receita]||RECEITAS.r1; return (r.passos||[]).reduce((s,p)=>s+(p.g||0),0); }
+
+// PORCIONAMENTO DE SECOS concluído → cria um novo LOTE numerado (com etiqueta)
+function criarLoteSecos(){
   const r=RECEITAS[st.receita]||RECEITAS.r1;
   const agora=new Date();
   const lote={
     num:proxLoteNum(), id:'lote_'+agora.getTime(),
     receita:st.receita, receitaNome:r.nome, rotulo:r.rotulo,
     criado:agora.toLocaleString('pt-BR'), criadoTs:agora.getTime(),
-    etapas:{ porcionamento:{
+    etapas:{ porcionamento_secos:{
       feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(),
       op:getOp(), temp:st.temp, baldes_secos:st.baldeSecos||1,
-      total_g:totalGeral(), concluidos:st.done.size, total:RECEITA.length,
+      total_g:totalReceitaFull(st.receita), peso_secos_g:pesoBaldeSecosAtual(),
+      concluidos:st.done.size, total:RECEITA.length,
       dur:Math.round((Date.now()-st.sessionStart)/60000)
     }}
   };
@@ -1094,7 +1214,8 @@ function migrarLotesAntigos(){
 function lotesPendentesBatimento(){
   return LS.g('fdo_lotes',[]).filter(l=>{
     const e=l.etapas||{};
-    return e.porcionamento && e.porcionamento.feito && !(e.batimento && e.batimento.feito);
+    // Bater a Massa só com os secos E os líquidos prontos, e ainda não batido
+    return secosFeito(l) && liquidosFeito(l) && !(e.batimento && e.batimento.feito);
   });
 }
 function abrirBatimentoLotes(){ renderBatLotes(); ir('batimento-lotes'); }
@@ -1102,11 +1223,11 @@ function renderBatLotes(){
   const lotes=lotesPendentesBatimento();
   const el=document.getElementById('bat-lotes-list');
   if(!lotes.length){
-    el.innerHTML='<div class="bat-empty"><div class="bat-empty-icon">✅</div><div>Nenhum lote aguardando batimento.</div><div style="font-size:.78rem">Conclua um porcionamento para gerar um lote.</div></div>';
+    el.innerHTML='<div class="bat-empty"><div class="bat-empty-icon">✅</div><div>Nenhum lote aguardando batimento.</div><div style="font-size:.78rem">Conclua os secos E os líquidos de um lote para liberar o batimento.</div></div>';
     return;
   }
   el.innerHTML=lotes.map(l=>{
-    const p=(l.etapas&&l.etapas.porcionamento)||{};
+    const p=porcInfo(l);
     const sub=[l.criado||'', p.temp?(p.temp+'°C'):'', p.total_g?formatPeso(p.total_g):''].filter(Boolean).join(' · ');
     return `<div class="modulo ativo" onclick="abrirBatimento('${l.id}')">
       <div class="modulo-icon">🥣</div>
@@ -1115,6 +1236,31 @@ function renderBatLotes(){
         <div class="modulo-desc">${sub}</div>
       </div>
       <div class="modulo-badge badge-ativo">Bater</div>
+    </div>`;
+  }).join('');
+}
+// PORCIONAMENTO DE LÍQUIDOS — lista lotes com os secos prontos e líquidos pendentes
+function lotesPendentesLiquidos(){
+  return LS.g('fdo_lotes',[]).filter(l=> secosFeito(l) && !liquidosFeito(l));
+}
+function abrirLiquidosLotes(){ renderLiquidosLotes(); ir('liquidos-lotes'); }
+function renderLiquidosLotes(){
+  const lotes=lotesPendentesLiquidos();
+  const el=document.getElementById('liq-lotes-list');
+  if(!lotes.length){
+    el.innerHTML='<div class="bat-empty"><div class="bat-empty-icon">✅</div><div>Nenhum lote aguardando os líquidos.</div><div style="font-size:.78rem">Faça primeiro o Porcionamento de Secos para gerar um lote.</div></div>';
+    return;
+  }
+  el.innerHTML=lotes.map(l=>{
+    const p=porcInfo(l);
+    const sub=[l.criado||'', p.temp?(p.temp+'°C'):'', (p.baldes_secos&&p.baldes_secos>1)?(p.baldes_secos+'x secos'):''].filter(Boolean).join(' · ');
+    return `<div class="modulo ativo" onclick="iniciarLiquidos('${l.id}')">
+      <div class="modulo-icon">💧</div>
+      <div class="modulo-info">
+        <div class="modulo-nome">Lote #${l.num} · ${l.receitaNome||l.rotulo||''}</div>
+        <div class="modulo-desc">${sub}</div>
+      </div>
+      <div class="modulo-badge badge-ativo">Líquidos</div>
     </div>`;
   }).join('');
 }
@@ -1161,9 +1307,10 @@ function setBatFase(f){
 function abrirBatimento(id){
   const lote=LS.g('fdo_lotes',[]).find(l=>l.id===id);
   if(!lote){ abrirBatimentoLotes(); return; }
-  st.batLote=id; st.batStart=Date.now();
+  st.batLote=id; st.batStart=Date.now(); st.batRodando=false; batLimparRun();
   // reset cronômetro / fases
   if(batCronInt){clearInterval(batCronInt);batCronInt=null;}
+  batPararMicPeso();
   batAvisados=[]; batTempoSeg=0;
   document.getElementById('bat-cron').textContent='00:00';
   document.getElementById('bat-aviso').textContent='Toque em iniciar para começar a contar.';
@@ -1171,7 +1318,7 @@ function abrirBatimento(id){
   document.getElementById('bat-fim-btn').style.display='none';
   document.getElementById('bat-peso-inp').value='';
   document.getElementById('bat-divisao').textContent='';
-  const p=(lote.etapas&&lote.etapas.porcionamento)||{};
+  const p=porcInfo(lote);
   document.getElementById('bat-lote-num').textContent='#'+lote.num;
   document.getElementById('bat-lote-rec').textContent=lote.receitaNome||lote.rotulo||'';
   document.getElementById('bat-lote-meta').textContent=[lote.criado||'', p.op?('op. '+p.op):'', p.total_g?('total '+formatPeso(p.total_g)):''].filter(Boolean).join(' · ');
@@ -1255,28 +1402,48 @@ function batAgenda(){
   ];
 }
 function fmtMMSS(seg){ const m=Math.floor(seg/60), s=seg%60; return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
+// Persistência da batida (resiste a sair do app / descartar a aba) — req5
+function batSalvarRun(fase){
+  if(!st.batLote) return;
+  LS.s('fdo_bat_run',{ loteId:st.batLote, startMs:batBatStartMs, fase:fase, temp:st.batTemp, tempoSeg:batTempoSeg, avisados:batAvisados.slice(), savedAt:Date.now() });
+}
+function batLimparRun(){ try{ localStorage.removeItem('fdo_bat_run'); }catch(e){} }
+
+// Cria o cronômetro. Anuncia só o alarme MAIS RECENTE se vários cruzarem de uma vez (ao voltar do background)
+function batCriarTick(){
+  const agenda=batAgenda();
+  return setInterval(()=>{
+    const seg=Math.floor((Date.now()-batBatStartMs)/1000);
+    batTempoSeg=seg;
+    const cronEl=document.getElementById('bat-cron'); if(cronEl) cronEl.textContent=fmtMMSS(seg);
+    let maisRecente=-1;
+    agenda.forEach((a,i)=>{ if(!batAvisados.includes(i) && seg>=a.min*60){ batAvisados.push(i); maisRecente=i; } });
+    if(maisRecente>=0){ batAnunciar(agenda[maisRecente].txt); batSalvarRun('batendo'); }
+  },1000);
+}
+
 function batIniciarBatida(){
   // destrava o áudio agora (gesto do usuário) para o alarme tocar alto depois
   try{ const A=window.AudioContext||window.webkitAudioContext; if(A){ if(!batAudioCtx) batAudioCtx=new A(); if(batAudioCtx.state==='suspended') batAudioCtx.resume(); } }catch(e){}
-  batBatStartMs=Date.now(); batAvisados=[];
+  batBatStartMs=Date.now(); batAvisados=[]; st.batRodando=true;
   document.getElementById('bat-start-btn').style.display='none';
   document.getElementById('bat-fim-btn').style.display='';
   document.getElementById('bat-aviso').textContent='Cronômetro rodando…';
+  pedirWakeLock();
+  batSalvarRun('batendo');
   falar('Batida iniciada, velocidade 1.');
-  const agenda=batAgenda();
-  batCronInt=setInterval(()=>{
-    const seg=Math.floor((Date.now()-batBatStartMs)/1000);
-    batTempoSeg=seg;
-    document.getElementById('bat-cron').textContent=fmtMMSS(seg);
-    agenda.forEach((a,i)=>{ if(!batAvisados.includes(i) && seg>=a.min*60){ batAvisados.push(i); batAnunciar(a.txt); } });
-  },1000);
+  if(batCronInt){clearInterval(batCronInt);}
+  batCronInt=batCriarTick();
 }
 function batFinalizarBatida(){
   if(batCronInt){clearInterval(batCronInt);batCronInt=null;}
   batTempoSeg=Math.floor((Date.now()-batBatStartMs)/1000);
+  st.batRodando=false;
   document.getElementById('bat-tempo-total').textContent=fmtMMSS(batTempoSeg);
   setBatFase('peso');
-  falar(`Batida finalizada. Tempo total ${Math.floor(batTempoSeg/60)} minutos e ${batTempoSeg%60} segundos. Informe o peso total da massa.`);
+  batSalvarRun('peso');
+  falar(`Batida finalizada. Tempo total ${Math.floor(batTempoSeg/60)} minutos e ${batTempoSeg%60} segundos. Informe o peso total da massa. Pode falar o peso.`);
+  batIniciarMicPeso(); // req4: microfone já ligado para falar o peso
 }
 function batAtualizarDivisao(){
   const v=parseFloat(document.getElementById('bat-peso-inp').value);
@@ -1285,28 +1452,35 @@ function batAtualizarDivisao(){
   if(isFinite(v)&&v>0){ const r=Math.round((v/div)*100)/100; el.textContent=`Cada parte (÷${div}): ${formatPeso(r)}`; return r; }
   el.textContent=''; return null;
 }
-function batFalarPeso(){
+// req4: microfone contínuo na fase de peso — o padeiro pode falar OU digitar
+function batIniciarMicPeso(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){ alert('Reconhecimento de voz indisponível. Digite o peso.'); return; }
-  const el=document.getElementById('bat-divisao'); el.textContent='🎤 Ouvindo o peso…';
-  const rec=new SR(); rec.lang='pt-BR'; rec.interimResults=false; rec.maxAlternatives=3;
+  const el=document.getElementById('bat-divisao');
+  if(!SR){ if(el && !document.getElementById('bat-peso-inp').value) el.textContent='Digite o peso (voz indisponível neste navegador).'; return; }
+  batPararMicPeso();
+  const rec=new SR(); rec.lang='pt-BR'; rec.continuous=true; rec.interimResults=false; rec.maxAlternatives=3;
+  st.batRecPeso=rec;
+  rec.onstart=()=>{ if(el && !document.getElementById('bat-peso-inp').value) el.textContent='🎤 Ouvindo o peso… pode falar ou digitar.'; };
+  rec.onend=()=>{ if(st.batRecPeso===rec){ setTimeout(()=>{try{rec.start();}catch(e){}},400); } };
+  rec.onerror=(e)=>{ if(e.error==='not-allowed'){ st.batRecPeso=null; if(el) el.textContent='Microfone bloqueado. Digite o peso.'; } };
   rec.onresult=(e)=>{
+    const r=e.results[e.results.length-1];
     let achou=null;
-    for(let i=0;i<e.results[0].length;i++){
-      const txt=e.results[0][i].transcript.toLowerCase();
+    for(let i=0;i<r.length;i++){
+      const txt=r[i].transcript.toLowerCase();
       const m=txt.replace(/\./g,'').replace(',','.').match(/\d+(\.\d+)?/);
       if(m){ achou=m[0]; break; }
     }
-    if(achou){ document.getElementById('bat-peso-inp').value=achou; const r=batAtualizarDivisao(); if(r!=null) falar(`Peso ${achou} gramas. Cada parte, ${falaPeso(Math.round(r))}.`); }
-    else { el.textContent='Não entendi o peso. Tente de novo ou digite.'; }
+    if(achou){ document.getElementById('bat-peso-inp').value=achou; const d=batAtualizarDivisao(); if(d!=null) falar(`Peso ${achou} gramas. Cada parte, ${falaPeso(Math.round(d))}.`); }
   };
-  rec.onerror=()=>{ el.textContent='Não consegui ouvir. Digite o peso.'; };
   try{ rec.start(); }catch(e){}
 }
+function batPararMicPeso(){ if(st.batRecPeso){ const r=st.batRecPeso; st.batRecPeso=null; r.onend=null; try{r.stop();}catch(e){} } }
+function batFalarPeso(){ batIniciarMicPeso(); const el=document.getElementById('bat-divisao'); if(el && !document.getElementById('bat-peso-inp').value) el.textContent='🎤 Ouvindo o peso…'; }
 function batConcluirComPeso(){
   const todos=LS.g('fdo_lotes',[]);
   const lote=todos.find(l=>l.id===st.batLote);
-  if(!lote){ abrirBatimentoLotes(); return; }
+  if(!lote){ batPararMicPeso(); batLimparRun(); abrirBatimentoLotes(); return; }
   const peso=parseFloat(document.getElementById('bat-peso-inp').value);
   const div=getBatDiv();
   const porParte=(isFinite(peso)&&peso>0)?Math.round((peso/div)*100)/100:null;
@@ -1320,10 +1494,58 @@ function batConcluirComPeso(){
     dur:Math.round((Date.now()-(st.batStart||Date.now()))/60000)
   };
   LS.s('fdo_lotes',todos);
+  batPararMicPeso(); batLimparRun(); st.batRodando=false; liberarWakeLock();
   if(porParte!=null) falar(`Batimento do lote ${lote.num} concluído. Peso ${Math.round(peso)} gramas. Cada uma das ${div} partes, ${falaPeso(Math.round(porParte))}.`);
   else falar(`Batimento do lote ${lote.num} concluído.`);
   st.batLote=null;
   abrirBatimentoLotes();
+}
+// Sair do batimento — pede confirmação se a batida está em andamento (req5: só sai por comando claro)
+function batSair(destino){
+  if(st.batRodando || (st.batLote && LS.g('fdo_bat_run',null))){
+    const ok=confirm('A batida está em andamento. Sair agora vai descartar o cronômetro deste lote.\n\nDeseja realmente sair?');
+    if(!ok) return;
+  }
+  if(batCronInt){clearInterval(batCronInt);batCronInt=null;}
+  batPararMicPeso(); st.batRodando=false; batLimparRun(); liberarWakeLock();
+  ir(destino);
+}
+// Restaura uma batida em andamento após recarregar/descartar a aba (req5)
+function batRestaurar(){
+  const run=LS.g('fdo_bat_run',null);
+  if(!run || !run.loteId) return false;
+  if(Date.now()-(run.savedAt||0) > 12*3600*1000){ batLimparRun(); return false; } // velho demais
+  const lote=LS.g('fdo_lotes',[]).find(l=>l.id===run.loteId);
+  if(!lote){ batLimparRun(); return false; }
+  st.batLote=run.loteId; st.batStart=run.startMs||Date.now(); st.batTemp=(run.temp!=null?run.temp:20);
+  const p=porcInfo(lote);
+  document.getElementById('bat-lote-num').textContent='#'+lote.num;
+  document.getElementById('bat-lote-rec').textContent=lote.receitaNome||lote.rotulo||'';
+  document.getElementById('bat-lote-meta').textContent=[lote.criado||'', p.op?('op. '+p.op):''].filter(Boolean).join(' · ');
+  document.getElementById('bat-temp-val').textContent=st.batTemp;
+  batBatStartMs=run.startMs||Date.now();
+  batAvisados=Array.isArray(run.avisados)?run.avisados.slice():[];
+  batTempoSeg=Math.floor((Date.now()-batBatStartMs)/1000);
+  // marca como já avisados os alarmes que JÁ passaram (não repete a rajada ao voltar)
+  batAgenda().forEach((a,i)=>{ if(batTempoSeg>=a.min*60 && !batAvisados.includes(i)) batAvisados.push(i); });
+  atualizarBotoesTTS();
+  if(run.fase==='peso'){
+    st.batRodando=false;
+    document.getElementById('bat-tempo-total').textContent=fmtMMSS(batTempoSeg);
+    setBatFase('peso'); ir('batimento');
+    batIniciarMicPeso();
+  }else{
+    st.batRodando=true;
+    document.getElementById('bat-cron').textContent=fmtMMSS(batTempoSeg);
+    document.getElementById('bat-start-btn').style.display='none';
+    document.getElementById('bat-fim-btn').style.display='';
+    document.getElementById('bat-aviso').textContent='Cronômetro rodando… (retomado)';
+    setBatFase('batendo'); ir('batimento');
+    pedirWakeLock();
+    if(batCronInt){clearInterval(batCronInt);}
+    batCronInt=batCriarTick();
+  }
+  return true;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1419,6 +1641,8 @@ function abrirEtiqueta(id){
   st.etqRet = (atual&&atual.id==='s-history')?'history':((atual&&atual.id==='s-done')?'done':'start');
   etqCanvas=desenharEtiqueta(lote);
   document.getElementById('etq-img').src=etqCanvas.toDataURL('image/png');
+  marcarPrintMode();
+  const d=document.getElementById('etq-diag'); if(d){ d.style.display='none'; d.textContent=''; }
   const sEl=document.getElementById('etq-status'); sEl.className='etq-status';
   sEl.textContent = navigator.bluetooth ? 'Pronto. Ligue a impressora e toque em Imprimir.' : 'Para Bluetooth use o Chrome no Android. Você também pode salvar a imagem e imprimir pelo app da impressora.';
   ir('etiqueta');
@@ -1431,8 +1655,14 @@ function baixarEtiqueta(){
   a.download='etiqueta_lote_'+(lote?lote.num:'x')+'.png';
   a.href=etqCanvas.toDataURL('image/png'); a.click();
 }
-// Canvas -> raster 1-bit -> bytes ESC/POS (GS v 0)
-function etiquetaParaEscpos(){
+
+// ── Linguagem da impressora (persistida). Padrão ESC/POS. ──
+function getPrintMode(){ const m=LS.g('fdo_print_mode','escpos'); return (m==='tspl'||m==='cpcl')?m:'escpos'; }
+function setPrintMode(m){ LS.s('fdo_print_mode',(m==='tspl'||m==='cpcl')?m:'escpos'); marcarPrintMode(); }
+function marcarPrintMode(){ const cur=getPrintMode(); document.querySelectorAll('#etq-modos .etq-modo').forEach(b=>{ b.classList.toggle('sel', b.dataset.modo===cur); }); }
+
+// Canvas -> raster 1-bit. invert=false → bit 1 = PRETO (ESC/POS, CPCL); invert=true → bit 1 = BRANCO (TSPL BITMAP)
+function rasterMono(invert){
   const x=etqCanvas.getContext('2d');
   const img=x.getImageData(0,0,ETQ_W,ETQ_H).data;
   const bpl=ETQ_W/8;
@@ -1442,12 +1672,18 @@ function etiquetaParaEscpos(){
       let b=0;
       for(let bit=0;bit<8;bit++){
         const px=bx*8+bit; const i=(y*ETQ_W+px)*4;
-        const lum=(img[i]+img[i+1]+img[i+2])/3;
-        if(lum<128) b|=(0x80>>bit);
+        const preto=((img[i]+img[i+1]+img[i+2])/3)<128;
+        const setBit = invert ? !preto : preto;
+        if(setBit) b|=(0x80>>bit);
       }
       raster[y*bpl+bx]=b;
     }
   }
+  return {raster,bpl};
+}
+// ESC/POS (GS v 0) — impressoras tipo cupom (modo padrão)
+function encEscpos(){
+  const {raster,bpl}=rasterMono(false);
   const init=[0x1B,0x40,0x1B,0x61,0x01];
   const cab=[0x1D,0x76,0x30,0x00,bpl&0xFF,(bpl>>8)&0xFF,ETQ_H&0xFF,(ETQ_H>>8)&0xFF];
   const fim=[0x0A,0x0A,0x0A,0x0A];
@@ -1455,42 +1691,89 @@ function etiquetaParaEscpos(){
   let o=0; out.set(init,o);o+=init.length; out.set(cab,o);o+=cab.length; out.set(raster,o);o+=raster.length; out.set(fim,o);
   return out;
 }
-async function imprimirBluetooth(){
-  const sEl=document.getElementById('etq-status');
-  const setS=(t,cls)=>{ sEl.textContent=t; sEl.className='etq-status'+(cls?(' '+cls):''); };
+// TSPL (SIZE/GAP/CLS/BITMAP/PRINT) — impressoras de etiqueta (BITMAP usa 1=branco)
+function encTspl(){
+  const {raster,bpl}=rasterMono(true);
+  const enc=new TextEncoder();
+  const head=enc.encode(`SIZE 60 mm,50 mm\r\nGAP 2 mm,0 mm\r\nDIRECTION 1\r\nREFERENCE 0,0\r\nCLS\r\nBITMAP 0,0,${bpl},${ETQ_H},0,`);
+  const tail=enc.encode(`\r\nPRINT 1,1\r\n`);
+  const out=new Uint8Array(head.length+raster.length+tail.length);
+  out.set(head,0); out.set(raster,head.length); out.set(tail,head.length+raster.length);
+  return out;
+}
+// CPCL (EG, dados em ASCII hex, 1=preto) — impressoras portáteis tipo etiqueta
+function encCpcl(){
+  const {raster,bpl}=rasterMono(false);
+  const H='0123456789ABCDEF'; let hex='';
+  for(let i=0;i<raster.length;i++){ const v=raster[i]; hex+=H[(v>>4)&0xF]+H[v&0xF]; }
+  const enc=new TextEncoder();
+  const s=`! 0 200 200 ${ETQ_H} 1\r\nEG ${bpl} ${ETQ_H} 0 0 ${hex}\r\nFORM\r\nPRINT\r\n`;
+  return enc.encode(s);
+}
+function encodeEtiqueta(mode){ if(mode==='tspl')return encTspl(); if(mode==='cpcl')return encCpcl(); return encEscpos(); }
+
+// Serviços/características comuns de escrita em impressoras BLE (ordem de prioridade)
+const BT_SERV_OPC=[0x18F0,0xFFE0,0xFF00,0xFEE7,0xAE30,'49535343-fe7d-4ae5-8fa9-9fafd205e455','e7810a71-73ae-499d-8c15-faa9aef0c3f2','0000ff00-0000-1000-8000-00805f9b34fb'];
+const BT_CHAR_PRIOR=['49535343-8841-43f4-a8d4-ecbe34729bb3','0000ff02-0000-1000-8000-00805f9b34fb','0000ffe1-0000-1000-8000-00805f9b34fb'].map(s=>s.toLowerCase());
+
+// Conecta por Bluetooth, escolhe a melhor característica e envia os bytes, com diagnóstico na tela
+async function btConectarEnviar(dados, setS){
   if(!navigator.bluetooth){ setS('Este navegador não suporta Bluetooth. Use o Chrome no Android, ou salve a imagem e imprima pelo app da impressora.','err'); return; }
+  const linhas=[]; const diag=document.getElementById('etq-diag');
+  const log=(t)=>{ linhas.push(t); if(diag){ diag.style.display='block'; diag.textContent=linhas.join('\n'); } };
   try{
     setS('Procurando a impressora… escolha a MDK-022 na lista.');
-    const dev=await navigator.bluetooth.requestDevice({
-      acceptAllDevices:true,
-      optionalServices:[0x18F0,0xFFE0,0xFF00,0xFEE7,0xAE30,'49535343-fe7d-4ae5-8fa9-9fafd205e455','e7810a71-73ae-499d-8c15-faa9aef0c3f2']
-    });
+    const dev=await navigator.bluetooth.requestDevice({ acceptAllDevices:true, optionalServices:BT_SERV_OPC });
+    log('Aparelho: '+(dev.name||'(sem nome)'));
     setS('Conectando…');
     const server=await dev.gatt.connect();
     const servs=await server.getPrimaryServices();
-    let ch=null;
+    const graváveis=[];
     for(const s of servs){
-      const cs=await s.getCharacteristics();
-      for(const c of cs){ if(c.properties.write||c.properties.writeWithoutResponse){ ch=c; break; } }
-      if(ch) break;
+      let cs=[]; try{ cs=await s.getCharacteristics(); }catch(e){ continue; }
+      for(const c of cs){
+        const props=[]; if(c.properties.write)props.push('write'); if(c.properties.writeWithoutResponse)props.push('wwr'); if(c.properties.notify)props.push('notify');
+        log('• '+String(s.uuid).slice(0,8)+' / '+String(c.uuid).slice(0,8)+' ['+(props.join(',')||'—')+']');
+        if(c.properties.write||c.properties.writeWithoutResponse) graváveis.push(c);
+      }
     }
-    if(!ch){ setS('Não encontrei um canal de impressão nesta impressora. Ela pode usar Bluetooth comum (não suportado pelo navegador). Salve a imagem e imprima pelo app.','err'); return; }
-    setS('Enviando etiqueta…');
-    const dados=etiquetaParaEscpos();
+    if(!graváveis.length){ setS('Não achei um canal de impressão (a impressora pode usar Bluetooth comum, fora do alcance do navegador). Salve a imagem e use o app da impressora.','err'); return; }
+    const ch=graváveis.find(c=>BT_CHAR_PRIOR.includes(String(c.uuid).toLowerCase())) || graváveis[0];
+    log('Usando: '+String(ch.uuid).slice(0,8)+' · '+getPrintMode().toUpperCase()+' · '+dados.length+' bytes');
+    setS('Enviando… ('+getPrintMode().toUpperCase()+')');
     const semResp=ch.properties.writeWithoutResponse;
-    const TAM=180;
+    const TAM=semResp?200:180;
     for(let i=0;i<dados.length;i+=TAM){
       const parte=dados.slice(i,i+TAM);
-      if(semResp && ch.writeValueWithoutResponse) await ch.writeValueWithoutResponse(parte);
-      else await ch.writeValue(parte);
-      await new Promise(r=>setTimeout(r,18));
+      try{
+        if(semResp && ch.writeValueWithoutResponse) await ch.writeValueWithoutResponse(parte);
+        else if(ch.writeValueWithResponse) await ch.writeValueWithResponse(parte);
+        else await ch.writeValue(parte);
+      }catch(e){ try{ await ch.writeValue(parte); }catch(e2){} }
+      await new Promise(r=>setTimeout(r,20));
     }
-    setS('Etiqueta enviada! ✓','ok');
-    setTimeout(()=>{ try{dev.gatt.disconnect();}catch(e){} },1200);
+    setS('Enviado! ✓ Se nada sair, troque a linguagem acima e use o Teste rápido.','ok');
+    setTimeout(()=>{ try{dev.gatt.disconnect();}catch(e){} },1500);
   }catch(err){
     if(err && err.name==='NotFoundError') setS('Nenhuma impressora selecionada.');
-    else setS('Falha: '+(err.message||err.name||'erro')+'. Tente de novo ou salve a imagem.','err');
+    else setS('Falha: '+(err.message||err.name||'erro')+'. Tente de novo, troque a linguagem ou salve a imagem.','err');
   }
+}
+async function imprimirBluetooth(){
+  const sEl=document.getElementById('etq-status');
+  const setS=(t,cls)=>{ sEl.textContent=t; sEl.className='etq-status'+(cls?(' '+cls):''); };
+  if(!etqCanvas){ setS('Etiqueta não carregada.','err'); return; }
+  await btConectarEnviar(encodeEtiqueta(getPrintMode()), setS);
+}
+// Teste rápido: envia um payload mínimo (uma linha) na linguagem selecionada
+async function imprimirTeste(){
+  const sEl=document.getElementById('etq-status');
+  const setS=(t,cls)=>{ sEl.textContent=t; sEl.className='etq-status'+(cls?(' '+cls):''); };
+  const enc=new TextEncoder(); const modo=getPrintMode(); let dados;
+  if(modo==='tspl') dados=enc.encode('SIZE 60 mm,50 mm\r\nGAP 2 mm,0 mm\r\nDIRECTION 1\r\nCLS\r\nTEXT 24,24,"3",0,1,1,"TESTE FdO"\r\nPRINT 1,1\r\n');
+  else if(modo==='cpcl') dados=enc.encode('! 0 200 200 120 1\r\nTEXT 4 0 30 30 TESTE FdO\r\nFORM\r\nPRINT\r\n');
+  else dados=enc.encode('\x1B\x40\x1B\x61\x01TESTE FdO\n\n\n');
+  await btConectarEnviar(dados, setS);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1578,9 +1861,10 @@ function reiniciarNumeracaoLotes(){
 // Escolhe qual receita rodar (r1, r2 ou r3), ajusta o cabeçalho e vai para a previsão de temperatura
 function iniciarReceita(rid){
   st.receita = RECEITAS[rid] ? rid : 'r1';
-  RECEITA = RECEITAS[st.receita].passos;
+  st.subModulo='secos';
+  RECEITA = RECEITAS[st.receita].passosSecos;
   const h=document.getElementById('hdr-rec');
-  if(h) h.textContent='Porcionamento · '+RECEITAS[st.receita].rotulo;
+  if(h) h.textContent='Secos · '+RECEITAS[st.receita].rotulo;
   buscarPrevisaoMadrugada();
 }
 
@@ -1651,11 +1935,15 @@ function setTemp(t){
   st.temp=t;
   const i=RECEITA.findIndex(p=>p.cat==='FERMENTO');
   if(i>=0){RECEITA[i].g=TEMP_FERMENTO[t];RECEITA[i].qty=TEMP_FERMENTO[t]+' g';RECEITA[i].det=`Quantidade para ${t}°C previstos na noite`;}
-  iniciar();
+  iniciarSecos();
 }
 
-function iniciar(){
+// PORCIONAMENTO DE SECOS — farinhas, fermento, açúcar, sal e manteiga (gera o lote)
+function iniciarSecos(){
   if(!getKey()){ir('config');return;}
+  st.subModulo='secos';
+  RECEITA = RECEITAS[st.receita].passosSecos;
+  const h=document.getElementById('hdr-rec'); if(h) h.textContent='Secos · '+RECEITAS[st.receita].rotulo;
   st.step=0;
   st.done=new Set();
   st.modo='normal';
@@ -1669,6 +1957,32 @@ function iniciar(){
   pedirWakeLock();
   iniciarVoz();
 }
+
+// PORCIONAMENTO DE LÍQUIDOS — água, leite e aproveitamento (continua um lote existente; sem etiqueta)
+function iniciarLiquidos(id){
+  if(!getKey()){ir('config');return;}
+  const lote=LS.g('fdo_lotes',[]).find(l=>l.id===id);
+  if(!lote){ abrirLiquidosLotes(); return; }
+  st.liqLote=id;
+  st.receita = RECEITAS[lote.receita] ? lote.receita : 'r1';
+  st.subModulo='liquidos';
+  const p=porcInfo(lote); st.temp=(p&&p.temp!=null)?p.temp:st.temp;
+  RECEITA = RECEITAS[st.receita].passosLiquidos;
+  const h=document.getElementById('hdr-rec'); if(h) h.textContent='Líquidos · Lote #'+lote.num;
+  st.step=0;
+  st.done=new Set();
+  st.modo='normal';
+  st.sessionStart=Date.now();
+  ir('active');
+  mostrarPerguntaSecos(false);
+  renderLista();
+  atualizarUI();
+  setDot('off','Iniciando mic...');
+  pedirWakeLock();
+  iniciarVoz();
+}
+
+function iniciar(){ iniciarSecos(); } // compat
 
 // ─── WAKE LOCK: mantém a tela ligada durante a sessão ───
 async function pedirWakeLock(){
@@ -1686,9 +2000,16 @@ document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'){
     // App voltou ao foco
     if(st.sessionStart && !st.wakeLock) pedirWakeLock();
-    // Se a sessão está ativa e o mic caiu, tenta religar
+    // Se a sessão de porcionamento está ativa e o mic caiu, tenta religar
     if(st.sessionStart && !st.rec){
       setTimeout(()=>{try{iniciarVoz();}catch(e){}},300);
+    }
+    // Batida em andamento: re-pega wake lock e garante o cronômetro rodando (req5)
+    if(st.batRodando){
+      if(!st.wakeLock) pedirWakeLock();
+      batTempoSeg=Math.floor((Date.now()-batBatStartMs)/1000);
+      const cronEl=document.getElementById('bat-cron'); if(cronEl) cronEl.textContent=fmtMMSS(batTempoSeg);
+      if(!batCronInt) batCronInt=batCriarTick();
     }
   }
 });
@@ -1710,7 +2031,13 @@ function iniciarVoz(){
     processarComando(txt,r);
   };
   try{rec.start();}catch(e){}
-  setTimeout(()=>{falar(`${st.temp} graus previstos. Balde 1. `+frasePasso(0));},900);
+  setTimeout(()=>{
+    if(st.subModulo==='liquidos'){
+      falar(`Porcionamento de líquidos. ${grupoFala(RECEITA[0].grupo)}. `+frasePasso(0));
+    }else{
+      falar(`${st.temp} graus previstos. Porcionamento de secos. Balde de secos. `+frasePasso(0));
+    }
+  },900);
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -1904,44 +2231,43 @@ function frasePasso(i){
 function irPasso(n){st.step=Math.max(0,Math.min(n,RECEITA.length-1));atualizarUI();falar(frasePasso(st.step));}
 
 // Verifica se o passo `i` é o ÚLTIMO dos secos do balde 1
-function ehUltimoSecos(i){
-  if(i<0||i>=RECEITA.length) return false;
-  const g=RECEITA[i].grupo||'';
-  if(!g.startsWith('BALDE 1')) return false;
-  const prox=RECEITA[i+1];
-  return !prox || !(prox.grupo||'').startsWith('BALDE 1');
+// Soma só os ingredientes do BALDE 1 · SECOS na fase atual (exclui SAL E MANTEIGA)
+function pesoBaldeSecosAtual(){
+  let s=0; (RECEITA||[]).forEach(p=>{ if((p.grupo||'')==='BALDE 1 · SECOS') s+=(p.g||0); }); return s;
 }
-// Índice do primeiro passo do balde 1 (primeira farinha)
-function primeiroSecosIdx(){
-  for(let i=0;i<RECEITA.length;i++){
-    if((RECEITA[i].grupo||'').startsWith('BALDE 1')) return i;
-  }
-  return 0;
+// (mantidas por compatibilidade)
+function ehUltimoSecos(i){ return st.subModulo==='secos' && i===RECEITA.length-1; }
+function primeiroSecosIdx(){ return 0; }
+
+// Texto de conferência/pergunta pós-secos (peso do balde de secos = só BALDE 1)
+function textoPerguntaSecos(){
+  const ing=pesoBaldeSecosAtual();
+  const alvo=ing+PESO_BALDE1;
+  return `Balde ${st.baldeSecos} de secos concluído. Conferir: peso total, com o balde de ${falaPeso(PESO_BALDE1)} mais os secos, é ${falaPeso(alvo)}. Finaliza e gera o lote, ou faz outro balde de secos?`;
 }
 
 function avancar(){
-  // Em modo pós-secos, o botão "Próximo" significa "continuar a receita"
-  if(st.modo==='pos_secos'){continuarReceita();return;}
+  // Em modo pós-secos, o botão "Próximo" significa "finalizar e gerar o lote"
+  if(st.modo==='pos_secos'){finalizarSecos();return;}
 
   const gAnt=RECEITA[st.step].grupo;
 
-  // CASO ESPECIAL: terminando o último dos secos do balde 1 → perguntar
-  if(ehUltimoSecos(st.step)){
+  // SECOS: terminando o ÚLTIMO passo dos secos → perguntar (finalizar x outro balde)
+  if(st.subModulo==='secos' && st.step===RECEITA.length-1){
     st.done.add(st.step);
     st.modo='pos_secos';
     atualizarUI();
-    const ing=baldeTotalAte(st.step);
-    const alvo=ing+PESO_BALDE1;
-    const chk=`Balde ${st.baldeSecos} de secos concluído. Conferir: peso total, com o balde de ${falaPeso(PESO_BALDE1)} mais os ingredientes, é ${falaPeso(alvo)}.`;
-    const pergunta=` Continua a receita ou faz outro balde de secos?`;
-    mostrarPerguntaSecos(true, chk+pergunta);
-    falar(chk+pergunta);
+    const txt=textoPerguntaSecos();
+    mostrarPerguntaSecos(true, txt);
+    falar(txt);
     return;
   }
 
   st.done.add(st.step);
   const n=st.step+1;
-  if(n>=RECEITA.length){concluir();return;}
+  if(n>=RECEITA.length){ // fim dos LÍQUIDOS → concluir (sem etiqueta)
+    concluirLiquidos();return;
+  }
   st.step=n;atualizarUI();
   const p=RECEITA[st.step];
   let pre='Concluído. ';
@@ -1951,41 +2277,22 @@ function avancar(){
   falar(pre+frasePasso(st.step));
 }
 
-// ─── PÓS-SECOS: continuar a receita normalmente (vai pro balde 2) ───
-function continuarReceita(){
-  st.modo='normal';
-  mostrarPerguntaSecos(false);
-  const n=st.step+1;
-  if(n>=RECEITA.length){concluir();return;}
-  st.step=n;
-  atualizarUI();
-  const p=RECEITA[st.step];
-  falar(`Próximo, ${grupoFala(p.grupo)}. `+frasePasso(st.step));
-}
+// ─── PÓS-SECOS: continuar = finalizar e gerar o lote (compat com o comando de voz) ───
+function continuarReceita(){ finalizarSecos(); }
 
 // ─── PÓS-SECOS: iniciar outro balde de secos com a mesma temperatura ───
 function iniciarOutroBaldeSecos(){
   st.modo='normal';
   st.baldeSecos=(st.baldeSecos||1)+1;
   mostrarPerguntaSecos(false);
-  // Desmarca todos os passos do balde 1 (secos) e volta pro primeiro
-  const inicio=primeiroSecosIdx();
-  for(let i=inicio;i<RECEITA.length;i++){
-    if((RECEITA[i].grupo||'').startsWith('BALDE 1')) st.done.delete(i);
-    else break;
-  }
-  st.step=inicio;
+  st.done=new Set();   // recomeça os secos do zero
+  st.step=0;
   atualizarUI();
   falar(`Balde ${st.baldeSecos} de secos. ${st.temp} graus previstos. `+frasePasso(st.step));
 }
 
-// Repete a pergunta de continuar / outro balde
-function repetirPerguntaSecos(){
-  const ing=baldeTotalAte(st.step);
-  const alvo=ing+PESO_BALDE1;
-  const chk=`Balde ${st.baldeSecos} de secos concluído. Conferir: peso total, com o balde de ${falaPeso(PESO_BALDE1)} mais os ingredientes, é ${falaPeso(alvo)}. Continua a receita ou faz outro balde de secos?`;
-  falar(chk);
-}
+// Repete a pergunta de finalizar / outro balde
+function repetirPerguntaSecos(){ falar(textoPerguntaSecos()); }
 
 // Alterna entre a navegação normal e a barra de pergunta pós-secos
 function mostrarPerguntaSecos(mostrar, texto){
@@ -2027,10 +2334,10 @@ function atualizarUI(){
   document.getElementById('c-qty').textContent=p.qty;
   document.getElementById('c-det').textContent=p.det;
   document.getElementById('c-tot').textContent='Total do balde até aqui: '+formatPeso(baldeTotalAte(st.step));
-  // Badge do contador de baldes de secos (só aparece a partir do 2º balde)
+  // Badge do contador de baldes de secos (só na fase de secos, a partir do 2º balde)
   const badge=document.getElementById('secos-badge');
   if(badge){
-    if(st.baldeSecos>1){badge.textContent=st.baldeSecos+'x secos';badge.style.display='inline-block';}
+    if(st.subModulo==='secos' && st.baldeSecos>1){badge.textContent=st.baldeSecos+'x secos';badge.style.display='inline-block';}
     else{badge.style.display='none';}
   }
   renderLista();
@@ -2046,20 +2353,55 @@ function renderLista(){
   document.querySelector('.si.active')?.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
-function concluir(){
+// PORCIONAMENTO DE SECOS concluído → cria o lote, mostra a etiqueta
+function finalizarSecos(){
   salvarSessao(true);
-  const lote=criarLotePorcionamento();
+  const lote=criarLoteSecos();
   st.ultimoLoteId=lote.id;
-  pararVoz();liberarWakeLock();st.sessionStart=0;
-  const tot=formatPeso(totalGeral());
+  pararVoz();liberarWakeLock();st.sessionStart=0;st.modo='normal';
+  mostrarPerguntaSecos(false);
+  const tot=formatPeso(totalReceitaFull(st.receita));
+  document.getElementById('done-emoji').textContent='✅';
+  document.getElementById('done-title').textContent='Secos Concluídos!';
   document.getElementById('done-lote').textContent='LOTE #'+lote.num;
-  document.getElementById('done-tot').innerHTML=`<div class="done-conf">Confira o valor total na balança</div><div class="done-val">${tot}</div>`;
-  falar(`Porcionamento concluído. Lote número ${lote.num}. Marque o número ${lote.num} na massa.`);
+  document.getElementById('done-mark').style.display='';
+  document.getElementById('done-mark').textContent='✍️ Marque este número na massa';
+  document.getElementById('done-etq-btn').style.display='';
+  document.getElementById('done-tot').innerHTML=`<div class="done-conf">Total da massa (secos + líquidos)</div><div class="done-val">${tot}</div>`;
+  falar(`Porcionamento de secos concluído. Lote número ${lote.num}. Marque o número ${lote.num} na massa. Agora imprima a etiqueta.`);
   setTimeout(()=>ir('done'),1500);
 }
-function encerrar(){salvarSessao(false);pararVoz();liberarWakeLock();st.sessionStart=0;st.modo='normal';st.baldeSecos=1;mostrarPerguntaSecos(false);ir('start');}
+
+// PORCIONAMENTO DE LÍQUIDOS concluído → grava no lote, SEM etiqueta
+function concluirLiquidos(){
+  const todos=LS.g('fdo_lotes',[]);
+  const lote=todos.find(l=>l.id===st.liqLote);
+  pararVoz();liberarWakeLock();st.sessionStart=0;st.modo='normal';
+  mostrarPerguntaSecos(false);
+  if(!lote){ ir('start'); return; }
+  const agora=new Date();
+  lote.etapas=lote.etapas||{};
+  lote.etapas.porcionamento_liquidos={
+    feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(),
+    op:getOp(), concluidos:st.done.size, total:RECEITA.length,
+    dur:Math.round((Date.now()-(st.sessionStart||Date.now()))/60000)
+  };
+  LS.s('fdo_lotes',todos);
+  st.liqLote=null;
+  document.getElementById('done-emoji').textContent='💧';
+  document.getElementById('done-title').textContent='Líquidos Concluídos!';
+  document.getElementById('done-lote').textContent='LOTE #'+lote.num;
+  document.getElementById('done-mark').style.display='none';   // líquidos não pede marcação
+  document.getElementById('done-etq-btn').style.display='none'; // líquidos NÃO imprime etiqueta
+  document.getElementById('done-tot').innerHTML=`<div class="done-conf">Lote pronto para o batimento</div><div class="done-val" style="color:var(--grn)">✓</div>`;
+  falar(`Líquidos do lote ${lote.num} concluídos. O lote está pronto para bater a massa.`);
+  setTimeout(()=>ir('done'),1500);
+}
+
+function concluir(){ if(st.subModulo==='liquidos') concluirLiquidos(); else finalizarSecos(); } // compat
+function encerrar(){salvarSessao(false);pararVoz();liberarWakeLock();st.sessionStart=0;st.modo='normal';st.baldeSecos=1;st.liqLote=null;mostrarPerguntaSecos(false);ir('start');}
 function pararVoz(){if(st.rec){st.rec.onend=null;try{st.rec.stop();}catch(e){}st.rec=null;}speechSynthesis?.cancel();}
-function salvarSessao(ok){const all=LS.g('fdo_sess',[]);all.unshift({data:new Date().toLocaleString('pt-BR'),modulo:'Porcionamento '+(RECEITAS[st.receita]?RECEITAS[st.receita].rotulo:'R1'),op:getOp(),temp:st.temp,baldes_secos:st.baldeSecos||1,total_g:totalGeral(),concluidos:st.done.size,total:RECEITA.length,dur:Math.round((Date.now()-st.sessionStart)/60000),ok});LS.s('fdo_sess',all.slice(0,60));}
+function salvarSessao(ok){const all=LS.g('fdo_sess',[]);all.unshift({data:new Date().toLocaleString('pt-BR'),modulo:'Porcionamento '+(RECEITAS[st.receita]?RECEITAS[st.receita].rotulo:'R1')+' · '+(st.subModulo==='liquidos'?'Líquidos':'Secos'),op:getOp(),temp:st.temp,baldes_secos:st.baldeSecos||1,total_g:totalReceitaFull(st.receita),concluidos:st.done.size,total:RECEITA.length,dur:Math.round((Date.now()-st.sessionStart)/60000),ok});LS.s('fdo_sess',all.slice(0,60));}
 function renderHist(){
   const todos=LS.g('fdo_lotes',[]);
   const el=document.getElementById('hist-list');
@@ -2068,7 +2410,7 @@ function renderHist(){
     return;
   }
   el.innerHTML=todos.map(l=>{
-    const p=(l.etapas&&l.etapas.porcionamento)||{};
+    const p=porcInfo(l);
     const meta=[
       l.criado||'—',
       p.op?('op. '+p.op):'',
@@ -2076,8 +2418,12 @@ function renderHist(){
       (p.baldes_secos&&p.baldes_secos>1)?(p.baldes_secos+'x secos'):'',
       p.total_g?('total '+formatPeso(p.total_g)):''
     ].filter(Boolean).join(' · ');
+    // Chips: usa o formato novo; lotes antigos (porcionamento único) mostram só "Porcionado"
+    const temNovo=!!((l.etapas&&(l.etapas.porcionamento_secos||l.etapas.porcionamento_liquidos)));
+    const base = temNovo ? ['porcionamento_secos','porcionamento_liquidos','batimento']
+                         : ['porcionamento','batimento'];
     const feitas=ETAPAS_ORDEM.filter(k=>l.etapas&&l.etapas[k]&&l.etapas[k].feito);
-    const mostradas=Array.from(new Set(['porcionamento','batimento'].concat(feitas)));
+    const mostradas=Array.from(new Set(base.concat(feitas)));
     const chips=mostradas.map(k=>{
       const ok=l.etapas&&l.etapas[k]&&l.etapas[k].feito;
       return `<span class="etapa-chip ${ok?'ok':'pend'}">${ok?'✓ ':''}${nomeEtapa(k)}</span>`;
@@ -2099,15 +2445,18 @@ function renderHist(){
   // PIN padrão na primeira execução
   if(LS.g('fdo_pin',null)===null) LS.s('fdo_pin','123789');
   if(LS.g('fdo_pin_ativo',null)===null) LS.s('fdo_pin_ativo',true);
+  if(LS.g('fdo_cfg_pin',null)===null) LS.s('fdo_cfg_pin','456'); // senha das Configurações
   // Migra sessões antigas concluídas para o sistema de lotes (uma vez)
   migrarLotesAntigos();
-  if(!getKey())ir('config');else ir('start');
   const op=LS.g('fdo_op','');
   if(op)document.getElementById('inp-op').value=op;
   atualizarBotoesTTS();
   speechSynthesis?.getVoices();
   speechSynthesis?.addEventListener('voiceschanged',()=>speechSynthesis.getVoices());
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  // Retoma uma batida em andamento (se a aba foi recarregada/descartada); senão, fluxo normal
+  if(!getKey()){ ir('config'); }
+  else if(!batRestaurar()){ ir('start'); }
 })();
 </script>
 </body>
