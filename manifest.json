@@ -1,5 +1,5 @@
 {
-  "_obs": "OBS 18/06/2026 (fdo-v12): Porcionamento dividido em Secos (gera lote + etiqueta) e Líquidos (continua o lote, sem etiqueta); Bater a Massa só com Secos E Líquidos prontos; Receita 3 PADRÃO Bagatelle 3600 g + Italiana 4400 g; senha própria das Configurações (padrão 456); microfone já ligado no peso do batimento; cronômetro do batimento resiste a segundo plano e só sai por confirmação; impressão MDK-022 com seletor ESC/POS/TSPL/CPCL, teste rápido e diagnóstico Bluetooth.",
+  "_obs": "OBS 18/06/2026 (fdo-v13): Temperatura da Noite com 2 opções (ambas 17°C) por tempo de fermentação — fermento 70 g (14 h) ou 64 g (17 h); no 1º passo dos secos Voltar sai para o menu inicial; entre farinhas a voz fala só o nome e o total (sem Concluído); finalização sem '+ Outro balde de secos'; voz ao finalizar só diz concluído + número do lote; Bater a Massa mostra fermento, sal e manteiga no balde 1. Base v12: porcionamento dividido em Secos/Líquidos; senha das Configurações; impressão MDK-022 ESC/POS·TSPL·CPCL.",
   "name": "Folhados d'Ouro — Produção",
   "short_name": "Folhados d'Ouro",
   "description": "Checklist por voz para produção de croissants",

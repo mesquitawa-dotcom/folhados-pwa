@@ -1,20 +1,23 @@
 // Folhados d'Ouro — Service Worker
-// OBS 18/06/2026: cache fdo-v12 —
-//   • Porcionamento dividido em DOIS: Secos (gera o lote + etiqueta) e
-//     Líquidos (continua um lote já com os secos prontos; sem etiqueta).
+// OBS 18/06/2026: cache fdo-v13 —
+//   • Temperatura da Noite: só DUAS opções (ambas 17°C), por tempo de
+//     fermentação — fermento 70 g (14 h) ou 64 g (17 h).
+//   • Secos: "Voltar" no 1º passo sai para o menu inicial.
+//   • Entre farinhas, a voz fala só o nome e o total (sem "Concluído").
+//   • Finalização dos secos sem "+ Outro balde de secos".
+//   • Voz ao finalizar só diz "concluído + número do lote".
+//   • Bater a Massa: balde 1 mostra fermento, sal e manteiga.
+//   --- base v12 ---
+//   • Porcionamento dividido em Secos (gera lote + etiqueta) e Líquidos.
 //   • Bater a Massa só libera lotes com Secos E Líquidos prontos.
-//   • Receita 3 PADRÃO: Bagatelle 3600 g + Italiana 4400 g (sem Feuilletage).
-//   • Senha própria das Configurações (padrão 456), pedida toda vez.
-//   • Bater a Massa: microfone JÁ LIGADO no campo de peso (fala ou digita).
-//   • Cronômetro do batimento resiste a sair do app (retoma ao voltar);
-//     só sai por comando claro (confirmação). Wake Lock durante a batida.
-//   • Impressão MDK-022: seletor de linguagem (ESC/POS · TSPL · CPCL),
-//     teste rápido e diagnóstico de serviços/características Bluetooth.
+//   • Receita 3 PADRÃO; senha própria das Configurações; microfone já
+//     ligado no peso do batimento; cronômetro resiste ao segundo plano;
+//     impressão MDK-022 (ESC/POS · TSPL · CPCL) com teste e diagnóstico.
 //   --- mantido das versões anteriores ---
 //   • Lotes numerados/apagáveis, PIN do Porcionamento, autofalante, calculadora,
 //     previsão de madrugada (Open-Meteo), Gemini no contexto da receita.
 // IMPORTANTE: a cada publicação, troque a versão (fdo-vN) para o celular atualizar.
-const CACHE = 'fdo-v12';
+const CACHE = 'fdo-v13';
 
 self.addEventListener('install', e => {
   e.waitUntil(

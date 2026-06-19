@@ -2,27 +2,30 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — OBS 16/06/2026 (atualização v11)
-       NOVIDADES v11:
-       • ALARME do batimento muito mais forte: sequência de 6 apitos
-         altos e longos + vibração + voz REPETIDA (toca mesmo com o
-         autofalante desligado). Áudio destravado ao tocar "Iniciar batida".
-       • ORDEM DOS ITENS no porcionamento: Balde 1 (secos) → SAL e
-         MANTEIGA → Balde 2 (água/gelo e leite) → Aproveitamento.
-       • Balde 1 concluído: o cartão do passo é ocultado para os botões
-         "Continuar receita →" / "+ Outro balde" caberem e serem clicáveis.
-       • Botões de navegação (Voltar/Repetir/Próximo) agora encolhem e
-         cabem em telas estreitas (não cortam mais).
-       --- base v10 ---
-       • Bater a Massa cronometrado (confere balde 1 e 2, avisos por tempo,
-         peso ÷8). Tempos no Config (4/6/3/2). Calculadora no porcionamento
-         e batimento + por voz. Etiqueta inclui líquidos do balde 2.
-         Receita 2: aproveitamento 3000 g.
-       --- base v9/v8/v7 ---
-       • Etiqueta 60×50 (MDK-022 BT/imagem). Lotes (apagar cascata,
-         reiniciar numeração). Fermentação (mín/máx). PIN só no
-         Porcionamento. Autofalante 🔊/🔇. Divisão por voz. Wake Lock.
-       • Service Worker: cache fdo-v11.
+       FOLHADOS D'OURO — OBS 18/06/2026 (atualização v13)
+       NOVIDADES v13 (porcionamento de secos + bater a massa):
+       • Temperatura da Noite: agora só DUAS opções, ambas 17°C, escolhidas
+         pelo tempo de fermentação — fermento 70 g (14 h) ou 64 g (17 h).
+       • No 1º passo dos secos, "Voltar" sai para o menu inicial (antes
+         não fazia nada).
+       • Entre farinhas do mesmo balde, a voz não diz mais "Concluído";
+         fala só o nome da farinha e o total acumulado.
+       • Finalização dos secos: removida a opção "+ Outro balde de secos"
+         (cada porcionamento de secos já gera um novo lote).
+       • Voz ao finalizar: só "concluído + número do lote" (sem "marque na
+         massa" e sem "imprima a etiqueta"); o aviso na tela continua.
+       • Bater a Massa: o balde 1 mostra também fermento (já no balde),
+         sal e manteiga (pesados à parte p/ o batimento).
+       --- base v12 ---
+       • Porcionamento dividido em Secos (gera lote + etiqueta) e Líquidos.
+         Bater a Massa só com secos E líquidos prontos. Receita 3 PADRÃO.
+         Senha própria das Configurações. Microfone já ligado no peso do
+         batimento. Cronômetro resiste ao segundo plano. Impressão MDK-022
+         com seletor ESC/POS · TSPL · CPCL, teste rápido e diagnóstico.
+       --- base v11/v10/v9/v8/v7 ---
+       • Alarme forte do batimento. Lotes numerados/apagáveis. Fermentação.
+         PIN do Porcionamento. Autofalante 🔊/🔇. Calculadora. Wake Lock.
+       • Service Worker: cache fdo-v13.
        ════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -192,6 +195,7 @@
     .temp-btn:active{opacity:.8;transform:scale(.97)}
     .temp-c{font-size:1.6rem;font-weight:bold;color:var(--gold);line-height:1}
     .temp-f{font-size:.72rem;color:var(--mut)}
+    .temp-horas{font-size:.7rem;color:var(--gl);font-weight:bold;margin-top:.1rem}
 
     /* ══ CONFIG ══ */
     #s-config{padding:1.5rem 1.3rem;gap:.7rem;justify-content:flex-start;overflow-y:auto}
@@ -546,7 +550,7 @@
     <div class="start-icon">🌡️</div>
     <div class="start-brand">Folhados d'Ouro</div>
     <div class="start-title">Temperatura da Noite</div>
-    <div class="start-sub">Quantos graus estão previstos?</div>
+    <div class="start-sub">Escolha o tempo de fermentação</div>
   </div>
   <div class="modulos-label">Define a quantidade de fermento seco</div>
   <div class="temp-grid" id="temp-grid"></div>
@@ -579,13 +583,12 @@
   </div>
   <div class="pergunta-secos" id="pergunta-secos"></div>
   <div class="nav" id="nav-normal">
-    <button class="nbtn" onclick="irPasso(st.step-1)">← Voltar</button>
+    <button class="nbtn" onclick="voltarPasso()">← Voltar</button>
     <button class="nbtn" onclick="repetir()">🔊 Repetir</button>
     <button class="nbtn next" onclick="avancar()">Próximo →</button>
   </div>
   <div class="nav-secos" id="nav-secos">
     <button class="nbtn next secos-continuar" onclick="finalizarSecos()">Finalizar e gerar lote →</button>
-    <button class="nbtn secos secos-novo" onclick="iniciarOutroBaldeSecos()">+ Outro balde de secos</button>
   </div>
   <div class="list" id="lista"></div>
   <div class="ai" id="ai-box" style="display:none">
@@ -848,7 +851,17 @@
 
 <script>
 // Fermento seco em gramas por temperatura prevista para a noite
+// (tabela mantida para conferência de lotes antigos)
 const TEMP_FERMENTO = {15:120,16:112,17:104,18:96,19:90,20:84,21:78,22:74,23:68,24:64};
+
+// Opções de fermento mostradas na tela "Temperatura da Noite".
+// Hoje são duas, ambas a 17°C, escolhidas pelo TEMPO de fermentação desejado:
+//   • mais fermento  → fermenta mais rápido (menos horas)
+//   • menos fermento → fermenta mais devagar (mais horas)
+const OPCOES_FERMENTO = [
+  {temp:17, fermento:70, horas:14},
+  {temp:17, fermento:64, horas:17},
+];
 
 // Peso do balde 1 vazio (tara), para conferência na balança
 const PESO_BALDE1 = 474;
@@ -978,7 +991,7 @@ const CMD = {
 };
 function matchCmd(txt,g){return CMD[g].some(p=>txt.includes(p));}
 
-const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0,temp:null,receita:'r1',modo:'normal',subModulo:'secos',baldeSecos:1,wakeLock:null,
+const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0,temp:null,fermento:null,fermentoHoras:null,receita:'r1',modo:'normal',subModulo:'secos',baldeSecos:1,wakeLock:null,
   pinBuf:'',pinAlvo:null,pinTipo:'producao',batLote:null,liqLote:null,batTemp:20,batStart:0,batRodando:false,batRecPeso:null,
   ultimoLoteId:null,calcRet:'start',calcAberta:false,etqLote:null,etqRet:'start',
   fermLote:null,fermStart:0,fermMin:24,fermMax:28};
@@ -1159,7 +1172,7 @@ function criarLoteSecos(){
     criado:agora.toLocaleString('pt-BR'), criadoTs:agora.getTime(),
     etapas:{ porcionamento_secos:{
       feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(),
-      op:getOp(), temp:st.temp, baldes_secos:st.baldeSecos||1,
+      op:getOp(), temp:st.temp, fermento_g:st.fermento, fermento_horas:st.fermentoHoras, baldes_secos:st.baldeSecos||1,
       total_g:totalReceitaFull(st.receita), peso_secos_g:pesoBaldeSecosAtual(),
       concluidos:st.done.size, total:RECEITA.length,
       dur:Math.round((Date.now()-st.sessionStart)/60000)
@@ -1280,13 +1293,31 @@ function getBatT3(){ return Number(LS.g('fdo_bat_t3',3))||3; }   // depois → m
 function getBatT4(){ return Number(LS.g('fdo_bat_t4',2))||2; }   // depois → ponto de véu (22°C)
 function getBatDiv(){ return Number(LS.g('fdo_bat_div',8))||8; } // partes para gelar
 
+// Fermento (g) deste lote: prefere o valor gravado; cai p/ a tabela por temperatura; por fim, o padrão da receita
+function loteFermentoG(lote){
+  const e=(lote&&lote.etapas)||{};
+  const ps=e.porcionamento_secos||e.porcionamento||{};
+  if(ps.fermento_g!=null) return ps.fermento_g;
+  const t=ps.temp;
+  if(t!=null && TEMP_FERMENTO[t]!=null) return TEMP_FERMENTO[t];
+  const r=RECEITAS[lote.receita];
+  if(r){ const f=(r.passos||[]).find(p=>p.cat==='FERMENTO'); if(f) return f.g; }
+  return null;
+}
+// Sal e manteiga (g) deste lote, a partir da receita (pesados à parte; entram no batimento)
+function loteSalManteiga(lote){
+  const r=RECEITAS[lote.receita]; if(!r) return {sal:null,manteiga:null};
+  let sal=null,manteiga=null;
+  (r.passos||[]).forEach(p=>{ if(p.grupo==='SAL E MANTEIGA'){ if(p.cat==='SAL')sal=p.g; else if(p.cat==='GORDURA')manteiga=p.g; } });
+  return {sal,manteiga};
+}
 // Pesos esperados a partir da receita do lote
 function pesoBalde1Lote(lote){
   const r=RECEITAS[lote.receita]; if(!r) return null;
-  const t=(lote.etapas&&lote.etapas.porcionamento)?lote.etapas.porcionamento.temp:null;
+  const ferm=loteFermentoG(lote);
   let s=0;
   r.passos.forEach(p=>{ if((p.grupo||'').startsWith('BALDE 1')){
-    if(p.cat==='FERMENTO'){ s += (t!=null&&TEMP_FERMENTO[t]!=null)?TEMP_FERMENTO[t]:p.g; }
+    if(p.cat==='FERMENTO'){ s += (ferm!=null?ferm:p.g); }
     else s+=p.g;
   }});
   return s;
@@ -1343,7 +1374,18 @@ function batConfirmarTemp(){
   // Balde 1
   const b1=pesoBalde1Lote(lote);
   const a1=document.getElementById('bat-b1-alvo'), d1=document.getElementById('bat-b1-det');
-  if(b1!=null){ a1.textContent=formatPeso(b1+PESO_BALDE1); d1.textContent='Ingredientes do balde 1 ('+formatPeso(b1)+') + balde ('+PESO_BALDE1+' g).'; }
+  if(b1!=null){
+    a1.textContent=formatPeso(b1+PESO_BALDE1);
+    const ferm=loteFermentoG(lote); const sm=loteSalManteiga(lote);
+    let txt='Ingredientes do balde 1 ('+formatPeso(b1);
+    if(ferm!=null) txt+=', já com fermento '+formatPeso(ferm);
+    txt+=') + balde ('+PESO_BALDE1+' g).';
+    const extra=[];
+    if(sm.sal!=null) extra.push('sal '+formatPeso(sm.sal));
+    if(sm.manteiga!=null) extra.push('manteiga '+formatPeso(sm.manteiga));
+    if(extra.length) txt+=' À parte p/ o batimento: '+extra.join(' · ')+'.';
+    d1.textContent=txt;
+  }
   else{ a1.textContent='—'; d1.textContent='Confira o balde 1 conforme a receita (lote antigo sem dados).'; }
   setBatFase('balde1');
   falar(b1!=null?`Temperatura ${st.batTemp} graus. Confira o peso do balde 1: ${falaPeso(b1+PESO_BALDE1)}.`:'Confira o peso do balde 1.');
@@ -1923,16 +1965,27 @@ async function buscarPrevisaoMadrugada() {
   }
 }
 
-// Tela de seleção: agora alimentada após o clique do botão de prosseguir
+// Tela de seleção: mostra as duas opções de fermento (17°C, por tempo de fermentação)
 function escolherTemp(){
   const grid=document.getElementById('temp-grid');
-  grid.innerHTML=Object.keys(TEMP_FERMENTO).map(t=>
-    `<button class="temp-btn" onclick="setTemp(${t})"><div class="temp-c">${t}°C</div><div class="temp-f">fermento ${TEMP_FERMENTO[t]} g</div></button>`
+  grid.innerHTML=OPCOES_FERMENTO.map((o,idx)=>
+    `<button class="temp-btn" onclick="setTempOpcao(${idx})"><div class="temp-c">${o.temp}°C</div><div class="temp-f">fermento ${o.fermento} g</div><div class="temp-horas">${o.horas} horas fermentação</div></button>`
   ).join('');
   ir('temp');
 }
+// Aplica a opção escolhida (define temperatura, fermento e o tempo de fermentação)
+function setTempOpcao(idx){
+  const o=OPCOES_FERMENTO[idx]; if(!o) return;
+  st.temp=o.temp;
+  st.fermento=o.fermento;
+  st.fermentoHoras=o.horas;
+  const i=RECEITA.findIndex(p=>p.cat==='FERMENTO');
+  if(i>=0){RECEITA[i].g=o.fermento;RECEITA[i].qty=o.fermento+' g';RECEITA[i].det=`Para ${o.temp}°C · ${o.horas} horas de fermentação`;}
+  iniciarSecos();
+}
+// (compat) seleção antiga por temperatura da tabela
 function setTemp(t){
-  st.temp=t;
+  st.temp=t; st.fermento=TEMP_FERMENTO[t]; st.fermentoHoras=null;
   const i=RECEITA.findIndex(p=>p.cat==='FERMENTO');
   if(i>=0){RECEITA[i].g=TEMP_FERMENTO[t];RECEITA[i].qty=TEMP_FERMENTO[t]+' g';RECEITA[i].det=`Quantidade para ${t}°C previstos na noite`;}
   iniciarSecos();
@@ -2035,7 +2088,7 @@ function iniciarVoz(){
     if(st.subModulo==='liquidos'){
       falar(`Porcionamento de líquidos. ${grupoFala(RECEITA[0].grupo)}. `+frasePasso(0));
     }else{
-      falar(`${st.temp} graus previstos. Porcionamento de secos. Balde de secos. `+frasePasso(0));
+      falar(`${st.temp} graus previstos${st.fermentoHoras?(', fermento para '+st.fermentoHoras+' horas de fermentação'):''}. Porcionamento de secos. Balde de secos. `+frasePasso(0));
     }
   },900);
 }
@@ -2141,13 +2194,8 @@ function processarComando(txt,alt){
     if(d){responderDivisao(d.a,d.b);return;}
   }
 
-  // 2) Modo PÓS-SECOS: aguardando escolha entre "outro balde de secos" ou continuar
+  // 2) Modo PÓS-SECOS: aguardando confirmação para finalizar e gerar o lote
   if(st.modo==='pos_secos'){
-    // Verifica "só secos" primeiro (mais específico)
-    for(const t of todas){
-      if(matchCmd(t,'so_secos')){iniciarOutroBaldeSecos();return;}
-    }
-    // Depois verifica continuar (inclui também "continua", "próximo", "feito" etc.)
     for(const t of todas){
       if(matchCmd(t,'continua_receita')||matchCmd(t,'avancar')){continuarReceita();return;}
       if(matchCmd(t,'voltar')){irPasso(st.step-1);st.modo='normal';mostrarPerguntaSecos(false);return;}
@@ -2162,7 +2210,7 @@ function processarComando(txt,alt){
   for(const t of todas){
     const som=ehComandoSom(t); if(som!==null){ aplicarComandoSom(som); return; }
     if(matchCmd(t,'avancar')){avancar();return;}
-    if(matchCmd(t,'voltar')){irPasso(st.step-1);return;}
+    if(matchCmd(t,'voltar')){voltarPasso();return;}
     if(matchCmd(t,'repetir')){repetir();return;}
     if(matchCmd(t,'pausar')){speechSynthesis?.cancel();mostrarAI('Pausado. Diga continuar quando pronto.');return;}
   }
@@ -2230,6 +2278,19 @@ function frasePasso(i){
 
 function irPasso(n){st.step=Math.max(0,Math.min(n,RECEITA.length-1));atualizarUI();falar(frasePasso(st.step));}
 
+// "Voltar": no PRIMEIRO passo, sai para o menu inicial (sem salvar sessão);
+// nos demais passos, volta um passo normalmente.
+function voltarPasso(){
+  if(st.step===0){
+    pararVoz(); liberarWakeLock();
+    st.sessionStart=0; st.modo='normal'; st.baldeSecos=1; st.liqLote=null;
+    mostrarPerguntaSecos(false);
+    ir('start');
+    return;
+  }
+  irPasso(st.step-1);
+}
+
 // Verifica se o passo `i` é o ÚLTIMO dos secos do balde 1
 // Soma só os ingredientes do BALDE 1 · SECOS na fase atual (exclui SAL E MANTEIGA)
 function pesoBaldeSecosAtual(){
@@ -2239,11 +2300,11 @@ function pesoBaldeSecosAtual(){
 function ehUltimoSecos(i){ return st.subModulo==='secos' && i===RECEITA.length-1; }
 function primeiroSecosIdx(){ return 0; }
 
-// Texto de conferência/pergunta pós-secos (peso do balde de secos = só BALDE 1)
+// Texto de conferência/confirmação pós-secos (peso do balde de secos = só BALDE 1)
 function textoPerguntaSecos(){
   const ing=pesoBaldeSecosAtual();
   const alvo=ing+PESO_BALDE1;
-  return `Balde ${st.baldeSecos} de secos concluído. Conferir: peso total, com o balde de ${falaPeso(PESO_BALDE1)} mais os secos, é ${falaPeso(alvo)}. Finaliza e gera o lote, ou faz outro balde de secos?`;
+  return `Secos concluídos. Conferir: peso total, com o balde de ${falaPeso(PESO_BALDE1)} mais os secos, é ${falaPeso(alvo)}. Finalize e gere o lote.`;
 }
 
 function avancar(){
@@ -2270,6 +2331,11 @@ function avancar(){
   }
   st.step=n;atualizarUI();
   const p=RECEITA[st.step];
+  // Entre farinhas do mesmo balde de secos: não diz "Concluído"; só o nome e o total acumulado
+  if(p.cat==='FARINHA' && p.grupo===gAnt){
+    falar(`${p.nome}. Total, ${falaPeso(baldeTotalAte(st.step))}.`);
+    return;
+  }
   let pre='Concluído. ';
   if(p.grupo!==gAnt){
     pre=`Concluído. Próximo, ${grupoFala(p.grupo)}. `;
@@ -2280,18 +2346,7 @@ function avancar(){
 // ─── PÓS-SECOS: continuar = finalizar e gerar o lote (compat com o comando de voz) ───
 function continuarReceita(){ finalizarSecos(); }
 
-// ─── PÓS-SECOS: iniciar outro balde de secos com a mesma temperatura ───
-function iniciarOutroBaldeSecos(){
-  st.modo='normal';
-  st.baldeSecos=(st.baldeSecos||1)+1;
-  mostrarPerguntaSecos(false);
-  st.done=new Set();   // recomeça os secos do zero
-  st.step=0;
-  atualizarUI();
-  falar(`Balde ${st.baldeSecos} de secos. ${st.temp} graus previstos. `+frasePasso(st.step));
-}
-
-// Repete a pergunta de finalizar / outro balde
+// Repete a confirmação de finalizar
 function repetirPerguntaSecos(){ falar(textoPerguntaSecos()); }
 
 // Alterna entre a navegação normal e a barra de pergunta pós-secos
@@ -2368,7 +2423,7 @@ function finalizarSecos(){
   document.getElementById('done-mark').textContent='✍️ Marque este número na massa';
   document.getElementById('done-etq-btn').style.display='';
   document.getElementById('done-tot').innerHTML=`<div class="done-conf">Total da massa (secos + líquidos)</div><div class="done-val">${tot}</div>`;
-  falar(`Porcionamento de secos concluído. Lote número ${lote.num}. Marque o número ${lote.num} na massa. Agora imprima a etiqueta.`);
+  falar(`Porcionamento de secos concluído. Lote número ${lote.num}.`);
   setTimeout(()=>ir('done'),1500);
 }
 
