@@ -1,5 +1,5 @@
 // Folhados d'Ouro — Service Worker
-// OBS 18/06/2026: cache fdo-v13 —
+// OBS 21/06/2026: cache fdo-v14 —
 //   • Temperatura da Noite: só DUAS opções (ambas 17°C), por tempo de
 //     fermentação — fermento 70 g (14 h) ou 64 g (17 h).
 //   • Secos: "Voltar" no 1º passo sai para o menu inicial.
@@ -17,7 +17,7 @@
 //   • Lotes numerados/apagáveis, PIN do Porcionamento, autofalante, calculadora,
 //     previsão de madrugada (Open-Meteo), Gemini no contexto da receita.
 // IMPORTANTE: a cada publicação, troque a versão (fdo-vN) para o celular atualizar.
-const CACHE = 'fdo-v13';
+const CACHE = 'fdo-v14';
 
 self.addEventListener('install', e => {
   e.waitUntil(

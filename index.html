@@ -2,7 +2,21 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — OBS 18/06/2026 (atualização v13)
+       FOLHADOS D'OURO — OBS 21/06/2026 (atualização v14)
+       NOVIDADES v14:
+       • Receitas R4 "Massa 3 kg sem manteiga" (15.564 g) e R5 "1 kg sem
+         laminar" (15.714 g); fermento fixo (70 g/14 h e 64 g/17 h).
+       • Sal e manteiga agora pesados DENTRO do balde de secos (somam no
+         balde, sem misturar); conferência pós-secos inclui sal+manteiga+tara.
+       • Receita sem manteiga pula a etapa avisando "não vai manteiga".
+       • "Aproveitamento" renomeado para "Massa laminada"; R5 tem 2ª massa
+         "sem laminar". Voz do fermento: "Misturar bem o fermento com o trigo".
+       • Bater a Massa: só precisa dos SECOS prontos; conferência ATIVA do
+         peso dos dois baldes (voz/digitação, compara com o alvo, tolerância 50 g).
+       • Tara do balde ajustável nas Configurações. Alerta de voz quando a
+         bateria cai abaixo de 20% (repete a cada 3 min).
+       • Laminação (Fase 1): agrupa as partes geladas das massas batidas
+         (seleção por lote, pode misturar dias) gerando a nomenclatura DD/MM · N.
        NOVIDADES v13 (porcionamento de secos + bater a massa):
        • Temperatura da Noite: agora só DUAS opções, ambas 17°C, escolhidas
          pelo tempo de fermentação — fermento 70 g (14 h) ou 64 g (17 h).
@@ -25,7 +39,7 @@
        --- base v11/v10/v9/v8/v7 ---
        • Alarme forte do batimento. Lotes numerados/apagáveis. Fermentação.
          PIN do Porcionamento. Autofalante 🔊/🔇. Calculadora. Wake Lock.
-       • Service Worker: cache fdo-v13.
+       • Service Worker: cache fdo-v14.
        ════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -352,6 +366,18 @@
       letter-spacing:.02em;font-variant-numeric:tabular-nums;margin:.2rem 0}
     .bat-aviso{font-size:1rem;color:var(--gold);text-align:center;line-height:1.4;min-height:1.4rem;font-weight:bold}
     .bat-divisao{font-size:1.5rem;color:var(--grn);font-weight:bold;text-align:center;margin-top:.6rem;min-height:1.6rem}
+    /* ════ LAMINAÇÃO (Fase 1) ════ */
+    .lam-card{background:var(--bg3);border:1px solid var(--brd);border-radius:.5rem;padding:.7rem .8rem;margin-bottom:.6rem}
+    .lam-card-top{display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem}
+    .lam-card-num{font-size:1.05rem;font-weight:bold;color:var(--gold);flex-shrink:0}
+    .lam-card-rec{font-size:.78rem;color:var(--gl);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .lam-card-disp{font-size:.74rem;color:var(--mut);margin-bottom:.5rem;line-height:1.5}
+    .lam-stepper{display:flex;align-items:center;gap:1rem;justify-content:flex-end}
+    .lam-stepbtn{width:2.8rem;height:2.8rem;border-radius:.5rem;border:.1rem solid var(--gold);background:rgba(201,151,58,.12);color:var(--gold);font-size:1.6rem;font-weight:bold;line-height:1}
+    .lam-stepbtn:active{opacity:.6;transform:scale(.94)}
+    .lam-stepval{font-size:1.5rem;font-weight:bold;color:var(--gl);min-width:2.2rem;text-align:center}
+    .lam-bar{position:sticky;bottom:0;background:var(--bg2);border-top:.1rem solid var(--brd);padding:.8rem 1rem;display:flex;flex-direction:column;gap:.6rem;z-index:5}
+    .lam-bar-info{font-size:.9rem;color:var(--gl)}
   </style>
 </head>
 <body>
@@ -380,6 +406,7 @@
     <label class="cfg-mini">Ver ponto de véu<input id="inp-bt4" class="inp" type="number" min="0" placeholder="2"></label>
   </div>
   <label class="cfg-mini" style="margin-top:.1rem">Dividir massa em (partes p/ gelar)<input id="inp-bdiv" class="inp" type="number" min="1" placeholder="8"></label>
+  <label class="cfg-mini" style="margin-top:.1rem">Peso do balde vazio / tara (g)<input id="inp-tara" class="inp" type="number" min="0" placeholder="474"></label>
   <button class="btn-main" onclick="salvarConfig()">Salvar e Continuar</button>
   <button class="link-btn" style="margin-top:.3rem;width:100%;text-align:center" onclick="ir('start')">← Voltar</button>
 </div>
@@ -406,10 +433,10 @@
       <div class="modulo-info"><div class="modulo-nome">Bater a Massa</div><div class="modulo-desc">Seleciona o lote porcionado e confirma variáveis</div></div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
-    <div class="modulo inativo">
+    <div class="modulo ativo" onclick="abrirLaminacao()">
       <div class="modulo-icon">📐</div>
-      <div class="modulo-info"><div class="modulo-nome">Laminação</div><div class="modulo-desc">Dobras e folhamento com manteiga</div></div>
-      <div class="modulo-badge badge-breve">Em breve</div>
+      <div class="modulo-info"><div class="modulo-nome">Laminação</div><div class="modulo-desc">Agrupa as partes de massa batida que vão laminar</div></div>
+      <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
     <div class="modulo inativo">
       <div class="modulo-icon">✂️</div>
@@ -500,6 +527,22 @@
       <div class="modulo-info">
         <div class="modulo-nome">Receita 3 - PADRÃO</div>
         <div class="modulo-desc">Bagatelle 3600 g · Italiana 4400 g · sem Feuilletage</div>
+      </div>
+      <div class="modulo-badge badge-ativo">Ativo</div>
+    </div>
+    <div class="modulo ativo" onclick="iniciarReceita('r4')">
+      <div class="modulo-icon">4️⃣</div>
+      <div class="modulo-info">
+        <div class="modulo-nome">Massa 3 kg sem manteiga</div>
+        <div class="modulo-desc">Sem manteiga · Bagatelle 3500 g · Italiana 4270 g · massa laminada 3 kg · fermento 70 g / 14 h</div>
+      </div>
+      <div class="modulo-badge badge-ativo">Ativo</div>
+    </div>
+    <div class="modulo ativo" onclick="iniciarReceita('r5')">
+      <div class="modulo-icon">5️⃣</div>
+      <div class="modulo-info">
+        <div class="modulo-nome">1 kg sem laminar</div>
+        <div class="modulo-desc">Laminada 2,5 kg + sem laminar 1 kg · Bagatelle 3370 g · Italiana 4118 g · fermento 64 g / 17 h</div>
       </div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
@@ -688,9 +731,15 @@
     <!-- FASE 2: conferir balde 1 -->
     <div class="bat-fase" id="bat-fase-balde1" style="display:none">
       <div class="bat-card">
-        <div class="bat-card-lbl">Conferir peso do Balde 1 (secos)</div>
+        <div class="bat-card-lbl">Peso esperado do Balde 1 (secos)</div>
         <div class="bat-peso-alvo" id="bat-b1-alvo">—</div>
         <div class="bat-note" id="bat-b1-det"></div>
+      </div>
+      <div class="bat-card">
+        <div class="bat-card-lbl">Peso pesado na balança (gramas)</div>
+        <input id="bat-b1-inp" class="inp" type="number" inputmode="numeric" placeholder="ex: 9838" oninput="batConfDiff('b1')">
+        <button class="link-btn" style="width:100%;margin-top:.5rem" onclick="batMicConf('b1')">🎤 Falar o peso</button>
+        <div class="bat-divisao" id="bat-b1-diff"></div>
       </div>
       <button class="btn-main" onclick="batConferirBalde1()">Conferido ✓ Seguir</button>
     </div>
@@ -698,9 +747,15 @@
     <!-- FASE 3: conferir balde 2 -->
     <div class="bat-fase" id="bat-fase-balde2" style="display:none">
       <div class="bat-card">
-        <div class="bat-card-lbl">Conferir peso do Balde 2 (líquidos)</div>
+        <div class="bat-card-lbl">Peso esperado do Balde 2 (líquidos)</div>
         <div class="bat-peso-alvo" id="bat-b2-alvo">—</div>
         <div class="bat-note" id="bat-b2-det"></div>
+      </div>
+      <div class="bat-card">
+        <div class="bat-card-lbl">Peso pesado na balança (gramas)</div>
+        <input id="bat-b2-inp" class="inp" type="number" inputmode="numeric" placeholder="ex: 7194" oninput="batConfDiff('b2')">
+        <button class="link-btn" style="width:100%;margin-top:.5rem" onclick="batMicConf('b2')">🎤 Falar o peso</button>
+        <div class="bat-divisao" id="bat-b2-diff"></div>
       </div>
       <button class="btn-main" onclick="batConferirBalde2()">Conferido ✓ Iniciar</button>
     </div>
@@ -849,6 +904,27 @@
   </div>
 </div>
 
+<!-- ═══ LAMINAÇÃO — agrupa partes de massa batida (Fase 1) ═══ -->
+<div id="s-laminacao" class="scr off">
+  <div class="start-top">
+    <div class="start-icon">📐</div>
+    <div class="start-brand">Folhados d'Ouro</div>
+    <div class="start-title">Laminação</div>
+    <div class="start-sub">Selecione as partes de massa que vão laminar</div>
+  </div>
+  <div class="modulos-label">Massas batidas · partes geladas disponíveis</div>
+  <div class="modulos" id="lam-disp-list"></div>
+  <div class="lam-bar" id="lam-bar" style="display:none">
+    <div class="lam-bar-info">Selecionado: <b id="lam-sel-tot">0</b> partes <span id="lam-sel-aviso"></span></div>
+    <button class="btn-main" onclick="criarLaminacao()">Criar laminação ✓</button>
+  </div>
+  <div class="modulos-label" style="margin-top:1rem">Laminações criadas</div>
+  <div class="modulos" id="lam-feitas-list"></div>
+  <div class="start-footer">
+    <button class="link-btn" onclick="ir('start')">← Voltar</button>
+  </div>
+</div>
+
 <script>
 // Fermento seco em gramas por temperatura prevista para a noite
 // (tabela mantida para conferência de lotes antigos)
@@ -863,8 +939,9 @@ const OPCOES_FERMENTO = [
   {temp:17, fermento:64, horas:17},
 ];
 
-// Peso do balde 1 vazio (tara), para conferência na balança
-const PESO_BALDE1 = 474;
+// Peso do balde 1 vazio (tara), para conferência na balança.
+// Ajustável nas Configurações (fdo_tara_balde); sobrescrito no boot e ao salvar config.
+let PESO_BALDE1 = 474;
 
 // Gera os passos de uma receita. Entre as receitas SÓ muda a divisão das farinhas.
 // Farinha com peso 0 (ex.: Feuilletage na Receita 3) é simplesmente omitida.
@@ -881,6 +958,8 @@ function gerarReceita(bag, feu, ita, opts){
   const vSal      = (opts.sal      != null) ? opts.sal      : 174;
   const vManteiga = (opts.manteiga != null) ? opts.manteiga : 112;
   const vAprov    = (opts.aprov    != null) ? opts.aprov    : 2500;
+  const vFermento = (opts.fermento != null) ? opts.fermento : 84;   // valor base (R1/2/3 ajustam pela temperatura)
+  const vSemLam   = (opts.semLaminar != null) ? opts.semLaminar : 0; // massa sem laminar (2ª massa de aproveitamento)
 
   // Monta a lista de farinhas presentes (ignora as que têm peso 0)
   const farinhas=[
@@ -899,29 +978,35 @@ function gerarReceita(bag, feu, ita, opts){
     });
   });
 
-  // Fermento e Açúcar também anunciam o total acumulado do balde de secos
-  arr.push({grupo:'BALDE 1 · SECOS', cat:'FERMENTO', nome:'Fermento seco', g:84,       voz:'total', det:'Quantidade conforme a temperatura da noite'});
-  arr.push({grupo:'BALDE 1 · SECOS', cat:'AÇÚCAR',   nome:'Açúcar',        g:vAcucar,  voz:'total', det:'No balde de secos, logo após o fermento'});
-  // Ainda no PORCIONAMENTO DE SECOS: sal e manteiga (pesados à parte; vão no batimento)
-  arr.push({grupo:'SAL E MANTEIGA',  cat:'SAL',      nome:'Sal refinado',  g:vSal,     voz:'solo',  det:'Pese à parte (não vai no balde de secos). Entra no batimento'});
-  arr.push({grupo:'SAL E MANTEIGA',  cat:'GORDURA',  nome:'Manteiga',      g:vManteiga,voz:'solo',  det:'Pese à parte (não vai no balde de secos). Entra no batimento'});
+  // Fermento e Açúcar — no balde de secos, com total acumulado
+  arr.push({grupo:'BALDE 1 · SECOS', cat:'FERMENTO', nome:'Fermento seco', g:vFermento, voz:'total', det:'Quantidade conforme a temperatura da noite'});
+  arr.push({grupo:'BALDE 1 · SECOS', cat:'AÇÚCAR',   nome:'Açúcar',        g:vAcucar,   voz:'total', det:'No balde de secos, logo após o fermento'});
+  // Sal e manteiga — agora pesados DENTRO do balde de secos (sem misturar com os secos); somam no balde
+  arr.push({grupo:'BALDE 1 · SECOS', cat:'SAL',     nome:'Sal refinado', g:vSal,      voz:'total', det:'Pese dentro do balde de secos, sem misturar com os secos. Entra no batimento.'});
+  arr.push({grupo:'BALDE 1 · SECOS', cat:'GORDURA', nome:'Manteiga',     g:vManteiga, voz:(vManteiga>0?'total':'solo'),
+            det:(vManteiga>0?'Pese dentro do balde de secos, sem misturar com os secos. Entra no batimento.':'Esta receita não leva manteiga.')});
   // PORCIONAMENTO DE LÍQUIDOS: balde 2 (água + leite)
   arr.push({grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Água com gelo', g:vAgua,    voz:'solo',  det:'Água gelada no balde 2'});
   arr.push({grupo:'BALDE 2 · LÍQUIDOS', cat:'LÍQUIDO',  nome:'Leite em pó',   g:vLeite,   voz:'solo',  det:'No balde 2, junto com a água'});
-  arr.push({grupo:'APROVEITAMENTO',     cat:'APROVEITA',nome:'Aproveitamento',g:vAprov,   voz:'solo',  det:'Massa antiga incorporada à massa nova'});
+  // Massa laminada (antigo "aproveitamento") + massa sem laminar (quando a receita usar)
+  arr.push({grupo:'MASSA LAMINADA', cat:'MASSA LAMINADA', nome:'Massa laminada', g:vAprov, voz:'solo', det:'Massa laminada incorporada à massa nova'});
+  if(vSemLam>0){
+    arr.push({grupo:'MASSA LAMINADA', cat:'SEM LAMINAR', nome:'Massa sem laminar', g:vSemLam, voz:'solo', det:'Massa sem laminar incorporada à massa nova'});
+  }
 
   arr.forEach((p,idx)=>{p.id=idx+1; p.qty=formatPeso(p.g);}); // ids sequenciais; formatPeso é hoisted
   return arr;
 }
 
 // Grupos que pertencem ao PORCIONAMENTO DE SECOS (o resto é PORCIONAMENTO DE LÍQUIDOS)
-const GRUPOS_SECOS=['BALDE 1 · SECOS','SAL E MANTEIGA'];
+// Sal e manteiga agora fazem parte do BALDE 1 · SECOS (somam no balde, sem misturar).
+const GRUPOS_SECOS=['BALDE 1 · SECOS'];
 function ehGrupoSecos(g){ return GRUPOS_SECOS.indexOf(g||'')>=0; }
 
 // Monta uma receita já dividida em duas fases:
 //  - passos:         lista completa (usada p/ conferência de peso, etiqueta, etc.)
 //  - passosSecos:    farinhas + fermento + açúcar + sal + manteiga  → gera o LOTE + etiqueta
-//  - passosLiquidos: água + leite + aproveitamento                  → continua um lote existente
+//  - passosLiquidos: água + leite + massa laminada (+ sem laminar)  → continua um lote existente
 function montarReceita(meta, bag, feu, ita, opts){
   const full=gerarReceita(bag,feu,ita,opts);
   const secos=full.filter(p=>ehGrupoSecos(p.grupo));
@@ -935,6 +1020,12 @@ const RECEITAS = {
   r1: montarReceita({ nome:'Receita 1',              rotulo:'R1', farinhas:'Bagatelle 45%, Feuilletage 45%, Italiana 10%' },            3600,3600,800),
   r2: montarReceita({ nome:'Receita 2 - MASSA 3 KG', rotulo:'R2', farinhas:'Bagatelle 3500 g, Italiana 4270 g (sem Feuilletage)' },     3500,0,4270,{agua:3500, acucar:876, aprov:3000}),
   r3: montarReceita({ nome:'Receita 3 - PADRÃO',     rotulo:'R3', farinhas:'Bagatelle 3600 g, Italiana 4400 g (sem Feuilletage)' },     3600,0,4400,{agua:3600}),
+  // R4 — massa de 3 kg SEM manteiga; fermento fixo 70 g / 14 h
+  r4: montarReceita({ nome:'Massa 3 kg sem manteiga', rotulo:'R4', farinhas:'Bagatelle 3500 g, Italiana 4270 g (sem manteiga)', fermentoFixo:70, fermentoHoras:14 },
+                     3500,0,4270,{agua:3500, acucar:876, aprov:3000, manteiga:0, fermento:70}),
+  // R5 — "1 kg sem laminar": massa laminada 2,5 kg + massa sem laminar 1 kg; fermento fixo 64 g / 17 h
+  r5: montarReceita({ nome:'1 kg sem laminar', rotulo:'R5', farinhas:'Bagatelle 3370 g, Italiana 4118 g (sem Feuilletage)', fermentoFixo:64, fermentoHoras:17 },
+                     3370,0,4118,{agua:3369, acucar:844, leite:172, sal:172, manteiga:105, aprov:2500, semLaminar:1000, fermento:64}),
 };
 
 // Receita ativa (apontador para o array de passos da FASE atual: secos OU líquidos).
@@ -994,7 +1085,7 @@ function matchCmd(txt,g){return CMD[g].some(p=>txt.includes(p));}
 const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0,temp:null,fermento:null,fermentoHoras:null,receita:'r1',modo:'normal',subModulo:'secos',baldeSecos:1,wakeLock:null,
   pinBuf:'',pinAlvo:null,pinTipo:'producao',batLote:null,liqLote:null,batTemp:20,batStart:0,batRodando:false,batRecPeso:null,
   ultimoLoteId:null,calcRet:'start',calcAberta:false,etqLote:null,etqRet:'start',
-  fermLote:null,fermStart:0,fermMin:24,fermMax:28};
+  fermLote:null,fermStart:0,fermMin:24,fermMax:28,lamSel:{}};
 // Desbloqueio por sessão do app: o PIN é pedido só 1x por abertura (rápido p/ produção)
 let sessaoDesbloqueada=false;
 const LS={g:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch{return d}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
@@ -1013,6 +1104,7 @@ function carregarConfig(){
   document.getElementById('inp-bt3').value=getBatT3();
   document.getElementById('inp-bt4').value=getBatT4();
   document.getElementById('inp-bdiv').value=getBatDiv();
+  document.getElementById('inp-tara').value=getTara();
 }
 function salvarConfig(){
   const k=document.getElementById('inp-key').value.trim();
@@ -1039,6 +1131,8 @@ function salvarConfig(){
   LS.s('fdo_bat_t3',numPos('inp-bt3',3));
   LS.s('fdo_bat_t4',numPos('inp-bt4',2));
   const dv=parseInt(document.getElementById('inp-bdiv').value,10); LS.s('fdo_bat_div',(isFinite(dv)&&dv>=1)?dv:8);
+  const tv=parseInt(document.getElementById('inp-tara').value,10); LS.s('fdo_tara_balde',(isFinite(tv)&&tv>=0)?tv:474);
+  PESO_BALDE1=getTara();
   ir('start');
 }
 
@@ -1227,8 +1321,8 @@ function migrarLotesAntigos(){
 function lotesPendentesBatimento(){
   return LS.g('fdo_lotes',[]).filter(l=>{
     const e=l.etapas||{};
-    // Bater a Massa só com os secos E os líquidos prontos, e ainda não batido
-    return secosFeito(l) && liquidosFeito(l) && !(e.batimento && e.batimento.feito);
+    // Bater a Massa: basta os SECOS prontos (os líquidos já estão na etiqueta; ficam só p/ consulta)
+    return secosFeito(l) && !(e.batimento && e.batimento.feito);
   });
 }
 function abrirBatimentoLotes(){ renderBatLotes(); ir('batimento-lotes'); }
@@ -1236,7 +1330,7 @@ function renderBatLotes(){
   const lotes=lotesPendentesBatimento();
   const el=document.getElementById('bat-lotes-list');
   if(!lotes.length){
-    el.innerHTML='<div class="bat-empty"><div class="bat-empty-icon">✅</div><div>Nenhum lote aguardando batimento.</div><div style="font-size:.78rem">Conclua os secos E os líquidos de um lote para liberar o batimento.</div></div>';
+    el.innerHTML='<div class="bat-empty"><div class="bat-empty-icon">✅</div><div>Nenhum lote aguardando batimento.</div><div style="font-size:.78rem">Conclua os secos de um lote para liberar o batimento.</div></div>';
     return;
   }
   el.innerHTML=lotes.map(l=>{
@@ -1292,6 +1386,7 @@ function getBatT2(){ return Number(LS.g('fdo_bat_t2',6))||6; }   // depois → f
 function getBatT3(){ return Number(LS.g('fdo_bat_t3',3))||3; }   // depois → massa antiga (20°C)
 function getBatT4(){ return Number(LS.g('fdo_bat_t4',2))||2; }   // depois → ponto de véu (22°C)
 function getBatDiv(){ return Number(LS.g('fdo_bat_div',8))||8; } // partes para gelar
+function getTara(){ return Number(LS.g('fdo_tara_balde',474))||474; } // tara (g) do balde vazio, para conferência
 
 // Fermento (g) deste lote: prefere o valor gravado; cai p/ a tabela por temperatura; por fim, o padrão da receita
 function loteFermentoG(lote){
@@ -1304,11 +1399,11 @@ function loteFermentoG(lote){
   if(r){ const f=(r.passos||[]).find(p=>p.cat==='FERMENTO'); if(f) return f.g; }
   return null;
 }
-// Sal e manteiga (g) deste lote, a partir da receita (pesados à parte; entram no batimento)
+// Sal e manteiga (g) deste lote, a partir da receita (pesados no balde de secos, sem misturar; entram no batimento)
 function loteSalManteiga(lote){
   const r=RECEITAS[lote.receita]; if(!r) return {sal:null,manteiga:null};
   let sal=null,manteiga=null;
-  (r.passos||[]).forEach(p=>{ if(p.grupo==='SAL E MANTEIGA'){ if(p.cat==='SAL')sal=p.g; else if(p.cat==='GORDURA')manteiga=p.g; } });
+  (r.passos||[]).forEach(p=>{ if(p.cat==='SAL')sal=p.g; else if(p.cat==='GORDURA')manteiga=p.g; });
   return {sal,manteiga};
 }
 // Pesos esperados a partir da receita do lote
@@ -1339,6 +1434,7 @@ function abrirBatimento(id){
   const lote=LS.g('fdo_lotes',[]).find(l=>l.id===id);
   if(!lote){ abrirBatimentoLotes(); return; }
   st.batLote=id; st.batStart=Date.now(); st.batRodando=false; batLimparRun();
+  st.batB1Alvo=null; st.batB2Alvo=null; st.batPesoB1=null; st.batPesoB2=null;
   // reset cronômetro / fases
   if(batCronInt){clearInterval(batCronInt);batCronInt=null;}
   batPararMicPeso();
@@ -1371,9 +1467,10 @@ function batLoteAtual(){ return LS.g('fdo_lotes',[]).find(l=>l.id===st.batLote);
 
 function batConfirmarTemp(){
   const lote=batLoteAtual(); if(!lote){abrirBatimentoLotes();return;}
-  // Balde 1
+  // Balde 1 (agora inclui sal e manteiga, que vão pesados no balde sem misturar)
   const b1=pesoBalde1Lote(lote);
   const a1=document.getElementById('bat-b1-alvo'), d1=document.getElementById('bat-b1-det');
+  st.batB1Alvo = (b1!=null)? b1+PESO_BALDE1 : null;
   if(b1!=null){
     a1.textContent=formatPeso(b1+PESO_BALDE1);
     const ferm=loteFermentoG(lote); const sm=loteSalManteiga(lote);
@@ -1382,26 +1479,92 @@ function batConfirmarTemp(){
     txt+=') + balde ('+PESO_BALDE1+' g).';
     const extra=[];
     if(sm.sal!=null) extra.push('sal '+formatPeso(sm.sal));
-    if(sm.manteiga!=null) extra.push('manteiga '+formatPeso(sm.manteiga));
-    if(extra.length) txt+=' À parte p/ o batimento: '+extra.join(' · ')+'.';
+    if(sm.manteiga!=null && sm.manteiga>0) extra.push('manteiga '+formatPeso(sm.manteiga));
+    if(extra.length) txt+=' No balde, sem misturar: '+extra.join(' · ')+'.';
+    if(sm.manteiga===0) txt+=' Esta receita não leva manteiga.';
     d1.textContent=txt;
   }
   else{ a1.textContent='—'; d1.textContent='Confira o balde 1 conforme a receita (lote antigo sem dados).'; }
+  const i1=document.getElementById('bat-b1-inp'); if(i1) i1.value=''; const df1=document.getElementById('bat-b1-diff'); if(df1) df1.textContent='';
   setBatFase('balde1');
-  falar(b1!=null?`Temperatura ${st.batTemp} graus. Confira o peso do balde 1: ${falaPeso(b1+PESO_BALDE1)}.`:'Confira o peso do balde 1.');
+  falar(b1!=null?`Temperatura ${st.batTemp} graus. Confira o peso do balde 1: ${falaPeso(b1+PESO_BALDE1)}. Pode falar o peso ou digitar.`:'Confira o peso do balde 1.');
+  batMicConf('b1');
 }
 function batConferirBalde1(){
   const lote=batLoteAtual(); if(!lote){abrirBatimentoLotes();return;}
+  const inp=document.getElementById('bat-b1-inp');
+  const peso=parseFloat((inp&&inp.value)||'');
+  if(!(isFinite(peso)&&peso>0)){
+    const d=document.getElementById('bat-b1-diff'); if(d){ d.textContent='Informe o peso pesado para seguir.'; d.style.color='var(--red)'; }
+    falar('Informe o peso do balde 1 para seguir.'); return;
+  }
+  st.batPesoB1=peso;
+  if(st.batB1Alvo!=null && Math.abs(peso-st.batB1Alvo)>50){
+    falarForcado(`Atenção: o balde 1 está ${peso>st.batB1Alvo?'acima':'abaixo'} do esperado. Pesado ${Math.round(peso)}, esperado ${Math.round(st.batB1Alvo)} gramas.`);
+  }
+  batPararMicPeso();
+  // Prepara o balde 2 (líquidos)
   const b2=pesoBalde2Lote(lote);
   const a2=document.getElementById('bat-b2-alvo'), d2=document.getElementById('bat-b2-det');
+  st.batB2Alvo = (b2!=null)? b2+PESO_BALDE1 : null;
   if(b2!=null){ a2.textContent=formatPeso(b2+PESO_BALDE1); d2.textContent='Líquidos ('+formatPeso(b2)+') + balde ('+PESO_BALDE1+' g). Só líquidos: '+formatPeso(b2)+'.'; }
   else{ a2.textContent='—'; d2.textContent='Confira os líquidos do balde 2 conforme a receita.'; }
+  const i2=document.getElementById('bat-b2-inp'); if(i2) i2.value=''; const df2=document.getElementById('bat-b2-diff'); if(df2) df2.textContent='';
   setBatFase('balde2');
-  falar(b2!=null?`Balde 1 conferido. Agora o balde 2, líquidos: ${falaPeso(b2+PESO_BALDE1)} com o balde, ou ${falaPeso(b2)} só os líquidos.`:'Confira o balde 2, líquidos.');
+  falar(b2!=null?`Balde 1 conferido. Agora o balde 2, líquidos: ${falaPeso(b2+PESO_BALDE1)} com o balde. Pode falar o peso ou digitar.`:'Confira o balde 2, líquidos.');
+  batMicConf('b2');
 }
 function batConferirBalde2(){
+  const inp=document.getElementById('bat-b2-inp');
+  const peso=parseFloat((inp&&inp.value)||'');
+  if(!(isFinite(peso)&&peso>0)){
+    const d=document.getElementById('bat-b2-diff'); if(d){ d.textContent='Informe o peso pesado para iniciar.'; d.style.color='var(--red)'; }
+    falar('Informe o peso do balde 2 para iniciar.'); return;
+  }
+  st.batPesoB2=peso;
+  if(st.batB2Alvo!=null && Math.abs(peso-st.batB2Alvo)>50){
+    falarForcado(`Atenção: o balde 2 está ${peso>st.batB2Alvo?'acima':'abaixo'} do esperado. Pesado ${Math.round(peso)}, esperado ${Math.round(st.batB2Alvo)} gramas.`);
+  }
+  batPararMicPeso();
   setBatFase('batendo');
   falar('Balde 2 conferido. Inicie o batimento na velocidade 1 e toque em iniciar.');
+}
+// Captura genérica de número por voz, preenchendo o input indicado (voz OU digitação)
+function batMicNum(inputId, cb){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR) return false;
+  batPararMicPeso();
+  const rec=new SR(); rec.lang='pt-BR'; rec.continuous=true; rec.interimResults=false; rec.maxAlternatives=3;
+  st.batRecPeso=rec;
+  rec.onend=()=>{ if(st.batRecPeso===rec){ setTimeout(()=>{try{rec.start();}catch(e){}},400); } };
+  rec.onerror=(e)=>{ if(e.error==='not-allowed'){ st.batRecPeso=null; } };
+  rec.onresult=(e)=>{
+    const r=e.results[e.results.length-1];
+    for(let i=0;i<r.length;i++){
+      const m=r[i].transcript.toLowerCase().replace(/\./g,'').replace(',','.').match(/\d+(\.\d+)?/);
+      if(m){ const inp=document.getElementById(inputId); if(inp){ inp.value=m[0]; if(cb)cb(m[0]); } break; }
+    }
+  };
+  try{ rec.start(); }catch(e){}
+  return true;
+}
+// Mostra a diferença entre o peso pesado e o alvo (tolerância ±50 g)
+function batConfDiff(which){
+  const alvo = which==='b1'? st.batB1Alvo : st.batB2Alvo;
+  const inp=document.getElementById('bat-'+which+'-inp');
+  const el=document.getElementById('bat-'+which+'-diff');
+  if(!el) return;
+  const v=parseFloat((inp&&inp.value)||'');
+  if(!(isFinite(v)&&v>0)){ el.textContent=''; return; }
+  if(alvo==null){ el.textContent='Peso registrado: '+formatPeso(v)+'.'; el.style.color='var(--mut)'; return; }
+  const dif=Math.round(v-alvo);
+  if(Math.abs(dif)<=50){ el.textContent='✓ Confere (diferença '+(dif>=0?'+':'')+dif+' g).'; el.style.color='var(--grn)'; }
+  else{ el.textContent='⚠ Fora do esperado: '+(dif>=0?'+':'')+dif+' g · esperado '+formatPeso(alvo)+'.'; el.style.color='var(--red)'; }
+}
+function batMicConf(which){
+  const ok=batMicNum('bat-'+which+'-inp', ()=>batConfDiff(which));
+  const el=document.getElementById('bat-'+which+'-diff');
+  if(!ok && el){ el.textContent='Voz indisponível neste navegador. Digite o peso.'; el.style.color='var(--mut)'; }
 }
 // Alarme forte para ambiente de produção: sequência de apitos longos e altos.
 function batBeep(){
@@ -1438,7 +1601,7 @@ function batAgenda(){
   const t1=getBatT1(), t2=getBatT2(), t3=getBatT3(), t4=getBatT4();
   return [
     {min:t1,          txt:'Colocar o sal e a manteiga.'},
-    {min:t1+t2,       txt:'Colocar lentamente o fermento com porção de farinha bem misturados.'},
+    {min:t1+t2,       txt:'Colocar lentamente o fermento com porção de farinha bem misturados. Misturar bem o fermento com o trigo.'},
     {min:t1+t2+t3,    txt:'Chegando em 20 graus, coloque a massa antiga.'},
     {min:t1+t2+t3+t4, txt:'Aos 22 graus, conferir ponto de véu, 80 por cento.'},
   ];
@@ -1533,6 +1696,8 @@ function batConcluirComPeso(){
     op:getOp(), tempAmbiente:st.batTemp,
     tempoSeg:batTempoSeg, tempoTxt:fmtMMSS(batTempoSeg),
     pesoTotal:(isFinite(peso)?peso:null), partes:div, porParte:porParte,
+    partesUsadas:0,
+    peso_balde1:(st.batPesoB1!=null?st.batPesoB1:null), peso_balde2:(st.batPesoB2!=null?st.batPesoB2:null),
     dur:Math.round((Date.now()-(st.batStart||Date.now()))/60000)
   };
   LS.s('fdo_lotes',todos);
@@ -1965,8 +2130,17 @@ async function buscarPrevisaoMadrugada() {
   }
 }
 
-// Tela de seleção: mostra as duas opções de fermento (17°C, por tempo de fermentação)
+// Tela de seleção: mostra as duas opções de fermento (17°C, por tempo de fermentação).
+// Receitas com fermento fixo (R4/R5) pulam a escolha — o fermento já está definido na receita.
 function escolherTemp(){
+  const r=RECEITAS[st.receita]||RECEITAS.r1;
+  if(r.fermentoFixo!=null){
+    st.temp=17;
+    st.fermento=r.fermentoFixo;
+    st.fermentoHoras=r.fermentoHoras!=null?r.fermentoHoras:null;
+    iniciarSecos();
+    return;
+  }
   const grid=document.getElementById('temp-grid');
   grid.innerHTML=OPCOES_FERMENTO.map((o,idx)=>
     `<button class="temp-btn" onclick="setTempOpcao(${idx})"><div class="temp-c">${o.temp}°C</div><div class="temp-f">fermento ${o.fermento} g</div><div class="temp-horas">${o.horas} horas fermentação</div></button>`
@@ -2270,10 +2444,14 @@ function grupoFala(g){return g.replace(' · ',' ');}
 // Monta a frase falada ao chegar em cada passo, conforme o modo de voz do passo
 function frasePasso(i){
   const p=RECEITA[i];
+  if(p.cat==='GORDURA' && (p.g||0)===0) return 'Não vai manteiga.';
   const peso=falaPeso(p.g);
-  if(p.voz==='total') return `${p.nome}, ${peso}. Total, ${falaPeso(baldeTotalAte(i))}.`;
-  if(p.voz==='det')   return `${p.nome}, ${peso}. ${p.det}`;
-  return `${p.nome}, ${peso}.`; // 'solo'
+  let base;
+  if(p.voz==='total') base=`${p.nome}, ${peso}. Total, ${falaPeso(baldeTotalAte(i))}.`;
+  else if(p.voz==='det') base=`${p.nome}, ${peso}. ${p.det}`;
+  else base=`${p.nome}, ${peso}.`; // 'solo'
+  if(p.cat==='FERMENTO') base+=' Misturar bem o fermento com o trigo.';
+  return base;
 }
 
 function irPasso(n){st.step=Math.max(0,Math.min(n,RECEITA.length-1));atualizarUI();falar(frasePasso(st.step));}
@@ -2291,8 +2469,8 @@ function voltarPasso(){
   irPasso(st.step-1);
 }
 
-// Verifica se o passo `i` é o ÚLTIMO dos secos do balde 1
-// Soma só os ingredientes do BALDE 1 · SECOS na fase atual (exclui SAL E MANTEIGA)
+// Soma os ingredientes do BALDE 1 · SECOS na fase atual
+// (agora inclui sal e manteiga, que passaram a ser pesados dentro do balde de secos)
 function pesoBaldeSecosAtual(){
   let s=0; (RECEITA||[]).forEach(p=>{ if((p.grupo||'')==='BALDE 1 · SECOS') s+=(p.g||0); }); return s;
 }
@@ -2326,6 +2504,15 @@ function avancar(){
 
   st.done.add(st.step);
   const n=st.step+1;
+  // Receita sem manteiga: pula a etapa da manteiga avisando por voz (e finaliza os secos, pois é o último passo)
+  if(st.subModulo==='secos' && n===RECEITA.length-1 && RECEITA[n].cat==='GORDURA' && (RECEITA[n].g||0)===0){
+    st.done.add(n);
+    st.step=n; st.modo='pos_secos'; atualizarUI();
+    const txt='Não vai manteiga. '+textoPerguntaSecos();
+    mostrarPerguntaSecos(true, txt);
+    falar(txt);
+    return;
+  }
   if(n>=RECEITA.length){ // fim dos LÍQUIDOS → concluir (sem etiqueta)
     concluirLiquidos();return;
   }
@@ -2386,7 +2573,7 @@ function atualizarUI(){
   document.getElementById('gb').textContent=p.grupo;
   document.getElementById('c-cat').textContent=p.cat;
   document.getElementById('c-name').textContent=p.nome;
-  document.getElementById('c-qty').textContent=p.qty;
+  document.getElementById('c-qty').textContent=(p.cat==='GORDURA'&&(p.g||0)===0)?'Não vai manteiga':p.qty;
   document.getElementById('c-det').textContent=p.det;
   document.getElementById('c-tot').textContent='Total do balde até aqui: '+formatPeso(baldeTotalAte(st.step));
   // Badge do contador de baldes de secos (só na fase de secos, a partir do 2º balde)
@@ -2496,6 +2683,164 @@ function renderHist(){
   }).join('');
 }
 
+// ════════════════════════════════════════════════════════════
+// LAMINAÇÃO (Fase 1) — agrupa PARTES geladas de lotes batidos.
+// Cada lote batido gera N partes (÷ divisor). Aqui o operador seleciona
+// quantas partes de cada lote vão laminar (pode misturar dias), gera a
+// nomenclatura DD/MM · N e baixa as partes do estoque de cada lote.
+// ════════════════════════════════════════════════════════════
+function lotePartesDisp(l){
+  const b=(l&&l.etapas&&l.etapas.batimento)||null;
+  if(!b||!b.feito) return 0;
+  return Math.max(0,(Number(b.partes)||0)-(Number(b.partesUsadas)||0));
+}
+function lotesComPartes(){ return LS.g('fdo_lotes',[]).filter(l=>lotePartesDisp(l)>0); }
+function dataCurta(ts){ const d=new Date(ts); return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}); }
+// Próxima sequência do dia para a nomenclatura DD/MM · N
+function proxLamSeqDia(ts){
+  const dia=dataCurta(ts);
+  return LS.g('fdo_laminacoes',[]).filter(x=>dataCurta(x.dataTs)===dia).length + 1;
+}
+function abrirLaminacao(){ st.lamSel={}; renderLaminacao(); ir('laminacao'); falar('Laminação. Selecione as partes de massa que vão laminar.'); }
+function lamAjustar(loteId, delta){
+  const l=LS.g('fdo_lotes',[]).find(x=>x.id===loteId); if(!l) return;
+  const disp=lotePartesDisp(l);
+  let novo=(Number(st.lamSel[loteId])||0)+delta;
+  if(novo<0) novo=0; if(novo>disp) novo=disp;
+  if(novo===0) delete st.lamSel[loteId]; else st.lamSel[loteId]=novo;
+  renderLaminacao();
+}
+function lamTotalSel(){ return Object.values(st.lamSel||{}).reduce((s,n)=>s+(Number(n)||0),0); }
+function renderLaminacao(){
+  const lotes=lotesComPartes();
+  const el=document.getElementById('lam-disp-list');
+  if(!lotes.length){
+    el.innerHTML='<div class="bat-empty"><div class="bat-empty-icon">🧊</div><div>Nenhuma massa batida com partes disponíveis.</div><div style="font-size:.78rem">Bata uma massa para liberar partes para a laminação.</div></div>';
+  } else {
+    el.innerHTML=lotes.map(l=>{
+      const disp=lotePartesDisp(l);
+      const sel=Number(st.lamSel[l.id])||0;
+      const dia=l.criadoTs?dataCurta(l.criadoTs):'—';
+      return `<div class="lam-card">
+        <div class="lam-card-top">
+          <span class="lam-card-num">Lote #${l.num}</span>
+          <span class="lam-card-rec">${l.receitaNome||l.rotulo||'—'} · ${dia}</span>
+        </div>
+        <div class="lam-card-disp">Disponível: ${disp} ${disp===1?'parte':'partes'}</div>
+        <div class="lam-stepper">
+          <button class="lam-stepbtn" onclick="lamAjustar('${l.id}',-1)">−</button>
+          <span class="lam-stepval">${sel}</span>
+          <button class="lam-stepbtn" onclick="lamAjustar('${l.id}',1)">+</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  const tot=lamTotalSel();
+  document.getElementById('lam-sel-tot').textContent=tot;
+  const hoje=dataCurta(Date.now());
+  const temAnterior=Object.keys(st.lamSel||{}).some(id=>{ const l=lotes.find(x=>x.id===id); return l&&l.criadoTs&&dataCurta(l.criadoTs)!==hoje; });
+  document.getElementById('lam-sel-aviso').innerHTML = temAnterior ? '<span style="color:var(--red)">· inclui massa de dia anterior</span>' : '';
+  document.getElementById('lam-bar').style.display = tot>0 ? 'flex' : 'none';
+  renderLamFeitas();
+}
+function renderLamFeitas(){
+  const lams=LS.g('fdo_laminacoes',[]);
+  const el=document.getElementById('lam-feitas-list');
+  if(!lams.length){ el.innerHTML='<div style="padding:1rem;text-align:center;color:var(--mut);font-size:.82rem">Nenhuma laminação criada ainda.</div>'; return; }
+  el.innerHTML=lams.map(x=>{
+    const comp=(x.composicao||[]).map(c=>`${c.partes}× #${c.loteNum} (${c.dataLote})`).join(' + ');
+    return `<div class="lam-card">
+      <div class="lam-card-top">
+        <span class="lam-card-num">${x.nome}</span>
+        <span class="lam-card-rec">${x.receitaNome||''}</span>
+        <button class="lote-del" onclick="apagarLaminacao('${x.id}')" title="Apagar laminação">🗑</button>
+      </div>
+      <div class="lam-card-disp">${x.totalPartes} partes · ${comp}${x.temMassaAnterior?' · <span style="color:var(--red)">contém massa de dia anterior</span>':''}</div>
+    </div>`;
+  }).join('');
+}
+function criarLaminacao(){
+  const sel=st.lamSel||{};
+  const total=lamTotalSel();
+  if(total<=0){ falar('Selecione ao menos uma parte para criar a laminação.'); return; }
+  const todos=LS.g('fdo_lotes',[]);
+  const hoje=dataCurta(Date.now());
+  const receitas=new Set(), composicao=[]; let temAnterior=false;
+  Object.keys(sel).forEach(id=>{
+    const l=todos.find(x=>x.id===id); if(!l) return;
+    const q=Number(sel[id])||0; if(q<=0) return;
+    const dia=l.criadoTs?dataCurta(l.criadoTs):'—';
+    if(dia!==hoje) temAnterior=true;
+    receitas.add(l.receita);
+    composicao.push({loteId:id, loteNum:l.num, dataLote:dia, partes:q, receita:l.receita});
+    l.etapas=l.etapas||{}; l.etapas.batimento=l.etapas.batimento||{};
+    l.etapas.batimento.partesUsadas=(Number(l.etapas.batimento.partesUsadas)||0)+q;
+    if(!l.etapas.laminacao || !l.etapas.laminacao.feito){ l.etapas.laminacao={feito:true, em:new Date().toLocaleString('pt-BR'), emTs:Date.now()}; }
+  });
+  if(!composicao.length){ falar('Nenhuma parte válida selecionada.'); return; }
+  const agora=new Date();
+  const seqDia=proxLamSeqDia(agora.getTime());
+  const nome=dataCurta(agora.getTime())+' · '+seqDia;
+  let receitaNome='Misto', receita='misto';
+  if(receitas.size===1){ receita=[...receitas][0]; receitaNome=(RECEITAS[receita]&&RECEITAS[receita].rotulo)||''; }
+  const lam={
+    id:'lam_'+agora.getTime(), nome, seqDia, data:agora.toLocaleString('pt-BR'), dataTs:agora.getTime(),
+    receita, receitaNome, composicao, totalPartes:total, temMassaAnterior:temAnterior, op:getOp(),
+    etapas:{laminacao:{feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(), op:getOp()}}
+  };
+  const lams=LS.g('fdo_laminacoes',[]); lams.unshift(lam); LS.s('fdo_laminacoes',lams.slice(0,200));
+  LS.s('fdo_lotes',todos);
+  st.lamSel={};
+  renderLaminacao();
+  const compFala=composicao.map(c=>`${c.partes} ${c.partes===1?'parte':'partes'} do lote ${c.loteNum}`).join(', ');
+  falar(`Laminação ${nome} criada. ${total} ${total===1?'parte':'partes'}. ${compFala}.`+(temAnterior?' Atenção: inclui massa de dia anterior.':''));
+}
+function apagarLaminacao(id){
+  const lams=LS.g('fdo_laminacoes',[]);
+  const lam=lams.find(x=>x.id===id); if(!lam) return;
+  if(!confirm(`Apagar a laminação ${lam.nome}?\n\nAs partes voltam para o estoque dos lotes de origem.`)) return;
+  const todos=LS.g('fdo_lotes',[]);
+  (lam.composicao||[]).forEach(c=>{
+    const l=todos.find(x=>x.id===c.loteId); if(!l||!l.etapas||!l.etapas.batimento) return;
+    l.etapas.batimento.partesUsadas=Math.max(0,(Number(l.etapas.batimento.partesUsadas)||0)-(Number(c.partes)||0));
+  });
+  LS.s('fdo_lotes',todos);
+  LS.s('fdo_laminacoes',lams.filter(x=>x.id!==id));
+  renderLaminacao();
+}
+
+// ════════════════════════════════════════════════════════════
+// Alerta de bateria fraca: avisa por voz abaixo de 20% e repete a cada 3 min
+// ════════════════════════════════════════════════════════════
+let bateriaTimer=null, bateriaAvisada=false;
+const MSG_BATERIA='Atenção: bateria abaixo de vinte por cento. Conecte o carregador.';
+function monitorarBateria(){
+  if(!navigator.getBattery) return;
+  navigator.getBattery().then(bat=>{
+    function checa(){
+      const nivel=Math.round((bat.level||0)*100);
+      if(!bat.charging && nivel<20){
+        if(!bateriaAvisada){
+          falarForcado(MSG_BATERIA);
+          bateriaAvisada=true;
+          if(bateriaTimer) clearInterval(bateriaTimer);
+          bateriaTimer=setInterval(()=>{
+            const n=Math.round((bat.level||0)*100);
+            if(!bat.charging && n<20){ falarForcado(MSG_BATERIA); }
+            else { clearInterval(bateriaTimer); bateriaTimer=null; bateriaAvisada=false; }
+          }, 180000);
+        }
+      } else {
+        bateriaAvisada=false;
+        if(bateriaTimer){ clearInterval(bateriaTimer); bateriaTimer=null; }
+      }
+    }
+    bat.addEventListener('levelchange', checa);
+    bat.addEventListener('chargingchange', checa);
+    checa();
+  }).catch(()=>{});
+}
+
 (function(){
   // PIN padrão na primeira execução
   if(LS.g('fdo_pin',null)===null) LS.s('fdo_pin','123789');
@@ -2503,12 +2848,15 @@ function renderHist(){
   if(LS.g('fdo_cfg_pin',null)===null) LS.s('fdo_cfg_pin','456'); // senha das Configurações
   // Migra sessões antigas concluídas para o sistema de lotes (uma vez)
   migrarLotesAntigos();
+  PESO_BALDE1=getTara();           // aplica a tara configurada
+  iniciarMonitorBateria();         // alerta de bateria baixa por voz
   const op=LS.g('fdo_op','');
   if(op)document.getElementById('inp-op').value=op;
   atualizarBotoesTTS();
   speechSynthesis?.getVoices();
   speechSynthesis?.addEventListener('voiceschanged',()=>speechSynthesis.getVoices());
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  monitorarBateria();
   // Retoma uma batida em andamento (se a aba foi recarregada/descartada); senão, fluxo normal
   if(!getKey()){ ir('config'); }
   else if(!batRestaurar()){ ir('start'); }
