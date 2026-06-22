@@ -2,7 +2,22 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — OBS 21/06/2026 (atualização v14)
+       FOLHADOS D'OURO — OBS 22/06/2026 (atualização v15)
+       NOVIDADES v15:
+       • Nomenclatura: o que o porcionamento gera agora se chama BALDE
+         (nº do balde), não mais "lote". A tela "Lotes" virou "Baldes".
+       • O LOTE passa a nascer na LAMINAÇÃO: agrupamento de partes batidas
+         do mesmo dia + MESMA RECEITA (uma receita por lote — travado na UI;
+         misturar dias continua liberado). Nomenclatura mantida: DD/MM · N.
+       • Etiqueta do balde: passa a mostrar "Massa laminada" e (quando > 0)
+         "Massa sem laminar", lidos da receita.
+       • Nova etiqueta 60×50 mm das MASSAS: 4 faixas iguais (receita + data),
+         com risco para cortar em 4. Disponível ao fim do porcionamento e
+         no botão da tela de Baldes.
+       • Botões "Porcionamento de Secos" e "Porcionamento de Líquidos"
+         enxutos (sem descrição).
+       • Tela de Laminação refeita para celular em pé: cabeçalho enxuto,
+         seleção mais prática (cartões com estado, trava de receita).
        NOVIDADES v14:
        • Receitas R4 "Massa 3 kg sem manteiga" (15.564 g) e R5 "1 kg sem
          laminar" (15.714 g); fermento fixo (70 g/14 h e 64 g/17 h).
@@ -39,7 +54,7 @@
        --- base v11/v10/v9/v8/v7 ---
        • Alarme forte do batimento. Lotes numerados/apagáveis. Fermentação.
          PIN do Porcionamento. Autofalante 🔊/🔇. Calculadora. Wake Lock.
-       • Service Worker: cache fdo-v14.
+       • Service Worker: cache fdo-v15.
        ════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -184,6 +199,8 @@
     .modulo-nome{font-size:1rem;font-weight:bold;color:var(--gl);margin-bottom:.15rem}
     .modulo.inativo .modulo-nome{color:var(--mut)}
     .modulo-desc{font-size:.75rem;color:var(--mut);line-height:1.3}
+    .modulo-slim{padding:.7rem 1rem}
+    .modulo-slim .modulo-nome{font-size:1.05rem;margin-bottom:0}
     .modulo-badge{font-size:.55rem;letter-spacing:.15rem;text-transform:uppercase;
       padding:.25rem .55rem;border-radius:.2rem;flex-shrink:0;font-weight:bold}
     .badge-ativo{background:rgba(201,151,58,.18);color:var(--gold);border:1px solid rgba(201,151,58,.35)}
@@ -316,6 +333,7 @@
       font-size:1rem;width:2.1rem;height:2.1rem;border-radius:.35rem;cursor:pointer;flex-shrink:0;
       display:flex;align-items:center;justify-content:center}
     .lote-etq:active{opacity:.7}
+    .lote-etq.etq-4x{width:auto;padding:0 .5rem;font-size:.8rem;font-weight:bold}
 
     /* ════ CALCULADORA ════ */
     .calc-wrap{flex:1;display:flex;flex-direction:column;padding:1rem;gap:.8rem;overflow:hidden}
@@ -366,17 +384,29 @@
       letter-spacing:.02em;font-variant-numeric:tabular-nums;margin:.2rem 0}
     .bat-aviso{font-size:1rem;color:var(--gold);text-align:center;line-height:1.4;min-height:1.4rem;font-weight:bold}
     .bat-divisao{font-size:1.5rem;color:var(--grn);font-weight:bold;text-align:center;margin-top:.6rem;min-height:1.6rem}
-    /* ════ LAMINAÇÃO (Fase 1) ════ */
-    .lam-card{background:var(--bg3);border:1px solid var(--brd);border-radius:.5rem;padding:.7rem .8rem;margin-bottom:.6rem}
-    .lam-card-top{display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem}
-    .lam-card-num{font-size:1.05rem;font-weight:bold;color:var(--gold);flex-shrink:0}
-    .lam-card-rec{font-size:.78rem;color:var(--gl);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .lam-card-disp{font-size:.74rem;color:var(--mut);margin-bottom:.5rem;line-height:1.5}
-    .lam-stepper{display:flex;align-items:center;gap:1rem;justify-content:flex-end}
-    .lam-stepbtn{width:2.8rem;height:2.8rem;border-radius:.5rem;border:.1rem solid var(--gold);background:rgba(201,151,58,.12);color:var(--gold);font-size:1.6rem;font-weight:bold;line-height:1}
+    /* ════ LAMINAÇÃO ════ */
+    .lam-scroll{flex:1;overflow-y:auto;padding:.6rem 1rem 1rem;display:flex;flex-direction:column}
+    .lam-hint{font-size:.78rem;color:var(--mut);line-height:1.45;background:var(--bg3);border:1px solid var(--brd);border-radius:.45rem;padding:.55rem .7rem;margin-bottom:.7rem}
+    .lam-hint b{color:var(--gold)}
+    .lam-sec-lbl{font-size:.65rem;letter-spacing:.2rem;text-transform:uppercase;color:var(--mut);margin:1rem 0 .5rem}
+    .lam-empty{padding:1rem;text-align:center;color:var(--mut);font-size:.82rem;line-height:1.5}
+    .lam-card{display:flex;align-items:center;gap:.7rem;background:var(--bg3);border:1px solid var(--brd);border-radius:.5rem;padding:.6rem .7rem;margin-bottom:.5rem}
+    .lam-card.sel{border-color:var(--gold);background:rgba(201,151,58,.08)}
+    .lam-card.lock{opacity:.4}
+    .lam-card-main{flex:1;min-width:0}
+    .lam-card-num{font-size:1.05rem;font-weight:bold;color:var(--gold)}
+    .lam-card-sub{font-size:.74rem;color:var(--mut);line-height:1.35;margin-top:.1rem}
+    .lam-stepper{display:flex;align-items:center;gap:.5rem;flex-shrink:0}
+    .lam-stepbtn{width:2.7rem;height:2.7rem;border-radius:.5rem;border:.1rem solid var(--gold);background:rgba(201,151,58,.12);color:var(--gold);font-size:1.6rem;font-weight:bold;line-height:1;display:flex;align-items:center;justify-content:center}
     .lam-stepbtn:active{opacity:.6;transform:scale(.94)}
-    .lam-stepval{font-size:1.5rem;font-weight:bold;color:var(--gl);min-width:2.2rem;text-align:center}
-    .lam-bar{position:sticky;bottom:0;background:var(--bg2);border-top:.1rem solid var(--brd);padding:.8rem 1rem;display:flex;flex-direction:column;gap:.6rem;z-index:5}
+    .lam-stepbtn:disabled{opacity:.35;border-color:var(--brd);color:var(--mut)}
+    .lam-stepval{font-size:1.5rem;font-weight:bold;color:var(--gl);min-width:1.8rem;text-align:center}
+    .lam-fcard{background:var(--bg3);border:1px solid var(--brd);border-radius:.5rem;padding:.6rem .7rem;margin-bottom:.5rem}
+    .lam-fcard-top{display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem}
+    .lam-fcard-num{font-size:1rem;font-weight:bold;color:var(--gold);flex-shrink:0}
+    .lam-fcard-rec{font-size:.75rem;color:var(--gl);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .lam-fcard-comp{font-size:.72rem;color:var(--mut);line-height:1.45}
+    .lam-bar{background:var(--bg2);border-top:.1rem solid var(--brd);padding:.8rem 1rem;display:flex;flex-direction:column;gap:.6rem;flex-shrink:0}
     .lam-bar-info{font-size:.9rem;color:var(--gl)}
   </style>
 </head>
@@ -430,12 +460,12 @@
     </div>
     <div class="modulo ativo" onclick="entrarBatimento()">
       <div class="modulo-icon">🥣</div>
-      <div class="modulo-info"><div class="modulo-nome">Bater a Massa</div><div class="modulo-desc">Seleciona o lote porcionado e confirma variáveis</div></div>
+      <div class="modulo-info"><div class="modulo-nome">Bater a Massa</div><div class="modulo-desc">Seleciona o balde porcionado e confirma variáveis</div></div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
     <div class="modulo ativo" onclick="abrirLaminacao()">
       <div class="modulo-icon">📐</div>
-      <div class="modulo-info"><div class="modulo-nome">Laminação</div><div class="modulo-desc">Agrupa as partes de massa batida que vão laminar</div></div>
+      <div class="modulo-info"><div class="modulo-nome">Laminação</div><div class="modulo-desc">Agrupa as partes batidas e forma o lote</div></div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
     <div class="modulo inativo">
@@ -445,7 +475,7 @@
     </div>
     <div class="modulo ativo" onclick="entrarFermentacao()">
       <div class="modulo-icon">🌡️</div>
-      <div class="modulo-info"><div class="modulo-nome">Fermentação</div><div class="modulo-desc">Registra temperatura mínima e máxima do lote</div></div>
+      <div class="modulo-info"><div class="modulo-nome">Fermentação</div><div class="modulo-desc">Registra temperatura mínima e máxima do balde</div></div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
     <div class="modulo inativo">
@@ -461,7 +491,7 @@
   </div>
   <div class="start-footer">
     <button class="link-btn" onclick="abrirCalc('start')">🧮 Calculadora</button>
-    <button class="link-btn" onclick="ir('history')">Lotes</button>
+    <button class="link-btn" onclick="ir('history')">Baldes</button>
     <button class="link-btn" onclick="entrarConfig()">Config</button>
   </div>
 </div>
@@ -475,21 +505,13 @@
   </div>
   <div class="modulos-label">Etapas do porcionamento</div>
   <div class="modulos">
-    <div class="modulo ativo" onclick="ir('receitas')">
+    <div class="modulo ativo modulo-slim" onclick="ir('receitas')">
       <div class="modulo-icon">🧂</div>
-      <div class="modulo-info">
-        <div class="modulo-nome">Porcionamento de Secos</div>
-        <div class="modulo-desc">Farinhas, fermento, açúcar, sal e manteiga · gera o lote e a etiqueta</div>
-      </div>
-      <div class="modulo-badge badge-ativo">Gera lote</div>
+      <div class="modulo-info"><div class="modulo-nome">Porcionamento de Secos</div></div>
     </div>
-    <div class="modulo ativo" onclick="abrirLiquidosLotes()">
+    <div class="modulo ativo modulo-slim" onclick="abrirLiquidosLotes()">
       <div class="modulo-icon">💧</div>
-      <div class="modulo-info">
-        <div class="modulo-nome">Porcionamento de Líquidos</div>
-        <div class="modulo-desc">Água, leite e aproveitamento · continua um lote já com os secos prontos</div>
-      </div>
-      <div class="modulo-badge badge-ativo">Usa lote</div>
+      <div class="modulo-info"><div class="modulo-nome">Porcionamento de Líquidos</div></div>
     </div>
   </div>
   <div class="start-footer">
@@ -558,9 +580,9 @@
     <div class="start-icon">💧</div>
     <div class="start-brand">Folhados d'Ouro</div>
     <div class="start-title">Porcionamento de Líquidos</div>
-    <div class="start-sub">Selecione o lote com os secos prontos</div>
+    <div class="start-sub">Selecione o balde com os secos prontos</div>
   </div>
-  <div class="modulos-label">Lotes aguardando os líquidos</div>
+  <div class="modulos-label">Baldes aguardando os líquidos</div>
   <div class="modulos" id="liq-lotes-list"></div>
   <div class="start-footer">
     <button class="link-btn" onclick="ir('porc-menu')">← Voltar</button>
@@ -631,7 +653,7 @@
     <button class="nbtn next" onclick="avancar()">Próximo →</button>
   </div>
   <div class="nav-secos" id="nav-secos">
-    <button class="nbtn next secos-continuar" onclick="finalizarSecos()">Finalizar e gerar lote →</button>
+    <button class="nbtn next secos-continuar" onclick="finalizarSecos()">Finalizar e gerar balde →</button>
   </div>
   <div class="list" id="lista"></div>
   <div class="ai" id="ai-box" style="display:none">
@@ -646,21 +668,22 @@
 <div id="s-done" class="scr off">
   <div style="font-size:2.6rem" id="done-emoji">✅</div>
   <div style="font-size:1.2rem;color:var(--gl);font-weight:bold;text-align:center" id="done-title">Porcionamento Concluído!</div>
-  <div class="done-lote-big" id="done-lote">LOTE #—</div>
+  <div class="done-lote-big" id="done-lote">BALDE #—</div>
   <div id="done-mark" style="font-size:.9rem;color:var(--gold);text-align:center;font-weight:bold;letter-spacing:.05rem">✍️ Marque este número na massa</div>
   <div class="done-tot" id="done-tot"></div>
-  <button class="btn-main" id="done-etq-btn" style="width:auto;padding:1rem 2rem;margin-top:.6rem" onclick="abrirEtiqueta(st.ultimoLoteId)">🏷 Imprimir Etiqueta</button>
+  <button class="btn-main" id="done-etq-btn" style="width:auto;padding:1rem 2rem;margin-top:.6rem" onclick="abrirEtiqueta(st.ultimoLoteId)">🏷 Etiqueta do balde</button>
+  <button class="link-btn" id="done-etq-massas-btn" style="width:auto;padding:.8rem 2rem" onclick="abrirEtiqueta(st.ultimoLoteId,'massas')">🏷 Etiqueta das massas (4×)</button>
   <button class="link-btn" style="width:auto;padding:.8rem 2rem" onclick="ir('start')">← Início</button>
 </div>
 
 <div id="s-history" class="scr off">
   <div class="hdr">
-    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Lotes de Produção</div></div>
+    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Baldes de Produção</div></div>
     <button class="link-btn" onclick="ir('start')">← Início</button>
   </div>
   <div class="hist-list" id="hist-list"></div>
   <div class="bot">
-    <button class="btn-danger" onclick="reiniciarNumeracaoLotes()">🔄 Reiniciar numeração dos lotes</button>
+    <button class="btn-danger" onclick="reiniciarNumeracaoLotes()">🔄 Reiniciar numeração dos baldes</button>
   </div>
 </div>
 
@@ -688,9 +711,9 @@
     <div class="start-icon">🥣</div>
     <div class="start-brand">Folhados d'Ouro</div>
     <div class="start-title">Bater a Massa</div>
-    <div class="start-sub">Selecione o lote porcionado</div>
+    <div class="start-sub">Selecione o balde porcionado</div>
   </div>
-  <div class="modulos-label">Lotes aguardando batimento</div>
+  <div class="modulos-label">Baldes aguardando batimento</div>
   <div class="modulos" id="bat-lotes-list"></div>
   <div class="start-footer">
     <button class="link-btn" onclick="ir('start')">← Voltar</button>
@@ -708,7 +731,7 @@
   </div>
   <div class="bat-body">
     <div class="bat-card">
-      <div class="bat-card-lbl">Lote selecionado</div>
+      <div class="bat-card-lbl">Balde selecionado</div>
       <div class="bat-lote-num" id="bat-lote-num">#—</div>
       <div class="bat-lote-rec" id="bat-lote-rec">—</div>
       <div class="bat-note" id="bat-lote-meta"></div>
@@ -787,7 +810,7 @@
     </div>
   </div>
   <div class="bot" style="display:flex;gap:.5rem">
-    <button class="btn-danger" style="flex:1" onclick="batSair('batimento-lotes')">← Lotes</button>
+    <button class="btn-danger" style="flex:1" onclick="batSair('batimento-lotes')">← Baldes</button>
     <button class="btn-danger" style="flex:1" onclick="batSair('start')">⌂ Início</button>
   </div>
 </div>
@@ -830,7 +853,7 @@
 <!-- ═══ ETIQUETA (impressão) ═══ -->
 <div id="s-etiqueta" class="scr off">
   <div class="hdr">
-    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Etiqueta do Lote</div></div>
+    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title" id="etq-title">Etiqueta do Balde</div></div>
     <button class="link-btn" onclick="fecharEtiqueta()">← Voltar</button>
   </div>
   <div class="etq-body">
@@ -857,9 +880,9 @@
     <div class="start-icon">🌡️</div>
     <div class="start-brand">Folhados d'Ouro</div>
     <div class="start-title">Fermentação</div>
-    <div class="start-sub">Selecione o lote</div>
+    <div class="start-sub">Selecione o balde</div>
   </div>
-  <div class="modulos-label">Lotes aguardando registro de fermentação</div>
+  <div class="modulos-label">Baldes aguardando registro de fermentação</div>
   <div class="modulos" id="ferm-lotes-list"></div>
   <div class="start-footer">
     <button class="link-btn" onclick="ir('start')">⌂ Início</button>
@@ -874,7 +897,7 @@
   </div>
   <div class="bat-body">
     <div class="bat-card">
-      <div class="bat-card-lbl">Lote selecionado</div>
+      <div class="bat-card-lbl">Balde selecionado</div>
       <div class="bat-lote-num" id="ferm-lote-num">#—</div>
       <div class="bat-lote-rec" id="ferm-lote-rec">—</div>
       <div class="bat-note" id="ferm-lote-meta"></div>
@@ -899,29 +922,26 @@
     <button class="btn-main" onclick="concluirFermentacao()">Confirmar e concluir fermentação ✓</button>
   </div>
   <div class="bot" style="display:flex;gap:.5rem">
-    <button class="btn-danger" style="flex:1" onclick="ir('fermentacao-lotes')">← Lotes</button>
+    <button class="btn-danger" style="flex:1" onclick="ir('fermentacao-lotes')">← Baldes</button>
     <button class="btn-danger" style="flex:1" onclick="ir('start')">⌂ Início</button>
   </div>
 </div>
 
-<!-- ═══ LAMINAÇÃO — agrupa partes de massa batida (Fase 1) ═══ -->
+<!-- ═══ LAMINAÇÃO — agrupa partes de massa batida e forma o lote ═══ -->
 <div id="s-laminacao" class="scr off">
-  <div class="start-top">
-    <div class="start-icon">📐</div>
-    <div class="start-brand">Folhados d'Ouro</div>
-    <div class="start-title">Laminação</div>
-    <div class="start-sub">Selecione as partes de massa que vão laminar</div>
+  <div class="hdr">
+    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Laminação</div></div>
+    <button class="link-btn" onclick="ir('start')">← Voltar</button>
   </div>
-  <div class="modulos-label">Massas batidas · partes geladas disponíveis</div>
-  <div class="modulos" id="lam-disp-list"></div>
+  <div class="lam-scroll">
+    <div class="lam-hint">Toque <b>+</b> nas partes de cada balde. Um lote = <b>uma receita</b> (pode misturar dias).</div>
+    <div id="lam-disp-list"></div>
+    <div class="lam-sec-lbl">Lotes criados</div>
+    <div id="lam-feitas-list"></div>
+  </div>
   <div class="lam-bar" id="lam-bar" style="display:none">
     <div class="lam-bar-info">Selecionado: <b id="lam-sel-tot">0</b> partes <span id="lam-sel-aviso"></span></div>
-    <button class="btn-main" onclick="criarLaminacao()">Criar laminação ✓</button>
-  </div>
-  <div class="modulos-label" style="margin-top:1rem">Laminações criadas</div>
-  <div class="modulos" id="lam-feitas-list"></div>
-  <div class="start-footer">
-    <button class="link-btn" onclick="ir('start')">← Voltar</button>
+    <button class="btn-main" onclick="criarLaminacao()">Criar lote ✓</button>
   </div>
 </div>
 
@@ -1282,7 +1302,7 @@ function apagarLote(id){
   const todos=LS.g('fdo_lotes',[]);
   const lote=todos.find(l=>l.id===id);
   if(!lote) return;
-  const ok=confirm(`Apagar o Lote #${lote.num} e TODOS os seus processos (porcionamento, batimento e demais etapas)?\n\nEsta ação não pode ser desfeita.`);
+  const ok=confirm(`Apagar o Balde #${lote.num} e TODOS os seus processos (porcionamento, batimento e demais etapas)?\n\nEsta ação não pode ser desfeita.`);
   if(!ok) return;
   LS.s('fdo_lotes',todos.filter(l=>l.id!==id));
   renderHist();
@@ -1330,7 +1350,7 @@ function renderBatLotes(){
   const lotes=lotesPendentesBatimento();
   const el=document.getElementById('bat-lotes-list');
   if(!lotes.length){
-    el.innerHTML='<div class="bat-empty"><div class="bat-empty-icon">✅</div><div>Nenhum lote aguardando batimento.</div><div style="font-size:.78rem">Conclua os secos de um lote para liberar o batimento.</div></div>';
+    el.innerHTML='<div class="bat-empty"><div class="bat-empty-icon">✅</div><div>Nenhum balde aguardando batimento.</div><div style="font-size:.78rem">Conclua os secos de um balde para liberar o batimento.</div></div>';
     return;
   }
   el.innerHTML=lotes.map(l=>{
@@ -1339,7 +1359,7 @@ function renderBatLotes(){
     return `<div class="modulo ativo" onclick="abrirBatimento('${l.id}')">
       <div class="modulo-icon">🥣</div>
       <div class="modulo-info">
-        <div class="modulo-nome">Lote #${l.num} · ${l.receitaNome||l.rotulo||''}</div>
+        <div class="modulo-nome">Balde #${l.num} · ${l.receitaNome||l.rotulo||''}</div>
         <div class="modulo-desc">${sub}</div>
       </div>
       <div class="modulo-badge badge-ativo">Bater</div>
@@ -1355,7 +1375,7 @@ function renderLiquidosLotes(){
   const lotes=lotesPendentesLiquidos();
   const el=document.getElementById('liq-lotes-list');
   if(!lotes.length){
-    el.innerHTML='<div class="bat-empty"><div class="bat-empty-icon">✅</div><div>Nenhum lote aguardando os líquidos.</div><div style="font-size:.78rem">Faça primeiro o Porcionamento de Secos para gerar um lote.</div></div>';
+    el.innerHTML='<div class="bat-empty"><div class="bat-empty-icon">✅</div><div>Nenhum balde aguardando os líquidos.</div><div style="font-size:.78rem">Faça primeiro o Porcionamento de Secos para gerar um balde.</div></div>';
     return;
   }
   el.innerHTML=lotes.map(l=>{
@@ -1364,7 +1384,7 @@ function renderLiquidosLotes(){
     return `<div class="modulo ativo" onclick="iniciarLiquidos('${l.id}')">
       <div class="modulo-icon">💧</div>
       <div class="modulo-info">
-        <div class="modulo-nome">Lote #${l.num} · ${l.receitaNome||l.rotulo||''}</div>
+        <div class="modulo-nome">Balde #${l.num} · ${l.receitaNome||l.rotulo||''}</div>
         <div class="modulo-desc">${sub}</div>
       </div>
       <div class="modulo-badge badge-ativo">Líquidos</div>
@@ -1457,7 +1477,7 @@ function abrirBatimento(id){
   setBatFase('temp');
   atualizarBotoesTTS();
   ir('batimento');
-  falar(`Batimento do lote ${lote.num}. `+(tDia!=null?`Temperatura ambiente de hoje, ${st.batTemp} graus. Confirme ou ajuste.`:'Defina a temperatura ambiente.'));
+  falar(`Batimento do balde ${lote.num}. `+(tDia!=null?`Temperatura ambiente de hoje, ${st.batTemp} graus. Confirme ou ajuste.`:'Defina a temperatura ambiente.'));
 }
 function ajustarTempBat(d){
   st.batTemp=Math.max(0,Math.min(45,(st.batTemp||20)+d));
@@ -1702,15 +1722,15 @@ function batConcluirComPeso(){
   };
   LS.s('fdo_lotes',todos);
   batPararMicPeso(); batLimparRun(); st.batRodando=false; liberarWakeLock();
-  if(porParte!=null) falar(`Batimento do lote ${lote.num} concluído. Peso ${Math.round(peso)} gramas. Cada uma das ${div} partes, ${falaPeso(Math.round(porParte))}.`);
-  else falar(`Batimento do lote ${lote.num} concluído.`);
+  if(porParte!=null) falar(`Batimento do balde ${lote.num} concluído. Peso ${Math.round(peso)} gramas. Cada uma das ${div} partes, ${falaPeso(Math.round(porParte))}.`);
+  else falar(`Batimento do balde ${lote.num} concluído.`);
   st.batLote=null;
   abrirBatimentoLotes();
 }
 // Sair do batimento — pede confirmação se a batida está em andamento (req5: só sai por comando claro)
 function batSair(destino){
   if(st.batRodando || (st.batLote && LS.g('fdo_bat_run',null))){
-    const ok=confirm('A batida está em andamento. Sair agora vai descartar o cronômetro deste lote.\n\nDeseja realmente sair?');
+    const ok=confirm('A batida está em andamento. Sair agora vai descartar o cronômetro deste balde.\n\nDeseja realmente sair?');
     if(!ok) return;
   }
   if(batCronInt){clearInterval(batCronInt);batCronInt=null;}
@@ -1812,41 +1832,76 @@ function loteLiquidos(lote){
   if(agua==null&&leite==null) return null;
   return { agua, leite };
 }
+// Massa laminada e (quando > 0) massa sem laminar, lidas da receita do balde
+function loteMassas(lote){
+  const r=RECEITAS[lote.receita]; if(!r) return null;
+  let laminada=null, semLaminar=null;
+  r.passos.forEach(p=>{ if(p.nome==='Massa laminada')laminada=p.g; else if(p.nome==='Massa sem laminar')semLaminar=p.g; });
+  if(laminada==null && semLaminar==null) return null;
+  return { laminada, semLaminar };
+}
 function desenharEtiqueta(lote){
   const c=document.createElement('canvas'); c.width=ETQ_W; c.height=ETQ_H;
   const x=c.getContext('2d');
   x.fillStyle='#fff'; x.fillRect(0,0,ETQ_W,ETQ_H);
   x.fillStyle='#000'; x.strokeStyle='#000'; x.lineWidth=4;
   x.strokeRect(10,10,ETQ_W-20,ETQ_H-20);
-  const d=loteEtqDados(lote); const liq=loteLiquidos(lote);
+  const d=loteEtqDados(lote); const liq=loteLiquidos(lote); const mas=loteMassas(lote);
   x.textAlign='center';
-  x.font='bold 64px Arial, sans-serif'; x.fillText('LOTE #'+d.num, ETQ_W/2, 78);
+  x.font='bold 56px Arial, sans-serif'; x.fillText('BALDE #'+d.num, ETQ_W/2, 66);
   x.font='24px Arial, sans-serif';
   let rec=d.receita; if(rec.length>34) rec=rec.slice(0,34);
-  x.fillText(rec, ETQ_W/2, 116);
-  x.font='bold 28px Arial, sans-serif';
-  x.fillText(d.data+'    '+d.hora, ETQ_W/2, 158);
+  x.fillText(rec, ETQ_W/2, 100);
+  x.font='bold 26px Arial, sans-serif';
+  x.fillText(d.data+'    '+d.hora, ETQ_W/2, 132);
   // divisória
-  x.lineWidth=2; x.beginPath(); x.moveTo(40,182); x.lineTo(ETQ_W-40,182); x.stroke();
+  x.lineWidth=2; x.beginPath(); x.moveTo(40,150); x.lineTo(ETQ_W-40,150); x.stroke();
+  // valores: líquidos (balde 2) + massas (laminada / sem laminar)
+  const linhas=[];
   if(liq){
-    x.font='bold 22px Arial, sans-serif'; x.fillText('BALDE 2 — LÍQUIDOS', ETQ_W/2, 214);
-    x.font='28px Arial, sans-serif';
-    x.textAlign='left';
-    if(liq.agua!=null)  x.fillText('Água/gelo:  '+formatPeso(liq.agua), 50, 262);
-    if(liq.leite!=null) x.fillText('Leite em pó: '+formatPeso(liq.leite), 50, 308);
+    if(liq.agua!=null)  linhas.push('Água/gelo:  '+formatPeso(liq.agua));
+    if(liq.leite!=null) linhas.push('Leite em pó:  '+formatPeso(liq.leite));
+  }
+  if(mas){
+    if(mas.laminada!=null)                        linhas.push('Massa laminada:  '+formatPeso(mas.laminada));
+    if(mas.semLaminar!=null && mas.semLaminar>0)  linhas.push('Massa sem laminar:  '+formatPeso(mas.semLaminar));
+  }
+  if(linhas.length){
+    x.textAlign='left'; x.font='24px Arial, sans-serif';
+    let yy=188;
+    linhas.forEach(t=>{ x.fillText(t, 40, yy); yy+=33; });
     x.textAlign='center';
-  }else{
-    x.font='22px Arial, sans-serif'; x.fillText('(líquidos conforme a receita)', ETQ_W/2, 250);
+  } else {
+    x.font='22px Arial, sans-serif'; x.fillText('(conforme a receita)', ETQ_W/2, 250);
   }
   return c;
 }
-function abrirEtiqueta(id){
+// Etiqueta das MASSAS — 4 faixas iguais (receita + data), com risco para cortar em 4.
+function desenharEtiquetaMassas(lote){
+  const c=document.createElement('canvas'); c.width=ETQ_W; c.height=ETQ_H;
+  const x=c.getContext('2d');
+  x.fillStyle='#fff'; x.fillRect(0,0,ETQ_W,ETQ_H);
+  x.fillStyle='#000'; x.strokeStyle='#000';
+  const d=loteEtqDados(lote);
+  let rec=d.receita; if(rec.length>30) rec=rec.slice(0,30);
+  const fh=ETQ_H/4; // 100px por faixa
+  x.textAlign='center';
+  for(let i=0;i<4;i++){
+    const cy=i*fh;
+    x.font='bold 30px Arial, sans-serif'; x.fillText(rec, ETQ_W/2, cy+44);
+    x.font='26px Arial, sans-serif';     x.fillText(d.data, ETQ_W/2, cy+80);
+    if(i<3){ x.lineWidth=2; x.beginPath(); x.moveTo(0,cy+fh); x.lineTo(ETQ_W,cy+fh); x.stroke(); }
+  }
+  return c;
+}
+function abrirEtiqueta(id, tipo){
   const lote=LS.g('fdo_lotes',[]).find(l=>l.id===id);
-  if(!lote){ alert('Lote não encontrado.'); return; }
-  st.etqLote=id;
+  if(!lote){ alert('Balde não encontrado.'); return; }
+  st.etqLote=id; st.etqTipo=(tipo==='massas')?'massas':'balde';
   const atual=document.querySelector('.scr:not(.off)');
   st.etqRet = (atual&&atual.id==='s-history')?'history':((atual&&atual.id==='s-done')?'done':'start');
-  etqCanvas=desenharEtiqueta(lote);
+  etqCanvas = (st.etqTipo==='massas') ? desenharEtiquetaMassas(lote) : desenharEtiqueta(lote);
+  const tEl=document.getElementById('etq-title'); if(tEl) tEl.textContent=(st.etqTipo==='massas')?'Etiqueta das Massas':'Etiqueta do Balde';
   document.getElementById('etq-img').src=etqCanvas.toDataURL('image/png');
   marcarPrintMode();
   const d=document.getElementById('etq-diag'); if(d){ d.style.display='none'; d.textContent=''; }
@@ -1859,7 +1914,7 @@ function baixarEtiqueta(){
   if(!etqCanvas)return;
   const lote=LS.g('fdo_lotes',[]).find(l=>l.id===st.etqLote);
   const a=document.createElement('a');
-  a.download='etiqueta_lote_'+(lote?lote.num:'x')+'.png';
+  a.download='etiqueta_'+(st.etqTipo==='massas'?'massas':'balde')+'_'+(lote?lote.num:'x')+'.png';
   a.href=etqCanvas.toDataURL('image/png'); a.click();
 }
 
@@ -1998,7 +2053,7 @@ function renderFermLotes(){
   const lotes=lotesPendentesFermentacao();
   const el=document.getElementById('ferm-lotes-list');
   if(!lotes.length){
-    el.innerHTML='<div class="bat-empty"><div class="bat-empty-icon">✅</div><div>Nenhum lote aguardando fermentação.</div><div style="font-size:.78rem">Conclua o batimento de um lote primeiro.</div></div>';
+    el.innerHTML='<div class="bat-empty"><div class="bat-empty-icon">✅</div><div>Nenhum balde aguardando fermentação.</div><div style="font-size:.78rem">Conclua o batimento de um balde primeiro.</div></div>';
     return;
   }
   el.innerHTML=lotes.map(l=>{
@@ -2007,7 +2062,7 @@ function renderFermLotes(){
     return `<div class="modulo ativo" onclick="abrirFermentacao('${l.id}')">
       <div class="modulo-icon">🌡️</div>
       <div class="modulo-info">
-        <div class="modulo-nome">Lote #${l.num} · ${l.receitaNome||l.rotulo||''}</div>
+        <div class="modulo-nome">Balde #${l.num} · ${l.receitaNome||l.rotulo||''}</div>
         <div class="modulo-desc">${sub}</div>
       </div>
       <div class="modulo-badge badge-ativo">Fermentar</div>
@@ -2037,7 +2092,7 @@ function abrirFermentacao(id){
   document.getElementById('ferm-min-val').textContent=st.fermMin;
   document.getElementById('ferm-max-val').textContent=st.fermMax;
   ir('fermentacao');
-  falar(`Fermentação do lote ${lote.num}. `+(tDia?`Mínima ${st.fermMin} e máxima ${st.fermMax} graus de hoje. Confirme ou ajuste.`:'Defina a temperatura mínima e máxima.'));
+  falar(`Fermentação do balde ${lote.num}. `+(tDia?`Mínima ${st.fermMin} e máxima ${st.fermMax} graus de hoje. Confirme ou ajuste.`:'Defina a temperatura mínima e máxima.'));
 }
 function ajustarTempFerm(campo,d){
   if(campo==='min'){ st.fermMin=Math.max(0,Math.min(60,(st.fermMin||24)+d)); document.getElementById('ferm-min-val').textContent=st.fermMin; }
@@ -2052,17 +2107,17 @@ function concluirFermentacao(){
   lote.etapas=lote.etapas||{};
   lote.etapas.fermentacao={ feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(), op:getOp(), tempMin:st.fermMin, tempMax:st.fermMax, dur:Math.round((Date.now()-(st.fermStart||Date.now()))/60000) };
   LS.s('fdo_lotes',todos);
-  falar(`Fermentação do lote ${lote.num} registrada. Mínima ${st.fermMin}, máxima ${st.fermMax} graus.`);
+  falar(`Fermentação do balde ${lote.num} registrada. Mínima ${st.fermMin}, máxima ${st.fermMax} graus.`);
   st.fermLote=null;
   abrirFermentacaoLotes();
 }
 
 // Reiniciar numeração dos lotes — o próximo criado será #1
 function reiniciarNumeracaoLotes(){
-  const ok=confirm('Reiniciar a numeração dos lotes?\n\nO próximo lote criado será o #1.\nOs lotes que já estão na lista continuam guardados (com os números atuais).');
+  const ok=confirm('Reiniciar a numeração dos baldes?\n\nO próximo balde criado será o #1.\nOs baldes que já estão na lista continuam guardados (com os números atuais).');
   if(!ok) return;
   LS.s('fdo_lote_seq',0);
-  alert('Numeração reiniciada. O próximo lote será o #1.');
+  alert('Numeração reiniciada. O próximo balde será o #1.');
 }
 
 // Escolhe qual receita rodar (r1, r2 ou r3), ajusta o cabeçalho e vai para a previsão de temperatura
@@ -2195,7 +2250,7 @@ function iniciarLiquidos(id){
   st.subModulo='liquidos';
   const p=porcInfo(lote); st.temp=(p&&p.temp!=null)?p.temp:st.temp;
   RECEITA = RECEITAS[st.receita].passosLiquidos;
-  const h=document.getElementById('hdr-rec'); if(h) h.textContent='Líquidos · Lote #'+lote.num;
+  const h=document.getElementById('hdr-rec'); if(h) h.textContent='Líquidos · Balde #'+lote.num;
   st.step=0;
   st.done=new Set();
   st.modo='normal';
@@ -2605,12 +2660,13 @@ function finalizarSecos(){
   const tot=formatPeso(totalReceitaFull(st.receita));
   document.getElementById('done-emoji').textContent='✅';
   document.getElementById('done-title').textContent='Secos Concluídos!';
-  document.getElementById('done-lote').textContent='LOTE #'+lote.num;
+  document.getElementById('done-lote').textContent='BALDE #'+lote.num;
   document.getElementById('done-mark').style.display='';
   document.getElementById('done-mark').textContent='✍️ Marque este número na massa';
   document.getElementById('done-etq-btn').style.display='';
+  document.getElementById('done-etq-massas-btn').style.display='';
   document.getElementById('done-tot').innerHTML=`<div class="done-conf">Total da massa (secos + líquidos)</div><div class="done-val">${tot}</div>`;
-  falar(`Porcionamento de secos concluído. Lote número ${lote.num}.`);
+  falar(`Porcionamento de secos concluído. Balde número ${lote.num}.`);
   setTimeout(()=>ir('done'),1500);
 }
 
@@ -2632,11 +2688,12 @@ function concluirLiquidos(){
   st.liqLote=null;
   document.getElementById('done-emoji').textContent='💧';
   document.getElementById('done-title').textContent='Líquidos Concluídos!';
-  document.getElementById('done-lote').textContent='LOTE #'+lote.num;
+  document.getElementById('done-lote').textContent='BALDE #'+lote.num;
   document.getElementById('done-mark').style.display='none';   // líquidos não pede marcação
   document.getElementById('done-etq-btn').style.display='none'; // líquidos NÃO imprime etiqueta
-  document.getElementById('done-tot').innerHTML=`<div class="done-conf">Lote pronto para o batimento</div><div class="done-val" style="color:var(--grn)">✓</div>`;
-  falar(`Líquidos do lote ${lote.num} concluídos. O lote está pronto para bater a massa.`);
+  document.getElementById('done-etq-massas-btn').style.display='none';
+  document.getElementById('done-tot').innerHTML=`<div class="done-conf">Balde pronto para o batimento</div><div class="done-val" style="color:var(--grn)">✓</div>`;
+  falar(`Líquidos do balde ${lote.num} concluídos. O balde está pronto para bater a massa.`);
   setTimeout(()=>ir('done'),1500);
 }
 
@@ -2648,7 +2705,7 @@ function renderHist(){
   const todos=LS.g('fdo_lotes',[]);
   const el=document.getElementById('hist-list');
   if(!todos.length){
-    el.innerHTML='<div style="padding:2rem;text-align:center;color:var(--mut);font-size:.9rem">Nenhum lote ainda.<br>Conclua um porcionamento para criar o primeiro lote.</div>';
+    el.innerHTML='<div style="padding:2rem;text-align:center;color:var(--mut);font-size:.9rem">Nenhum balde ainda.<br>Conclua um porcionamento para criar o primeiro balde.</div>';
     return;
   }
   el.innerHTML=todos.map(l=>{
@@ -2672,10 +2729,11 @@ function renderHist(){
     }).join('');
     return `<div class="lote-card">
       <div class="lote-head">
-        <span class="lote-num">Lote #${l.num}</span>
+        <span class="lote-num">Balde #${l.num}</span>
         <span class="lote-rec">${l.receitaNome||l.rotulo||'—'}</span>
-        <button class="lote-etq" onclick="abrirEtiqueta('${l.id}')" title="Imprimir etiqueta">🏷</button>
-        <button class="lote-del" onclick="apagarLote('${l.id}')" title="Apagar lote">🗑</button>
+        <button class="lote-etq" onclick="abrirEtiqueta('${l.id}')" title="Etiqueta do balde">🏷</button>
+        <button class="lote-etq etq-4x" onclick="abrirEtiqueta('${l.id}','massas')" title="Etiqueta das massas (4×)">🏷×4</button>
+        <button class="lote-del" onclick="apagarLote('${l.id}')" title="Apagar balde">🗑</button>
       </div>
       <div class="lote-meta">${meta}</div>
       <div class="lote-etapas">${chips}</div>
@@ -2701,9 +2759,18 @@ function proxLamSeqDia(ts){
   const dia=dataCurta(ts);
   return LS.g('fdo_laminacoes',[]).filter(x=>dataCurta(x.dataTs)===dia).length + 1;
 }
-function abrirLaminacao(){ st.lamSel={}; renderLaminacao(); ir('laminacao'); falar('Laminação. Selecione as partes de massa que vão laminar.'); }
+function abrirLaminacao(){ st.lamSel={}; renderLaminacao(); ir('laminacao'); falar('Laminação. Escolha as partes dos baldes. Cada lote tem uma receita só, e pode misturar dias.'); }
+// Receita "travada" = a do primeiro balde já selecionado (um lote = uma receita)
+function lamRecLock(){
+  const sel=st.lamSel||{};
+  const ids=Object.keys(sel).filter(id=>(Number(sel[id])||0)>0);
+  if(!ids.length) return null;
+  const l=LS.g('fdo_lotes',[]).find(x=>x.id===ids[0]);
+  return l ? l.receita : null;
+}
 function lamAjustar(loteId, delta){
   const l=LS.g('fdo_lotes',[]).find(x=>x.id===loteId); if(!l) return;
+  if(delta>0){ const lock=lamRecLock(); if(lock && l.receita!==lock){ falar('Esse balde é de outra receita. Um lote tem uma receita só.'); return; } }
   const disp=lotePartesDisp(l);
   let novo=(Number(st.lamSel[loteId])||0)+delta;
   if(novo<0) novo=0; if(novo>disp) novo=disp;
@@ -2713,24 +2780,27 @@ function lamAjustar(loteId, delta){
 function lamTotalSel(){ return Object.values(st.lamSel||{}).reduce((s,n)=>s+(Number(n)||0),0); }
 function renderLaminacao(){
   const lotes=lotesComPartes();
+  const lock=lamRecLock();
   const el=document.getElementById('lam-disp-list');
   if(!lotes.length){
-    el.innerHTML='<div class="bat-empty"><div class="bat-empty-icon">🧊</div><div>Nenhuma massa batida com partes disponíveis.</div><div style="font-size:.78rem">Bata uma massa para liberar partes para a laminação.</div></div>';
+    el.innerHTML='<div class="lam-empty">🧊 Nenhum balde batido com partes disponíveis.<br>Bata uma massa para liberar partes.</div>';
   } else {
     el.innerHTML=lotes.map(l=>{
       const disp=lotePartesDisp(l);
       const sel=Number(st.lamSel[l.id])||0;
       const dia=l.criadoTs?dataCurta(l.criadoTs):'—';
-      return `<div class="lam-card">
-        <div class="lam-card-top">
-          <span class="lam-card-num">Lote #${l.num}</span>
-          <span class="lam-card-rec">${l.receitaNome||l.rotulo||'—'} · ${dia}</span>
+      const rec=l.receitaNome||l.rotulo||'—';
+      const travado = lock!=null && l.receita!==lock;
+      const sub = travado ? 'outra receita — trava (um lote = uma receita)' : `${rec} · ${dia} · ${disp} ${disp===1?'parte':'partes'}`;
+      return `<div class="lam-card ${sel>0?'sel':''} ${travado?'lock':''}">
+        <div class="lam-card-main">
+          <div class="lam-card-num">Balde #${l.num}</div>
+          <div class="lam-card-sub">${sub}</div>
         </div>
-        <div class="lam-card-disp">Disponível: ${disp} ${disp===1?'parte':'partes'}</div>
         <div class="lam-stepper">
-          <button class="lam-stepbtn" onclick="lamAjustar('${l.id}',-1)">−</button>
+          <button class="lam-stepbtn" onclick="lamAjustar('${l.id}',-1)" ${sel<=0?'disabled':''}>−</button>
           <span class="lam-stepval">${sel}</span>
-          <button class="lam-stepbtn" onclick="lamAjustar('${l.id}',1)">+</button>
+          <button class="lam-stepbtn" onclick="lamAjustar('${l.id}',1)" ${(travado||sel>=disp)?'disabled':''}>+</button>
         </div>
       </div>`;
     }).join('');
@@ -2746,23 +2816,23 @@ function renderLaminacao(){
 function renderLamFeitas(){
   const lams=LS.g('fdo_laminacoes',[]);
   const el=document.getElementById('lam-feitas-list');
-  if(!lams.length){ el.innerHTML='<div style="padding:1rem;text-align:center;color:var(--mut);font-size:.82rem">Nenhuma laminação criada ainda.</div>'; return; }
+  if(!lams.length){ el.innerHTML='<div class="lam-empty">Nenhum lote criado ainda.</div>'; return; }
   el.innerHTML=lams.map(x=>{
-    const comp=(x.composicao||[]).map(c=>`${c.partes}× #${c.loteNum} (${c.dataLote})`).join(' + ');
-    return `<div class="lam-card">
-      <div class="lam-card-top">
-        <span class="lam-card-num">${x.nome}</span>
-        <span class="lam-card-rec">${x.receitaNome||''}</span>
-        <button class="lote-del" onclick="apagarLaminacao('${x.id}')" title="Apagar laminação">🗑</button>
+    const comp=(x.composicao||[]).map(c=>`${c.partes}× Balde #${c.loteNum} (${c.dataLote})`).join(' + ');
+    return `<div class="lam-fcard">
+      <div class="lam-fcard-top">
+        <span class="lam-fcard-num">${x.nome}</span>
+        <span class="lam-fcard-rec">${x.receitaNome||''}</span>
+        <button class="lote-del" onclick="apagarLaminacao('${x.id}')" title="Apagar lote">🗑</button>
       </div>
-      <div class="lam-card-disp">${x.totalPartes} partes · ${comp}${x.temMassaAnterior?' · <span style="color:var(--red)">contém massa de dia anterior</span>':''}</div>
+      <div class="lam-fcard-comp">${x.totalPartes} partes · ${comp}${x.temMassaAnterior?' · <span style="color:var(--red)">contém massa de dia anterior</span>':''}</div>
     </div>`;
   }).join('');
 }
 function criarLaminacao(){
   const sel=st.lamSel||{};
   const total=lamTotalSel();
-  if(total<=0){ falar('Selecione ao menos uma parte para criar a laminação.'); return; }
+  if(total<=0){ falar('Selecione ao menos uma parte para criar o lote.'); return; }
   const todos=LS.g('fdo_lotes',[]);
   const hoje=dataCurta(Date.now());
   const receitas=new Set(), composicao=[]; let temAnterior=false;
@@ -2778,6 +2848,7 @@ function criarLaminacao(){
     if(!l.etapas.laminacao || !l.etapas.laminacao.feito){ l.etapas.laminacao={feito:true, em:new Date().toLocaleString('pt-BR'), emTs:Date.now()}; }
   });
   if(!composicao.length){ falar('Nenhuma parte válida selecionada.'); return; }
+  if(receitas.size>1){ falar('Um lote tem uma receita só. Remova os baldes de outra receita.'); return; }
   const agora=new Date();
   const seqDia=proxLamSeqDia(agora.getTime());
   const nome=dataCurta(agora.getTime())+' · '+seqDia;
@@ -2792,13 +2863,13 @@ function criarLaminacao(){
   LS.s('fdo_lotes',todos);
   st.lamSel={};
   renderLaminacao();
-  const compFala=composicao.map(c=>`${c.partes} ${c.partes===1?'parte':'partes'} do lote ${c.loteNum}`).join(', ');
-  falar(`Laminação ${nome} criada. ${total} ${total===1?'parte':'partes'}. ${compFala}.`+(temAnterior?' Atenção: inclui massa de dia anterior.':''));
+  const compFala=composicao.map(c=>`${c.partes} ${c.partes===1?'parte':'partes'} do balde ${c.loteNum}`).join(', ');
+  falar(`Lote ${nome} criado. ${total} ${total===1?'parte':'partes'}. ${compFala}.`+(temAnterior?' Atenção: inclui massa de dia anterior.':''));
 }
 function apagarLaminacao(id){
   const lams=LS.g('fdo_laminacoes',[]);
   const lam=lams.find(x=>x.id===id); if(!lam) return;
-  if(!confirm(`Apagar a laminação ${lam.nome}?\n\nAs partes voltam para o estoque dos lotes de origem.`)) return;
+  if(!confirm(`Apagar o lote ${lam.nome}?\n\nAs partes voltam para o estoque dos baldes de origem.`)) return;
   const todos=LS.g('fdo_lotes',[]);
   (lam.composicao||[]).forEach(c=>{
     const l=todos.find(x=>x.id===c.loteId); if(!l||!l.etapas||!l.etapas.batimento) return;
