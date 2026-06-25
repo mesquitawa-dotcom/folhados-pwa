@@ -1883,20 +1883,23 @@ function desenharEtiqueta(lote){
   }
   return c;
 }
-// Etiqueta das MASSAS — 4 faixas iguais (receita + data), com risco para cortar em 4.
+// Etiqueta das MASSAS — 4 faixas iguais (receita + data + fermentação), com risco para cortar em 4.
 function desenharEtiquetaMassas(lote){
   const c=document.createElement('canvas'); c.width=ETQ_W; c.height=ETQ_H;
   const x=c.getContext('2d');
   x.fillStyle='#fff'; x.fillRect(0,0,ETQ_W,ETQ_H);
   x.fillStyle='#000'; x.strokeStyle='#000';
   const d=loteEtqDados(lote);
+  const pi=porcInfo(lote);
   let rec=d.receita; if(rec.length>30) rec=rec.slice(0,30);
+  const fermLinha=(pi.temp!=null && pi.fermento_horas!=null) ? pi.temp+'ºC  '+pi.fermento_horas+' horas fermentação' : '';
   const fh=ETQ_H/4; // 100px por faixa
   x.textAlign='center';
   for(let i=0;i<4;i++){
     const cy=i*fh;
-    x.font='bold 30px Arial, sans-serif'; x.fillText(rec, ETQ_W/2, cy+44);
-    x.font='26px Arial, sans-serif';     x.fillText(d.data, ETQ_W/2, cy+80);
+    x.font='bold 28px Arial, sans-serif'; x.fillText(rec, ETQ_W/2, cy+34);
+    x.font='24px Arial, sans-serif';     x.fillText(d.data, ETQ_W/2, cy+64);
+    if(fermLinha){ x.font='20px Arial, sans-serif'; x.fillText(fermLinha, ETQ_W/2, cy+88); }
     if(i<3){ x.lineWidth=2; x.beginPath(); x.moveTo(0,cy+fh); x.lineTo(ETQ_W,cy+fh); x.stroke(); }
   }
   return c;
