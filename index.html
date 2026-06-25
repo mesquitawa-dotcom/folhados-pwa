@@ -1852,6 +1852,7 @@ function desenharEtiqueta(lote){
   x.fillStyle='#000'; x.strokeStyle='#000'; x.lineWidth=4;
   x.strokeRect(10,10,ETQ_W-20,ETQ_H-20);
   const d=loteEtqDados(lote); const liq=loteLiquidos(lote); const mas=loteMassas(lote);
+  const pi=porcInfo(lote);
   x.textAlign='center';
   x.font='bold 56px Arial, sans-serif'; x.fillText('BALDE #'+d.num, ETQ_W/2, 66);
   x.font='24px Arial, sans-serif';
@@ -1871,6 +1872,7 @@ function desenharEtiqueta(lote){
     if(mas.laminada!=null)                        linhas.push('Massa laminada:  '+formatPeso(mas.laminada));
     if(mas.semLaminar!=null && mas.semLaminar>0)  linhas.push('Massa sem laminar:  '+formatPeso(mas.semLaminar));
   }
+  if(pi.temp!=null && pi.fermento_horas!=null) linhas.push(pi.temp+'ºC  '+pi.fermento_horas+' horas fermentação');
   if(linhas.length){
     x.textAlign='left'; x.font='24px Arial, sans-serif';
     let yy=188;
