@@ -1,5 +1,7 @@
 // Folhados d'Ouro — Service Worker
-// OBS 22/06/2026: cache fdo-v15 —
+// OBS 25/06/2026: cache fdo-v16 —
+//   • Terceira opção de fermentação: 19°C / fermento 58 g / 12 horas.
+// cache fdo-v15 —
 //   • Nomenclatura "balde" no lugar de "lote" (porcionamento gera balde).
 //   • "Lote" agora = agrupamento de laminação (mesma receita, pode misturar dias).
 //   • Etiqueta do balde com massa laminada/sem laminar.
@@ -23,7 +25,7 @@
 //   • Lotes numerados/apagáveis, PIN do Porcionamento, autofalante, calculadora,
 //     previsão de madrugada (Open-Meteo), Gemini no contexto da receita.
 // IMPORTANTE: a cada publicação, troque a versão (fdo-vN) para o celular atualizar.
-const CACHE = 'fdo-v15';
+const CACHE = 'fdo-v16';
 
 self.addEventListener('install', e => {
   e.waitUntil(
