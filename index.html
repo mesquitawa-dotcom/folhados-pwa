@@ -2,7 +2,25 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — OBS 29/06/2026 (atualização v23)
+       FOLHADOS D'OURO — OBS 29/06/2026 (atualização v24.1)
+       NOVIDADES v24.1 (correção CRÍTICA do boot travado):
+       • CAUSA RAIZ: o IIFE de boot chamava iniciarMonitorBateria(), uma
+         função QUE NÃO EXISTE (a função real é monitorarBateria()). Isso
+         lançava ReferenceError e ABORTAVA todo o resto do boot, incluindo
+         GEO.registrarVisibility() e GEO.bootstrap(bootApp). Resultado: o
+         app nunca decidia a tela; ficava na start (visível por padrão no
+         HTML) sem operador logado → módulos ocultos, sem login. Só o botão
+         Config funcionava (onclick independente do boot).
+       • Correção: removida a linha órfã. monitorarBateria() (que já era
+         chamado logo abaixo) faz o trabalho de alerta de bateria.
+       • Reforço: nova função destinoBoot() centraliza a decisão de tela
+         (Config / Login / Start) respeitando operadores. Usada no boot,
+         no salvarConfig (antes pulava o login indo direto pra start) e na
+         destrava do GPS (antes também ia direto pra start).
+       NOVIDADES v24 (correção de bug):
+       • Flag _bootPendenteOperadores: se o boot vai pra start em modo
+         legado mas o Firebase entrega operadores em até 10s, o repaint
+         redireciona pra login (caso "limpou cache mas nuvem tem ops").
        NOVIDADES v23:
        • Operadores com permissões individuais (até 6 operadores).
          Cada operador tem: nome, cor, PIN próprio de 4 dígitos, e
@@ -88,7 +106,7 @@
        • Tela de Laminação refeita para celular em pé: cabeçalho enxuto,
          seleção mais prática (cartões com estado, trava de receita).
        --- base v14/v13/v12/v11/v10/v9/v8/v7 (histórico abreviado) ---
-       • Service Worker: cache fdo-v23.
+       • Service Worker: cache fdo-v24-1.
        ════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -1328,6 +1346,12 @@ const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0,temp:n
 let sessaoDesbloqueada=false;
 // Operador autorizado entrou via "Sou operador autorizado" na tela de bloqueio geo (v23)
 let bypassGeoSessao=false;
+// v24: bootApp foi pra start em modo legado (sem operadores no LS), mas o
+// Firebase ainda pode entregar fdo_operadores em seguida. Se chegar com
+// operadores cadastrados e ninguém logado, o repaint redireciona pra login.
+// Cobre o caso "limpou cache mas nuvem tem operadores" — sem isso, o app
+// fica preso em s-start com módulos ocultos por aplicarPermsStart.
+let _bootPendenteOperadores=false;
 const LS={g:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch{return d}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{} FB.push(k,v);}};
 // ===== Firebase Realtime Database (sincronia multi-aparelho) ============
 // • Fonte de verdade local: localStorage (leitura instantânea, offline-first).
@@ -1407,6 +1431,18 @@ const FB={
   // Re-renderiza a tela visível quando dado chega da nuvem
   repaint(){
     try{
+      // v24: se o boot foi pra start em modo legado mas o Firebase agora
+      // entregou operadores cadastrados, redireciona pra tela de login
+      // (caso "limpou cache mas nuvem tem operadores").
+      if(_bootPendenteOperadores && OP.lista().length){
+        _bootPendenteOperadores=false;
+        const v0=document.querySelector('.scr:not(.off)');
+        const naStart = v0 && v0.id==='s-start';
+        if(!OP.atual() && naStart){
+          st.loginFiltro=''; ir('login');
+          return;
+        }
+      }
       const visivel=document.querySelector('.scr:not(.off)');
       if(!visivel) return;
       const id=visivel.id||'';
@@ -1600,11 +1636,13 @@ const GEO={
       const cb=GEO._callback; GEO._callback=null; cb();
       return;
     }
-    // Reverificação posterior: se a tela atual era de bloqueio, volta pra start
+    // Reverificação posterior: se a tela atual era de bloqueio, decide o
+    // destino correto respeitando operadores/login (v24.1: antes ia direto
+    // pra start e pulava o login quando havia operadores cadastrados).
     const visivel=document.querySelector('.scr:not(.off)');
     if(visivel && /^s-geo/.test(visivel.id)){
-      if(!getKey()) ir('config');
-      else if(typeof batRestaurar!=='function' || !batRestaurar()) ir('start');
+      if(typeof destinoBoot==='function') destinoBoot();
+      else ir('start');
     }
   },
   _chamarCallback(){
@@ -1768,9 +1806,10 @@ function salvarConfig(){
   if(isFinite(fraio) && fraio>=10) LS.s('fdo_geo_raio',fraio);
   // Se geo ativo, sempre revalida (cobre: acabou de ativar, mudou coordenadas,
   // mudou raio, ou veio destravar da tela de bloqueio). Cache válido + dentro
-  // do raio libera instantâneo sem mostrar loading.
-  if(GEO.ativo()){ GEO.bootstrap(()=>ir('start')); return; }
-  ir('start');
+  // do raio libera instantâneo. O destino respeita operadores/login via
+  // destinoBoot (v24.1: antes ia direto pra start e pulava o login).
+  if(GEO.ativo()){ GEO.bootstrap(destinoBoot); return; }
+  destinoBoot();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -3816,19 +3855,34 @@ function monitorarBateria(){
   }).catch(()=>{});
 }
 
-// Boot do app (chamado pelo callback do GEO.bootstrap após a geo passar)
-function bootApp(){
+// Decide e navega para a tela inicial correta respeitando operadores/login.
+// Usado por: bootApp (boot), salvarConfig (após salvar), e destrava do GPS.
+// Centraliza a lógica para que NENHUM caminho pule a tela de login quando
+// há operadores cadastrados e ninguém logado.
+function destinoBoot(){
+  _bootPendenteOperadores=false;
   // Primeira configuração: sem chave Gemini → vai direto pra Config
   if(!getKey()){ ir('config'); return; }
   // Retoma batimento em andamento, se houver
   if(typeof batRestaurar==='function' && batRestaurar()) return;
-  // Modo legado: sem operadores cadastrados → app sem login
-  if(!OP.lista().length){ ir('start'); return; }
+  // Modo legado: sem operadores cadastrados → app sem login.
+  // CUIDADO (v24): pode ser modo legado real OU primeira sincronia ainda
+  // não chegou. Marca flag e dá 10s pro Firebase responder; se chegar com
+  // operadores, o FB.repaint() redireciona pra tela de login.
+  if(!OP.lista().length){
+    _bootPendenteOperadores=true;
+    setTimeout(()=>{ _bootPendenteOperadores=false; }, 10000);
+    ir('start');
+    return;
+  }
   // Há operadores e algum está logado → vai pra start
   if(OP.atual()){ ir('start'); return; }
   // Há operadores mas ninguém logado → tela "Quem está usando?"
   st.loginFiltro=''; ir('login');
 }
+
+// Boot do app (chamado pelo callback do GEO.bootstrap após a geo passar)
+function bootApp(){ destinoBoot(); }
 
 (function(){
   // Sincronia multi-aparelho via Firebase Realtime Database
@@ -3840,14 +3894,13 @@ function bootApp(){
   // Migra sessões antigas concluídas para o sistema de lotes (uma vez)
   migrarLotesAntigos();
   PESO_BALDE1=getTara();           // aplica a tara configurada
-  iniciarMonitorBateria();         // alerta de bateria baixa por voz
   const op=LS.g('fdo_op','');
   if(op)document.getElementById('inp-op').value=op;
   atualizarBotoesTTS();
   speechSynthesis?.getVoices();
   speechSynthesis?.addEventListener('voiceschanged',()=>speechSynthesis.getVoices());
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-  monitorarBateria();
+  monitorarBateria();              // alerta de bateria baixa por voz
   // Restrição por localização (v22): registra reverificação ao voltar do background
   GEO.registrarVisibility();
   // Verifica localização ANTES de mostrar a interface. Se passar (ou estiver
