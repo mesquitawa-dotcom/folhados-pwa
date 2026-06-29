@@ -1,107 +1,51 @@
 // Folhados d'Ouro — Service Worker
-// OBS 29/06/2026: cache fdo-v21 —
-//   • CORREÇÃO CRÍTICA da sincronia: quando uma chave (fdo_lotes,
-//     fdo_laminacoes) ficava VAZIA em outro aparelho, o Firebase converte
-//     em null (peculiaridade do RTDB) e o listener antigo IGNORAVA esse
-//     evento. Resultado: baldes/laminações apagados num aparelho ficavam
-//     "fantasma" nos outros até a próxima atualização sobrescrever.
-//     RISCO OPERACIONAL: balde fantasma podia iniciar batimento/laminação.
-//   • Listener agora distingue:
-//       - Primeira sincronia com nuvem vazia → não apaga local, sobe local.
-//       - Nuvem foi esvaziada depois → reflete localmente (removeItem).
-//   • Comportamento entre 2+ aparelhos agora é simétrico: apagar em
-//     qualquer aparelho propaga em 1-2 s para os demais.
-// cache fdo-v20 —
-//   • Sincronia multi-aparelho via Firebase Realtime Database (plano Spark).
-//     Wrapper híbrido no helper LS: localStorage continua como fonte de
-//     verdade local (leitura instantânea, offline-first); ao gravar, espelha
-//     no Firebase para as chaves de produção (fdo_lotes, fdo_laminacoes,
-//     fdo_lote_seq). Outras chaves (PINs, chave Gemini, modo impressora,
-//     tempos do batimento, tara, qtd etiquetas) ficam SÓ locais.
-//   • Listener em tempo real: quando outro celular grava, o dado chega,
-//     atualiza o localStorage e re-renderiza a tela atual sem F5.
-//   • Offline-first preservado: se o Firebase não responder, o app trabalha
-//     direto do localStorage; SDK enfileira escritas e sincroniza ao voltar.
-//   • SDK Firebase compat carregado via CDN gstatic (sem build).
-// cache fdo-v19 —
-//   • Tela "Secos Concluídos": novo botão "↩ Voltar sem imprimir" para
-//     voltar ao menu "Secos ou Líquidos?" sem precisar imprimir agora.
-//     Aparece só na conclusão dos Secos (Líquidos esconde).
-//   • Etiqueta das Massas: seletor de quantidade 1 ou 2 etiquetas, com
-//     2 pré-selecionado. Persistido em `fdo_etq_massas_qtd`. Suporte
-//     nativo nos 3 modos de impressão (ESC/POS · TSPL PRINT 1,N · CPCL).
-// cache fdo-v18 —
-//   • Etiqueta das Massas redesenhada: 2 linhas grandes por faixa.
-//     Linha 1: receita (negrito grande). Linha 2: "DD/MM/AA - 19°C 14 horas".
-//     Fontes auto-ajustam para caber na largura de 60 mm.
-// cache fdo-v17 —
-//   • Quarta opção de fermentação: 19°C / 48 g / 17 horas.
-//   • Opção 3 ajustada: 19°C / 58 g passa para 14 horas.
-// cache fdo-v16 —
-//   • Terceira opção de fermentação: 19°C / fermento 58 g / 12 horas.
-// cache fdo-v15 —
-//   • Nomenclatura "balde" no lugar de "lote" (porcionamento gera balde).
-//   • "Lote" agora = agrupamento de laminação (mesma receita, pode misturar dias).
-//   • Etiqueta do balde com massa laminada/sem laminar.
-//   • Nova etiqueta das massas (4 faixas, cortar em 4).
-//   • Botões de porcionamento enxutos. Laminação redesenhada p/ mobile.
-// cache fdo-v14 —
-//   • Temperatura da Noite: só DUAS opções (ambas 17°C), por tempo de
-//     fermentação — fermento 70 g (14 h) ou 64 g (17 h).
-//   • Secos: "Voltar" no 1º passo sai para o menu inicial.
-//   • Entre farinhas, a voz fala só o nome e o total (sem "Concluído").
-//   • Finalização dos secos sem "+ Outro balde de secos".
-//   • Voz ao finalizar só diz "concluído + número do lote".
-//   • Bater a Massa: balde 1 mostra fermento, sal e manteiga.
-//   --- base v12 ---
-//   • Porcionamento dividido em Secos (gera lote + etiqueta) e Líquidos.
-//   • Bater a Massa só libera lotes com Secos E Líquidos prontos.
-//   • Receita 3 PADRÃO; senha própria das Configurações; microfone já
-//     ligado no peso do batimento; cronômetro resiste ao segundo plano;
-//     impressão MDK-022 (ESC/POS · TSPL · CPCL) com teste e diagnóstico.
-//   --- mantido das versões anteriores ---
-//   • Lotes numerados/apagáveis, PIN do Porcionamento, autofalante, calculadora,
-//     previsão de madrugada (Open-Meteo), Gemini no contexto da receita.
-// IMPORTANTE: a cada publicação, troque a versão (fdo-vN) para o celular atualizar.
-const CACHE = 'fdo-v21';
+// Versão do cache: incrementada a TODA entrega.
+const CACHE='fdo-v22';
+const ASSETS=[
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+];
 
-self.addEventListener('install', e => {
+self.addEventListener('install',e=>{
   e.waitUntil(
-    caches.open(CACHE)
-      .then(c => c.addAll([
-        './',
-        './index.html',
-        './manifest.json',
-        './icon-192.png',
-        './icon-512.png'
-      ]))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE).then(c=>c.addAll(ASSETS)).catch(()=>{})
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate',e=>{
+  e.waitUntil(
+    caches.keys().then(keys=>Promise.all(
+      keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))
+    )).then(()=>self.clients.claim())
   );
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener('fetch', e => {
-  // APIs externas (Gemini e previsão do tempo) — nunca cachear
-  if (e.request.url.includes('generativelanguage.googleapis.com')) return;
-  if (e.request.url.includes('api.open-meteo.com')) return;
-  if (e.request.method !== 'GET') return;
-
+self.addEventListener('fetch',e=>{
+  const req=e.request;
+  // Não tenta servir do cache requisições não-GET (push do Firebase, etc.)
+  if(req.method!=='GET') return;
+  // Network-first para HTML (pega versão nova quando online); cache-first para assets
+  const url=new URL(req.url);
+  const isHtml=req.mode==='navigate' || (req.headers.get('accept')||'').includes('text/html');
+  if(isHtml){
+    e.respondWith(
+      fetch(req).then(r=>{
+        const copy=r.clone();
+        caches.open(CACHE).then(c=>c.put(req,copy)).catch(()=>{});
+        return r;
+      }).catch(()=>caches.match(req).then(r=>r||caches.match('./index.html')))
+    );
+    return;
+  }
   e.respondWith(
-    caches.match(e.request)
-      .then(r => r || fetch(e.request).then(res => {
-        if (res.ok) {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-        }
-        return res;
-      }))
-      .catch(() => caches.match('./index.html'))
+    caches.match(req).then(r=>r || fetch(req).then(resp=>{
+      const copy=resp.clone();
+      caches.open(CACHE).then(c=>c.put(req,copy)).catch(()=>{});
+      return resp;
+    }).catch(()=>r))
   );
 });
