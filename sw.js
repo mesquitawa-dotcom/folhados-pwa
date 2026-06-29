@@ -1,5 +1,12 @@
 // Folhados d'Ouro — Service Worker
-// OBS 29/06/2026: cache fdo-v18 —
+// OBS 29/06/2026: cache fdo-v19 —
+//   • Tela "Secos Concluídos": novo botão "↩ Voltar sem imprimir" para
+//     voltar ao menu "Secos ou Líquidos?" sem precisar imprimir agora.
+//     Aparece só na conclusão dos Secos (Líquidos esconde).
+//   • Etiqueta das Massas: seletor de quantidade 1 ou 2 etiquetas, com
+//     2 pré-selecionado. Persistido em `fdo_etq_massas_qtd`. Suporte
+//     nativo nos 3 modos de impressão (ESC/POS · TSPL PRINT 1,N · CPCL).
+// cache fdo-v18 —
 //   • Etiqueta das Massas redesenhada: 2 linhas grandes por faixa.
 //     Linha 1: receita (negrito grande). Linha 2: "DD/MM/AA - 19°C 14 horas".
 //     Fontes auto-ajustam para caber na largura de 60 mm.
@@ -32,7 +39,7 @@
 //   • Lotes numerados/apagáveis, PIN do Porcionamento, autofalante, calculadora,
 //     previsão de madrugada (Open-Meteo), Gemini no contexto da receita.
 // IMPORTANTE: a cada publicação, troque a versão (fdo-vN) para o celular atualizar.
-const CACHE = 'fdo-v18';
+const CACHE = 'fdo-v19';
 
 self.addEventListener('install', e => {
   e.waitUntil(

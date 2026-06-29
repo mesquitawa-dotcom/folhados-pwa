@@ -1,5 +1,5 @@
 {
-  "_obs": "OBS 29/06/2026 (fdo-v18): Etiqueta das Massas redesenhada — 2 linhas grandes por faixa (receita / DD/MM/AA - 19°C 14 horas), fontes auto-ajustam para caber. Base v17: 4ª opção fermentação 19°C/48g/17h e opção 3 ajustada para 14h. Base v16: 3ª opção 19°C/58g. Base v15: nomenclatura balde/lote; etiqueta das massas; Laminação redesenhada. Base v14: Temperatura da Noite com 2 opções por tempo de fermentação. Base v12: porcionamento dividido em Secos/Líquidos; senha das Configurações; impressão MDK-022 ESC/POS·TSPL·CPCL.",
+  "_obs": "OBS 29/06/2026 (fdo-v19): Tela 'Secos Concluídos' ganhou botão '↩ Voltar sem imprimir' para voltar ao menu Secos/Líquidos sem imprimir. Etiqueta das Massas: seletor 1 ou 2 etiquetas (padrão 2), persistido em fdo_etq_massas_qtd. Base v18: Etiqueta das Massas redesenhada (2 linhas grandes auto-ajustáveis). Base v17: 4ª opção fermentação 19°C/48g/17h e opção 3 ajustada para 14h. Base v16: 3ª opção 19°C/58g. Base v15: nomenclatura balde/lote; etiqueta das massas; Laminação redesenhada. Base v14: Temperatura da Noite com 2 opções por tempo de fermentação. Base v12: porcionamento dividido em Secos/Líquidos; senha das Configurações; impressão MDK-022 ESC/POS·TSPL·CPCL.",
   "name": "Folhados d'Ouro — Produção",
   "short_name": "Folhados d'Ouro",
   "description": "Checklist por voz para produção de croissants",

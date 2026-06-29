@@ -2,7 +2,15 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — OBS 29/06/2026 (atualização v18)
+       FOLHADOS D'OURO — OBS 29/06/2026 (atualização v19)
+       NOVIDADES v19:
+       • Tela "Secos Concluídos": novo botão "↩ Voltar sem imprimir"
+         que volta ao menu "Secos ou Líquidos?" sem precisar imprimir
+         a etiqueta. As etiquetas continuam disponíveis depois pela
+         tela "Baldes". O botão só aparece na conclusão dos Secos.
+       • Etiqueta das Massas: agora dá pra escolher imprimir 1 ou 2
+         etiquetas, com 2 pré-selecionado. A escolha fica guardada no
+         localStorage. Funciona em ESC/POS, TSPL e CPCL.
        NOVIDADES v18:
        • Etiqueta das Massas redesenhada: 2 linhas GRANDES por faixa.
          Linha 1: nome da receita em negrito grande.
@@ -68,7 +76,7 @@
        --- base v11/v10/v9/v8/v7 ---
        • Alarme forte do batimento. Lotes numerados/apagáveis. Fermentação.
          PIN do Porcionamento. Autofalante 🔊/🔇. Calculadora. Wake Lock.
-       • Service Worker: cache fdo-v18.
+       • Service Worker: cache fdo-v19.
        ════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -687,6 +695,7 @@
   <div class="done-tot" id="done-tot"></div>
   <button class="btn-main" id="done-etq-btn" style="width:auto;padding:1rem 2rem;margin-top:.6rem" onclick="abrirEtiqueta(st.ultimoLoteId)">🏷 Etiqueta do balde</button>
   <button class="link-btn" id="done-etq-massas-btn" style="width:auto;padding:.8rem 2rem" onclick="abrirEtiqueta(st.ultimoLoteId,'massas')">🏷 Etiqueta das massas (4×)</button>
+  <button class="link-btn" id="done-voltar-porc-btn" style="width:auto;padding:.8rem 2rem;display:none" onclick="ir('porc-menu')">↩ Voltar sem imprimir</button>
   <button class="link-btn" style="width:auto;padding:.8rem 2rem" onclick="ir('start')">← Início</button>
 </div>
 
@@ -879,6 +888,11 @@
       <button class="etq-modo" data-modo="escpos" onclick="setPrintMode('escpos')">ESC/POS<small>padrão</small></button>
       <button class="etq-modo" data-modo="tspl" onclick="setPrintMode('tspl')">TSPL<small>etiqueta</small></button>
       <button class="etq-modo" data-modo="cpcl" onclick="setPrintMode('cpcl')">CPCL<small>etiqueta</small></button>
+    </div>
+    <div class="etq-modo-lbl" id="etq-qtd-lbl" style="display:none">Quantidade de etiquetas</div>
+    <div class="etq-modos" id="etq-qtds" style="display:none">
+      <button class="etq-modo" data-qtd="1" onclick="setEtqMassasQtd(1)">1 etiqueta</button>
+      <button class="etq-modo" data-qtd="2" onclick="setEtqMassasQtd(2)">2 etiquetas</button>
     </div>
     <div class="etq-status" id="etq-status"></div>
     <button class="btn-main" id="etq-print-btn" onclick="imprimirBluetooth()">🖨 Imprimir na MDK-022 (Bluetooth)</button>
@@ -1948,6 +1962,11 @@ function abrirEtiqueta(id, tipo){
   const tEl=document.getElementById('etq-title'); if(tEl) tEl.textContent=(st.etqTipo==='massas')?'Etiqueta das Massas':'Etiqueta do Balde';
   document.getElementById('etq-img').src=etqCanvas.toDataURL('image/png');
   marcarPrintMode();
+  // Seletor "1 ou 2 etiquetas" só aparece na etiqueta das massas
+  const ehMassas=(st.etqTipo==='massas');
+  document.getElementById('etq-qtd-lbl').style.display=ehMassas?'':'none';
+  document.getElementById('etq-qtds').style.display=ehMassas?'flex':'none';
+  if(ehMassas) marcarEtqMassasQtd();
   const d=document.getElementById('etq-diag'); if(d){ d.style.display='none'; d.textContent=''; }
   const sEl=document.getElementById('etq-status'); sEl.className='etq-status';
   sEl.textContent = navigator.bluetooth ? 'Pronto. Ligue a impressora e toque em Imprimir.' : 'Para Bluetooth use o Chrome no Android. Você também pode salvar a imagem e imprimir pelo app da impressora.';
@@ -1966,6 +1985,11 @@ function baixarEtiqueta(){
 function getPrintMode(){ const m=LS.g('fdo_print_mode','escpos'); return (m==='tspl'||m==='cpcl')?m:'escpos'; }
 function setPrintMode(m){ LS.s('fdo_print_mode',(m==='tspl'||m==='cpcl')?m:'escpos'); marcarPrintMode(); }
 function marcarPrintMode(){ const cur=getPrintMode(); document.querySelectorAll('#etq-modos .etq-modo').forEach(b=>{ b.classList.toggle('sel', b.dataset.modo===cur); }); }
+
+// ── Quantidade de etiquetas das massas (persistida). Padrão 2. ──
+function getEtqMassasQtd(){ const n=parseInt(LS.g('fdo_etq_massas_qtd',2),10); return (n===1)?1:2; }
+function setEtqMassasQtd(n){ n=(parseInt(n,10)===1)?1:2; LS.s('fdo_etq_massas_qtd',n); marcarEtqMassasQtd(); }
+function marcarEtqMassasQtd(){ const cur=getEtqMassasQtd(); document.querySelectorAll('#etq-qtds .etq-modo').forEach(b=>{ b.classList.toggle('sel', parseInt(b.dataset.qtd,10)===cur); }); }
 
 // Canvas -> raster 1-bit. invert=false → bit 1 = PRETO (ESC/POS, CPCL); invert=true → bit 1 = BRANCO (TSPL BITMAP)
 function rasterMono(invert){
@@ -1988,35 +2012,45 @@ function rasterMono(invert){
   return {raster,bpl};
 }
 // ESC/POS (GS v 0) — impressoras tipo cupom (modo padrão)
-function encEscpos(){
+function encEscpos(copias){
+  copias=Math.max(1,parseInt(copias,10)||1);
   const {raster,bpl}=rasterMono(false);
   const init=[0x1B,0x40,0x1B,0x61,0x01];
   const cab=[0x1D,0x76,0x30,0x00,bpl&0xFF,(bpl>>8)&0xFF,ETQ_H&0xFF,(ETQ_H>>8)&0xFF];
   const fim=[0x0A,0x0A,0x0A,0x0A];
-  const out=new Uint8Array(init.length+cab.length+raster.length+fim.length);
-  let o=0; out.set(init,o);o+=init.length; out.set(cab,o);o+=cab.length; out.set(raster,o);o+=raster.length; out.set(fim,o);
+  // ESC/POS não tem comando padrão de N cópias: reseta 1x (init) e repete cab+raster+fim N vezes.
+  const out=new Uint8Array(init.length+(cab.length+raster.length+fim.length)*copias);
+  let o=0; out.set(init,o);o+=init.length;
+  for(let i=0;i<copias;i++){
+    out.set(cab,o);o+=cab.length;
+    out.set(raster,o);o+=raster.length;
+    out.set(fim,o);o+=fim.length;
+  }
   return out;
 }
 // TSPL (SIZE/GAP/CLS/BITMAP/PRINT) — impressoras de etiqueta (BITMAP usa 1=branco)
-function encTspl(){
+function encTspl(copias){
+  copias=Math.max(1,parseInt(copias,10)||1);
   const {raster,bpl}=rasterMono(true);
   const enc=new TextEncoder();
   const head=enc.encode(`SIZE 60 mm,50 mm\r\nGAP 2 mm,0 mm\r\nDIRECTION 1\r\nREFERENCE 0,0\r\nCLS\r\nBITMAP 0,0,${bpl},${ETQ_H},0,`);
-  const tail=enc.encode(`\r\nPRINT 1,1\r\n`);
+  const tail=enc.encode(`\r\nPRINT 1,${copias}\r\n`); // PRINT m,n → m lotes de n cópias
   const out=new Uint8Array(head.length+raster.length+tail.length);
   out.set(head,0); out.set(raster,head.length); out.set(tail,head.length+raster.length);
   return out;
 }
 // CPCL (EG, dados em ASCII hex, 1=preto) — impressoras portáteis tipo etiqueta
-function encCpcl(){
+function encCpcl(copias){
+  copias=Math.max(1,parseInt(copias,10)||1);
   const {raster,bpl}=rasterMono(false);
   const H='0123456789ABCDEF'; let hex='';
   for(let i=0;i<raster.length;i++){ const v=raster[i]; hex+=H[(v>>4)&0xF]+H[v&0xF]; }
   const enc=new TextEncoder();
-  const s=`! 0 200 200 ${ETQ_H} 1\r\nEG ${bpl} ${ETQ_H} 0 0 ${hex}\r\nFORM\r\nPRINT\r\n`;
+  // O último campo do "! 0 200 200 H N" é o número de cópias do form
+  const s=`! 0 200 200 ${ETQ_H} ${copias}\r\nEG ${bpl} ${ETQ_H} 0 0 ${hex}\r\nFORM\r\nPRINT\r\n`;
   return enc.encode(s);
 }
-function encodeEtiqueta(mode){ if(mode==='tspl')return encTspl(); if(mode==='cpcl')return encCpcl(); return encEscpos(); }
+function encodeEtiqueta(mode,copias){ if(mode==='tspl')return encTspl(copias); if(mode==='cpcl')return encCpcl(copias); return encEscpos(copias); }
 
 // Serviços/características comuns de escrita em impressoras BLE (ordem de prioridade)
 const BT_SERV_OPC=[0x18F0,0xFFE0,0xFF00,0xFEE7,0xAE30,'49535343-fe7d-4ae5-8fa9-9fafd205e455','e7810a71-73ae-499d-8c15-faa9aef0c3f2','0000ff00-0000-1000-8000-00805f9b34fb'];
@@ -2069,7 +2103,9 @@ async function imprimirBluetooth(){
   const sEl=document.getElementById('etq-status');
   const setS=(t,cls)=>{ sEl.textContent=t; sEl.className='etq-status'+(cls?(' '+cls):''); };
   if(!etqCanvas){ setS('Etiqueta não carregada.','err'); return; }
-  await btConectarEnviar(encodeEtiqueta(getPrintMode()), setS);
+  // 1 ou 2 etiquetas só faz sentido para "etiqueta das massas"; balde sempre imprime 1.
+  const copias=(st.etqTipo==='massas')?getEtqMassasQtd():1;
+  await btConectarEnviar(encodeEtiqueta(getPrintMode(),copias), setS);
 }
 // Teste rápido: envia um payload mínimo (uma linha) na linguagem selecionada
 async function imprimirTeste(){
@@ -2709,6 +2745,7 @@ function finalizarSecos(){
   document.getElementById('done-mark').textContent='✍️ Marque este número na massa';
   document.getElementById('done-etq-btn').style.display='';
   document.getElementById('done-etq-massas-btn').style.display='';
+  document.getElementById('done-voltar-porc-btn').style.display='';
   document.getElementById('done-tot').innerHTML=`<div class="done-conf">Total da massa (secos + líquidos)</div><div class="done-val">${tot}</div>`;
   falar(`Porcionamento de secos concluído. Balde número ${lote.num}.`);
   setTimeout(()=>ir('done'),1500);
@@ -2736,6 +2773,7 @@ function concluirLiquidos(){
   document.getElementById('done-mark').style.display='none';   // líquidos não pede marcação
   document.getElementById('done-etq-btn').style.display='none'; // líquidos NÃO imprime etiqueta
   document.getElementById('done-etq-massas-btn').style.display='none';
+  document.getElementById('done-voltar-porc-btn').style.display='none';
   document.getElementById('done-tot').innerHTML=`<div class="done-conf">Balde pronto para o batimento</div><div class="done-val" style="color:var(--grn)">✓</div>`;
   falar(`Líquidos do balde ${lote.num} concluídos. O balde está pronto para bater a massa.`);
   setTimeout(()=>ir('done'),1500);
