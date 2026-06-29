@@ -2,7 +2,54 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — OBS 29/06/2026 (atualização v19)
+       FOLHADOS D'OURO — OBS 29/06/2026 (atualização v23)
+       NOVIDADES v23:
+       • Operadores com permissões individuais (até 6 operadores).
+         Cada operador tem: nome, cor, PIN próprio de 4 dígitos, e
+         permissões por módulo (Porcionamento, Bater, Fermentação,
+         Laminação, Histórico, Calculadora, Assistente).
+       • Permissões especiais por operador:
+           - Pode apagar registros (baldes e laminações)
+           - Pode acessar fora da fábrica (bypass do GPS)
+       • Tela "Quem está usando?" no boot: cards com avatar e nome,
+         toca no card → digita PIN → entra com as permissões dele.
+       • Header da tela inicial mostra o operador atual + botão Trocar.
+       • Módulos sem permissão ficam ocultos no menu inicial.
+       • Botões de apagar (🗑) só aparecem para quem tem permissão.
+       • Bloqueio GPS: quando há operadores cadastrados com bypass
+         autorizado, a tela "Acesso restrito" ganha botão extra
+         "Sou operador autorizado" — leva ao login filtrado.
+       • Sem operadores cadastrados: app funciona em modo legado
+         (sem login, tudo liberado) — Wagner ativa o sistema só
+         quando quiser, cadastrando o primeiro operador em Config.
+       • Operadores sincronizam via Firebase (todos os aparelhos
+         compartilham o mesmo cadastro). PINs ficam na nuvem; trate
+         o RTDB do projeto como dado sensível.
+       NOVIDADES v22:
+       • Restrição por localização (GPS): bloqueia o acesso ao app fora
+         da fábrica. Coordenadas, raio e liga/desliga configuráveis em
+         Config. Padrão: lat -20.5294456, lng -47.3940625, raio 150 m.
+       • Cache do último fix válido por 30 min (tolera oscilação dentro
+         do prédio); reverificação a cada 15 min e ao voltar do background.
+       • Tela "Acesso restrito" mostra a distância atual + botão Tentar
+         Novamente. Tela "Permissão necessária" se o usuário negar GPS.
+       • Bypass via Configurações (senha 456) caso seja preciso desativar
+         em emergência. Tela de Config também acessível se a chave Gemini
+         ainda não estiver cadastrada (primeira configuração).
+       • Log de auditoria em 'fdo_acessos' no Firebase: cada verificação
+         grava timestamp, operador, status, lat/lng, accuracy, distância.
+       • LIMITES HONESTOS: PWA não impede apps de "fake GPS". O objetivo
+         é dissuadir uso casual de casa + criar trilha de auditoria.
+         Blindagem maior exige Capacitor + verificação de SSID/BSSID.
+       NOVIDADES v21:
+       • Correção crítica da sincronia Firebase: listener agora distingue
+         primeira sincronia (não apaga local) de esvaziamento posterior
+         (reflete removeItem). Antes, apagar todos os baldes num aparelho
+         deixava baldes fantasma nos outros até nova escrita.
+       NOVIDADES v20:
+       • Sincronia multi-aparelho via Firebase Realtime Database.
+         localStorage continua sendo a fonte de verdade local (offline-first);
+         FB espelha as chaves de produção em tempo real.
        NOVIDADES v19:
        • Tela "Secos Concluídos": novo botão "↩ Voltar sem imprimir"
          que volta ao menu "Secos ou Líquidos?" sem precisar imprimir
@@ -40,43 +87,8 @@
          enxutos (sem descrição).
        • Tela de Laminação refeita para celular em pé: cabeçalho enxuto,
          seleção mais prática (cartões com estado, trava de receita).
-       NOVIDADES v14:
-       • Receitas R4 "Massa 3 kg sem manteiga" (15.564 g) e R5 "1 kg sem
-         laminar" (15.714 g); fermento fixo (70 g/14 h e 64 g/17 h).
-       • Sal e manteiga agora pesados DENTRO do balde de secos (somam no
-         balde, sem misturar); conferência pós-secos inclui sal+manteiga+tara.
-       • Receita sem manteiga pula a etapa avisando "não vai manteiga".
-       • "Aproveitamento" renomeado para "Massa laminada"; R5 tem 2ª massa
-         "sem laminar". Voz do fermento: "Misturar bem o fermento com o trigo".
-       • Bater a Massa: só precisa dos SECOS prontos; conferência ATIVA do
-         peso dos dois baldes (voz/digitação, compara com o alvo, tolerância 50 g).
-       • Tara do balde ajustável nas Configurações. Alerta de voz quando a
-         bateria cai abaixo de 20% (repete a cada 3 min).
-       • Laminação (Fase 1): agrupa as partes geladas das massas batidas
-         (seleção por lote, pode misturar dias) gerando a nomenclatura DD/MM · N.
-       NOVIDADES v13 (porcionamento de secos + bater a massa):
-       • Temperatura da Noite: agora só DUAS opções, ambas 17°C, escolhidas
-         pelo tempo de fermentação — fermento 70 g (14 h) ou 64 g (17 h).
-       • No 1º passo dos secos, "Voltar" sai para o menu inicial (antes
-         não fazia nada).
-       • Entre farinhas do mesmo balde, a voz não diz mais "Concluído";
-         fala só o nome da farinha e o total acumulado.
-       • Finalização dos secos: removida a opção "+ Outro balde de secos"
-         (cada porcionamento de secos já gera um novo lote).
-       • Voz ao finalizar: só "concluído + número do lote" (sem "marque na
-         massa" e sem "imprima a etiqueta"); o aviso na tela continua.
-       • Bater a Massa: o balde 1 mostra também fermento (já no balde),
-         sal e manteiga (pesados à parte p/ o batimento).
-       --- base v12 ---
-       • Porcionamento dividido em Secos (gera lote + etiqueta) e Líquidos.
-         Bater a Massa só com secos E líquidos prontos. Receita 3 PADRÃO.
-         Senha própria das Configurações. Microfone já ligado no peso do
-         batimento. Cronômetro resiste ao segundo plano. Impressão MDK-022
-         com seletor ESC/POS · TSPL · CPCL, teste rápido e diagnóstico.
-       --- base v11/v10/v9/v8/v7 ---
-       • Alarme forte do batimento. Lotes numerados/apagáveis. Fermentação.
-         PIN do Porcionamento. Autofalante 🔊/🔇. Calculadora. Wake Lock.
-       • Service Worker: cache fdo-v19.
+       --- base v14/v13/v12/v11/v10/v9/v8/v7 (histórico abreviado) ---
+       • Service Worker: cache fdo-v23.
        ════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -430,6 +442,87 @@
     .lam-fcard-comp{font-size:.72rem;color:var(--mut);line-height:1.45}
     .lam-bar{background:var(--bg2);border-top:.1rem solid var(--brd);padding:.8rem 1rem;display:flex;flex-direction:column;gap:.6rem;flex-shrink:0}
     .lam-bar-info{font-size:.9rem;color:var(--gl)}
+
+    /* ════ ACESSO GEOLOCALIZADO (v22) ════ */
+    #s-geo-loading, #s-geo, #s-geo-perm{padding:0}
+    .geo-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:.9rem;padding:1.5rem 1.3rem;text-align:center}
+    .geo-icon{font-size:3.5rem;line-height:1;margin-bottom:.3rem}
+    .geo-title{font-size:1.5rem;font-weight:bold;color:var(--gl);line-height:1.2}
+    .geo-title.alert{color:#f08060}
+    .geo-msg{font-size:.95rem;color:var(--text);line-height:1.5;max-width:24rem}
+    .geo-msg.sub{font-size:.82rem;color:var(--mut)}
+    .geo-dist{font-size:.85rem;color:var(--mut);letter-spacing:.05rem;margin-top:.2rem}
+    .geo-dist b{color:var(--gold);font-size:1.05rem}
+    .geo-actions{display:flex;flex-direction:column;gap:.55rem;width:100%;max-width:18rem;margin-top:.7rem}
+    .geo-actions .btn-main{width:100%}
+    .geo-actions .link-btn{width:100%;text-align:center}
+    .geo-spinner{width:2.2rem;height:2.2rem;border:.25rem solid var(--brd);border-top-color:var(--gold);
+      border-radius:50%;animation:geo-spin 1s linear infinite;margin-top:.5rem}
+    @keyframes geo-spin{to{transform:rotate(360deg)}}
+
+    /* ════ OPERADORES (v23) ═══════════════════════════════════════ */
+    /* Tela "Quem está usando?" — cards de operadores */
+    #s-login{padding:0}
+    .login-grid{flex:1;overflow-y:auto;padding:.4rem 1rem 1rem;display:grid;
+      grid-template-columns:repeat(2,1fr);gap:.7rem;align-content:start}
+    .login-card{display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:.55rem;padding:1.4rem .8rem 1.1rem;border-radius:.55rem;border:1px solid var(--brd);
+      background:var(--bg3);cursor:pointer;min-height:7rem;text-align:center;
+      font-family:Georgia,serif}
+    .login-card:active{opacity:.7;transform:scale(.96)}
+    .op-av{width:3.2rem;height:3.2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      background:var(--gold);color:#0a0905;font-weight:bold;font-size:1.5rem;font-family:Georgia,serif;
+      box-shadow:0 .15rem .6rem rgba(0,0,0,.4);flex-shrink:0}
+    .login-nome{font-size:1.05rem;font-weight:bold;color:var(--gl);line-height:1.2;word-break:break-word}
+
+    /* Barra do operador atual (na tela inicial) */
+    .op-bar{margin:.5rem 1rem 0;padding:.55rem .85rem;background:rgba(201,151,58,.08);
+      border:1px solid rgba(201,151,58,.22);border-radius:.45rem;flex-shrink:0;
+      display:flex;align-items:center;gap:.65rem}
+    .op-bar-av{width:1.9rem;height:1.9rem;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      background:var(--gold);color:#0a0905;font-weight:bold;font-size:.95rem;flex-shrink:0;font-family:Georgia,serif}
+    .op-bar-nome{flex:1;font-size:.92rem;color:var(--gl);font-weight:bold;letter-spacing:.02rem;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .op-bar-trocar{background:transparent;border:1px solid var(--brd);color:var(--gold);
+      font-family:Georgia,serif;font-weight:bold;font-size:.62rem;letter-spacing:.15rem;
+      text-transform:uppercase;padding:.45rem .8rem;border-radius:.3rem;cursor:pointer;flex-shrink:0}
+    .op-bar-trocar:active{opacity:.7;transform:scale(.96)}
+
+    /* Lista de operadores em Configurações */
+    .op-list{display:flex;flex-direction:column;gap:.4rem;width:100%}
+    .op-item{display:flex;align-items:center;gap:.7rem;padding:.7rem .85rem;background:var(--bg3);
+      border:1px solid var(--brd);border-radius:.45rem;cursor:pointer}
+    .op-item:active{opacity:.75}
+    .op-item-av{width:2.1rem;height:2.1rem;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      background:var(--gold);color:#0a0905;font-weight:bold;font-size:1rem;flex-shrink:0;font-family:Georgia,serif}
+    .op-item-nome{flex:1;font-size:.95rem;color:var(--gl);font-weight:bold;overflow:hidden;
+      text-overflow:ellipsis;white-space:nowrap}
+    .op-item-meta{font-size:.62rem;color:var(--mut);letter-spacing:.08rem;flex-shrink:0;text-transform:uppercase}
+    .op-item.inativo{opacity:.45}
+    .op-add{padding:.85rem;border-radius:.45rem;border:1px dashed var(--brd);background:transparent;
+      color:var(--gold);font-family:Georgia,serif;font-weight:bold;font-size:.85rem;
+      letter-spacing:.1rem;text-transform:uppercase;cursor:pointer;width:100%}
+    .op-add:active{opacity:.7}
+
+    /* Tela edição de operador */
+    #s-op-edit{padding:1.2rem 1.3rem 1.5rem;gap:.55rem;justify-content:flex-start;overflow-y:auto}
+    .op-edit-cores{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:.1rem}
+    .op-cor{width:2.6rem;height:2.6rem;border-radius:50%;cursor:pointer;border:.18rem solid transparent;
+      flex-shrink:0;box-shadow:0 .1rem .4rem rgba(0,0,0,.35)}
+    .op-cor.sel{border-color:var(--gl);transform:scale(1.08)}
+    .op-perms{display:flex;flex-direction:column;gap:.4rem;width:100%}
+    .op-perm{display:flex;align-items:center;gap:.7rem;padding:.7rem .85rem;background:var(--bg3);
+      border:1px solid var(--brd);border-radius:.4rem;cursor:pointer;font-family:Georgia,serif}
+    .op-perm input[type=checkbox]{width:1.3rem;height:1.3rem;accent-color:var(--gold);cursor:pointer;flex-shrink:0}
+    .op-perm-icon{font-size:1.1rem;flex-shrink:0;width:1.4rem;text-align:center}
+    .op-perm-nome{flex:1;font-size:.9rem;color:var(--gl);line-height:1.25}
+    .op-perm.danger{border-color:#5a1a0e;background:rgba(248,113,113,.06)}
+    .op-perm.danger .op-perm-nome{color:#f08060}
+    .op-edit-btns{display:flex;gap:.5rem;margin-top:.4rem}
+    .op-edit-btns .btn-main{flex:2}
+    .op-edit-btns .btn-danger{flex:1;min-height:3rem}
+    @keyframes geo-spin{to{transform:rotate(360deg)}}
   </style>
   <!-- Firebase Realtime Database (compat, namespaced) — CDN, sem build -->
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
@@ -442,8 +535,13 @@
   <div class="cfg-s">Acesse <strong style="color:var(--gl)">aistudio.google.com</strong><br>
     → Get API key → Create API key</div>
   <input id="inp-key" class="inp" type="password" placeholder="AIza..." autocomplete="off">
-  <div class="cfg-s" style="font-size:.75rem;margin-top:-.2rem">Operador (opcional):</div>
+  <div class="cfg-s" style="font-size:.75rem;margin-top:-.2rem">Operador padrão (legado, opcional):</div>
   <input id="inp-op" class="inp" type="text" placeholder="Wagner">
+  <div class="cfg-sep"></div>
+  <div class="cfg-t" style="font-size:1rem">👥 Operadores</div>
+  <div class="cfg-s" style="font-size:.72rem;line-height:1.45">Cadastre até 6 operadores com PIN próprio e permissões individuais. Quando há operadores cadastrados, o app pede login antes de usar e cada um vê só os módulos liberados para ele.</div>
+  <div class="op-list" id="op-list"></div>
+  <button class="op-add" id="op-add-btn" onclick="abrirOpEdit(null)">+ Novo operador</button>
   <div class="cfg-sep"></div>
   <div class="cfg-s" style="font-size:.75rem">🔒 Senha de acesso (PIN numérico):</div>
   <input id="inp-pin" class="inp" type="tel" inputmode="numeric" maxlength="8" placeholder="123789" autocomplete="off">
@@ -462,8 +560,52 @@
   </div>
   <label class="cfg-mini" style="margin-top:.1rem">Dividir massa em (partes p/ gelar)<input id="inp-bdiv" class="inp" type="number" min="1" placeholder="8"></label>
   <label class="cfg-mini" style="margin-top:.1rem">Peso do balde vazio / tara (g)<input id="inp-tara" class="inp" type="number" min="0" placeholder="474"></label>
+  <div class="cfg-sep"></div>
+  <div class="cfg-s" style="font-size:.75rem">📍 Restrição por localização (GPS):</div>
+  <label class="cfg-row"><input type="checkbox" id="chk-geo"> Bloquear acesso fora da fábrica</label>
+  <div class="cfg-grid">
+    <label class="cfg-mini">Latitude da fábrica<input id="inp-geo-lat" class="inp" type="text" inputmode="decimal" placeholder="-20.5294456"></label>
+    <label class="cfg-mini">Longitude da fábrica<input id="inp-geo-lng" class="inp" type="text" inputmode="decimal" placeholder="-47.3940625"></label>
+  </div>
+  <label class="cfg-mini" style="margin-top:.1rem">Raio permitido (metros)<input id="inp-geo-raio" class="inp" type="number" min="10" placeholder="150"></label>
   <button class="btn-main" onclick="salvarConfig()">Salvar e Continuar</button>
   <button class="link-btn" style="margin-top:.3rem;width:100%;text-align:center" onclick="ir('start')">← Voltar</button>
+</div>
+
+<!-- ════ ACESSO GEOLOCALIZADO (v22) ════════════════════════════════════ -->
+<div id="s-geo-loading" class="scr off">
+  <div class="geo-wrap">
+    <div class="geo-icon">📍</div>
+    <div class="geo-title">Verificando localização</div>
+    <div class="geo-spinner"></div>
+    <div class="geo-msg sub">Aguarde alguns segundos…</div>
+  </div>
+</div>
+
+<div id="s-geo" class="scr off">
+  <div class="geo-wrap">
+    <div class="geo-icon">🚫</div>
+    <div class="geo-title alert">Acesso restrito</div>
+    <div class="geo-msg">Sistema só pode ser acessado na fábrica.</div>
+    <div class="geo-dist">Distância atual: <b id="geo-dist">—</b></div>
+    <div class="geo-actions">
+      <button class="btn-main" onclick="GEO.tentarNovamente()">Tentar Novamente</button>
+      <button class="link-btn" id="geo-bypass-btn" onclick="abrirLoginBypass()" style="display:none">👤 Sou operador autorizado</button>
+      <button class="link-btn" onclick="entrarConfig()">Configurações</button>
+    </div>
+  </div>
+</div>
+
+<div id="s-geo-perm" class="scr off">
+  <div class="geo-wrap">
+    <div class="geo-icon">📍</div>
+    <div class="geo-title alert">Permissão de localização necessária</div>
+    <div class="geo-msg">Para usar o sistema, ative a localização e recarregue a página.</div>
+    <div class="geo-actions">
+      <button class="btn-main" onclick="GEO.tentarNovamente()">Tentar Novamente</button>
+      <button class="link-btn" onclick="entrarConfig()">Configurações</button>
+    </div>
+  </div>
 </div>
 
 <div id="s-start" class="scr">
@@ -473,9 +615,14 @@
     <div class="start-title">Produção</div>
     <div class="start-sub">Selecione o módulo</div>
   </div>
+  <div class="op-bar" id="op-bar" style="display:none">
+    <div class="op-bar-av" id="op-bar-av">?</div>
+    <div class="op-bar-nome" id="op-bar-nome">—</div>
+    <button class="op-bar-trocar" onclick="trocarOperador()">Trocar</button>
+  </div>
   <div class="modulos-label">Módulos de Produção</div>
   <div class="modulos">
-    <div class="modulo ativo" onclick="entrarPorcionamento()">
+    <div class="modulo ativo" data-perm="porcionamento" onclick="entrarPorcionamento()">
       <div class="modulo-icon">⚖️</div>
       <div class="modulo-info">
         <div class="modulo-nome">Porcionamento</div>
@@ -483,12 +630,12 @@
       </div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
-    <div class="modulo ativo" onclick="entrarBatimento()">
+    <div class="modulo ativo" data-perm="batimento" onclick="entrarBatimento()">
       <div class="modulo-icon">🥣</div>
       <div class="modulo-info"><div class="modulo-nome">Bater a Massa</div><div class="modulo-desc">Seleciona o balde porcionado e confirma variáveis</div></div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
-    <div class="modulo ativo" onclick="abrirLaminacao()">
+    <div class="modulo ativo" data-perm="laminacao" onclick="entrarLaminacao()">
       <div class="modulo-icon">📐</div>
       <div class="modulo-info"><div class="modulo-nome">Laminação</div><div class="modulo-desc">Agrupa as partes batidas e forma o lote</div></div>
       <div class="modulo-badge badge-ativo">Ativo</div>
@@ -498,7 +645,7 @@
       <div class="modulo-info"><div class="modulo-nome">Modelagem</div><div class="modulo-desc">Corte, enrolamento e pesagem</div></div>
       <div class="modulo-badge badge-breve">Em breve</div>
     </div>
-    <div class="modulo ativo" onclick="entrarFermentacao()">
+    <div class="modulo ativo" data-perm="fermentacao" onclick="entrarFermentacao()">
       <div class="modulo-icon">🌡️</div>
       <div class="modulo-info"><div class="modulo-nome">Fermentação</div><div class="modulo-desc">Registra temperatura mínima e máxima do balde</div></div>
       <div class="modulo-badge badge-ativo">Ativo</div>
@@ -515,8 +662,8 @@
     </div>
   </div>
   <div class="start-footer">
-    <button class="link-btn" onclick="abrirCalc('start')">🧮 Calculadora</button>
-    <button class="link-btn" onclick="ir('history')">Baldes</button>
+    <button class="link-btn" data-perm="calculadora" onclick="abrirCalc('start')">🧮 Calculadora</button>
+    <button class="link-btn" data-perm="historico" onclick="ir('history')">Baldes</button>
     <button class="link-btn" onclick="entrarConfig()">Config</button>
   </div>
 </div>
@@ -729,6 +876,43 @@
   <div class="start-footer">
     <button class="link-btn" onclick="cancelarPin()">← Voltar</button>
   </div>
+</div>
+
+<!-- ═══ LOGIN — "Quem está usando?" (v23) ═══ -->
+<div id="s-login" class="scr off">
+  <div class="start-top">
+    <div class="start-icon">👋</div>
+    <div class="start-brand">Folhados d'Ouro</div>
+    <div class="start-title">Quem está usando?</div>
+    <div class="start-sub" id="login-sub">Toque no seu nome</div>
+  </div>
+  <div class="login-grid" id="login-grid"></div>
+  <div class="start-footer">
+    <button class="link-btn" onclick="entrarConfig()">Configurações</button>
+  </div>
+</div>
+
+<!-- ═══ EDIÇÃO DE OPERADOR (v23) ═══ -->
+<div id="s-op-edit" class="scr off">
+  <div class="cfg-t" id="opedit-title">Novo operador</div>
+  <div class="cfg-s" style="font-size:.75rem">Nome do operador:</div>
+  <input id="opedit-nome" class="inp" type="text" maxlength="20" placeholder="Ex.: Wagner" autocomplete="off">
+  <div class="cfg-s" style="font-size:.75rem;margin-top:.3rem">Cor do avatar:</div>
+  <div class="op-edit-cores" id="opedit-cores"></div>
+  <div class="cfg-s" style="font-size:.75rem;margin-top:.3rem">PIN pessoal (4 dígitos):</div>
+  <input id="opedit-pin" class="inp" type="tel" inputmode="numeric" maxlength="4" placeholder="1234" autocomplete="off">
+  <div class="cfg-sep"></div>
+  <div class="cfg-s" style="font-size:.78rem;color:var(--gl);font-weight:bold">Acesso aos módulos</div>
+  <div class="op-perms" id="opedit-perms"></div>
+  <div class="cfg-sep"></div>
+  <div class="cfg-s" style="font-size:.78rem;color:var(--gl);font-weight:bold">Permissões especiais</div>
+  <div class="op-perms" id="opedit-perms-esp"></div>
+  <label class="cfg-row" style="margin-top:.4rem"><input type="checkbox" id="opedit-ativo" checked> Operador ativo (desmarque para suspender sem apagar)</label>
+  <div class="op-edit-btns">
+    <button class="btn-main" onclick="salvarOpEdit()">Salvar</button>
+    <button class="btn-danger" id="opedit-del" onclick="apagarOpAtualEdit()" style="display:none">🗑 Apagar</button>
+  </div>
+  <button class="link-btn" style="width:100%;text-align:center;margin-top:.3rem" onclick="ir('config')">← Voltar</button>
 </div>
 
 <!-- ═══ BATER A MASSA — seleção de lote ═══ -->
@@ -1138,9 +1322,12 @@ function matchCmd(txt,g){return CMD[g].some(p=>txt.includes(p));}
 const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0,temp:null,fermento:null,fermentoHoras:null,receita:'r1',modo:'normal',subModulo:'secos',baldeSecos:1,wakeLock:null,
   pinBuf:'',pinAlvo:null,pinTipo:'producao',batLote:null,liqLote:null,batTemp:20,batStart:0,batRodando:false,batRecPeso:null,
   ultimoLoteId:null,calcRet:'start',calcAberta:false,etqLote:null,etqRet:'start',
-  fermLote:null,fermStart:0,fermMin:24,fermMax:28,lamSel:{}};
+  fermLote:null,fermStart:0,fermMin:24,fermMax:28,lamSel:{},
+  loginOpId:null,loginFiltro:''};
 // Desbloqueio por sessão do app: o PIN é pedido só 1x por abertura (rápido p/ produção)
 let sessaoDesbloqueada=false;
+// Operador autorizado entrou via "Sou operador autorizado" na tela de bloqueio geo (v23)
+let bypassGeoSessao=false;
 const LS={g:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch{return d}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{} FB.push(k,v);}};
 // ===== Firebase Realtime Database (sincronia multi-aparelho) ============
 // • Fonte de verdade local: localStorage (leitura instantânea, offline-first).
@@ -1159,7 +1346,7 @@ const FB_CFG={
   messagingSenderId:"904726497964",
   appId:"1:904726497964:web:03b4b9111ff0ff2580ed09"
 };
-const FB_SYNC_KEYS=['fdo_lotes','fdo_laminacoes','fdo_lote_seq'];
+const FB_SYNC_KEYS=['fdo_lotes','fdo_laminacoes','fdo_lote_seq','fdo_operadores'];
 const FB={
   db:null, applying:false, lastJson:{},
   init(){
@@ -1225,16 +1412,305 @@ const FB={
       const id=visivel.id||'';
       if(id==='s-history' && typeof renderHist==='function') renderHist();
       else if(id==='s-bater-lotes' && typeof renderBatLotes==='function') renderBatLotes();
+      else if(id==='s-batimento-lotes' && typeof renderBatLotes==='function') renderBatLotes();
       else if(id==='s-liquidos-lotes' && typeof renderLiquidosLotes==='function') renderLiquidosLotes();
       else if(id==='s-ferm-lotes' && typeof renderFermLotes==='function') renderFermLotes();
+      else if(id==='s-fermentacao-lotes' && typeof renderFermLotes==='function') renderFermLotes();
       else if(id==='s-laminacao' && typeof renderLaminacao==='function') renderLaminacao();
+      else if(id==='s-login' && typeof renderLogin==='function') renderLogin();
+      else if(id==='s-config' && typeof renderOpList==='function') renderOpList();
+      else if(id==='s-start' && typeof aplicarPermsStart==='function') aplicarPermsStart();
     }catch(e){ console.warn('[FB] repaint',e); }
   }
 };
-const getKey=()=>LS.g('fdo_key','');
-const getOp=()=>LS.g('fdo_op','Padeiro');
 
-function ir(id){document.querySelectorAll('.scr').forEach(s=>s.classList.add('off'));document.getElementById('s-'+id).classList.remove('off');if(id==='history')renderHist();if(id==='config')carregarConfig();}
+// ===== Operadores e permissões (v23) =====================================
+// • Até 6 operadores cadastrados em fdo_operadores (sincronizado via FB).
+// • Cada operador: id, nome, cor, pin (4 dígitos), ativo, perms{}.
+// • Permissões por módulo + permissões especiais (apagar, geo_bypass).
+// • Sem operadores cadastrados → app funciona em modo legado (sem login).
+// • Operador atual da sessão fica em fdo_op_atual (só local, cada aparelho).
+const OP_PERMS_MOD=[
+  {k:'porcionamento', icon:'⚖️', label:'Porcionamento'},
+  {k:'batimento',     icon:'🥣', label:'Bater a Massa'},
+  {k:'fermentacao',   icon:'🌡️', label:'Fermentação'},
+  {k:'laminacao',     icon:'📐', label:'Laminação'},
+  {k:'historico',     icon:'📋', label:'Histórico (Baldes)'},
+  {k:'calculadora',   icon:'🧮', label:'Calculadora'},
+  {k:'assistente',    icon:'🤖', label:'Assistente IA'}
+];
+const OP_PERMS_ESP=[
+  {k:'apagar',     icon:'🗑', label:'Pode apagar registros (baldes e laminações)', danger:true},
+  {k:'geo_bypass', icon:'📍', label:'Pode acessar fora da fábrica'}
+];
+const OP_CORES=['#c9973a','#4ade80','#60a5fa','#f87171','#c084fc','#fbbf24'];
+function OP_permsDefault(){ const p={}; OP_PERMS_MOD.forEach(x=>p[x.k]=true); OP_PERMS_ESP.forEach(x=>p[x.k]=false); return p; }
+
+const OP={
+  lista(){ return LS.g('fdo_operadores',[]); },
+  setLista(arr){ LS.s('fdo_operadores',arr); },
+  porId(id){ return OP.lista().find(o=>o.id===id)||null; },
+  atual(){ const id=LS.g('fdo_op_atual',null); if(!id)return null; const o=OP.porId(id); return (o&&o.ativo)?o:null; },
+  setAtual(id){ try{ localStorage.setItem('fdo_op_atual', JSON.stringify(id)); }catch{} },
+  sair(){ try{ localStorage.removeItem('fdo_op_atual'); }catch{} },
+  add(o){ const arr=OP.lista(); arr.push(o); OP.setLista(arr); },
+  upd(id, novo){ const arr=OP.lista(); const i=arr.findIndex(x=>x.id===id); if(i>=0){ arr[i]=novo; OP.setLista(arr); } },
+  del(id){
+    OP.setLista(OP.lista().filter(o=>o.id!==id));
+    const at=LS.g('fdo_op_atual',null); if(at===id) OP.sair();
+  },
+  // Sem cadastro → modo legado: tudo liberado. Com cadastro e operador ativo
+  // logado → respeita perms. Com cadastro mas ninguém logado → nega tudo.
+  pode(perm){
+    if(!OP.lista().length) return true;
+    const a=OP.atual(); if(!a) return false;
+    return !!(a.perms && a.perms[perm]);
+  },
+  comBypass(){ return OP.lista().filter(o=>o.ativo && o.perms && o.perms.geo_bypass); },
+  pinUsado(pin, exceptId){ return OP.lista().some(o=>o.pin===pin && o.id!==exceptId); }
+};
+
+const getKey=()=>LS.g('fdo_key','');
+const getOp=()=>{
+  const a=OP.atual(); if(a && a.nome) return a.nome;
+  return LS.g('fdo_op','Padeiro');
+};
+
+// ===== Restrição por localização (v22) ===================================
+// • Bloqueia o app fora da fábrica via GPS (Haversine).
+// • Cache do último fix válido (30 min) tolera oscilação dentro do prédio.
+// • Reverifica a cada 15 min e ao voltar do background.
+// • Bypass via Config (senha das Configurações) caso o GPS falhe e seja
+//   preciso desativar — evita "bricar" o app fora da fábrica.
+// • Configs locais (não sincronizam): fdo_geo_ativo, fdo_geo_lat,
+//   fdo_geo_lng, fdo_geo_raio, fdo_geo_ultimofix.
+// • Log de auditoria em fdo_acessos (Firebase) — toda verificação é gravada.
+// • LIMITES HONESTOS: PWA não impede "fake GPS" (apps de spoofing). O
+//   objetivo é dissuadir uso casual de casa + criar trilha de auditoria.
+//   Camada robusta exige Capacitor + verificação de SSID/BSSID do WiFi.
+const GEO_DEFAULTS={lat:-20.5294456, lng:-47.3940625, raio:150, ativo:true};
+const GEO={
+  _callback:null, _timer:null,
+  ativo(){ return LS.g('fdo_geo_ativo', GEO_DEFAULTS.ativo)===true; },
+  getLat(){ const v=parseFloat(LS.g('fdo_geo_lat', GEO_DEFAULTS.lat)); return isFinite(v)?v:GEO_DEFAULTS.lat; },
+  getLng(){ const v=parseFloat(LS.g('fdo_geo_lng', GEO_DEFAULTS.lng)); return isFinite(v)?v:GEO_DEFAULTS.lng; },
+  getRaio(){ const v=parseInt(LS.g('fdo_geo_raio', GEO_DEFAULTS.raio),10); return (isFinite(v)&&v>=10)?v:GEO_DEFAULTS.raio; },
+  // Haversine em metros
+  distancia(lat1,lng1,lat2,lng2){
+    const R=6371000;
+    const t1=lat1*Math.PI/180, t2=lat2*Math.PI/180;
+    const dt=(lat2-lat1)*Math.PI/180, dl=(lng2-lng1)*Math.PI/180;
+    const a=Math.sin(dt/2)**2 + Math.cos(t1)*Math.cos(t2)*Math.sin(dl/2)**2;
+    return Math.round(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
+  },
+  // Chamado pelo bootstrap. Se a verificação passar, executa o callback
+  // (normalmente o ir('start') ou ir('config')).
+  bootstrap(callback){
+    GEO._callback=callback;
+    // Exceção: sem chave Gemini é primeira configuração — libera Config
+    // para o operador conseguir cadastrar a chave em qualquer lugar.
+    if(!getKey()){ GEO._chamarCallback(); return; }
+    if(!GEO.ativo()){ GEO._chamarCallback(); return; }
+    // v23: operador atual com geo_bypass ou bypass de sessão (login autorizado)
+    // → não bloqueia.
+    if(bypassGeoSessao){ GEO._chamarCallback(); return; }
+    if(OP.lista().length && OP.atual() && OP.pode('geo_bypass')){ GEO._chamarCallback(); return; }
+    GEO.iniciar();
+  },
+  iniciar(){
+    if(!navigator.geolocation){
+      // Navegador sem suporte: trata como permissão negada
+      GEO._mostrarBloqueio('sem-suporte', 0);
+      GEO._log('sem-suporte', null);
+      return;
+    }
+    // Se o cache estiver válido E dentro do raio, libera direto (sem mostrar loading)
+    const cache=GEO._cacheValido();
+    if(cache && cache.distanciaM<=GEO.getRaio()){
+      GEO._liberar();
+      GEO._agendarReverificacao();
+      // Mesmo liberando pelo cache, dispara nova leitura em background
+      GEO._reverificar();
+      return;
+    }
+    // Mostra tela de "verificando" e pede GPS
+    ir('geo-loading');
+    GEO._pedirLocalizacao(true);
+  },
+  _pedirLocalizacao(highAccuracy){
+    const opts={enableHighAccuracy:!!highAccuracy, timeout:12000, maximumAge:60000};
+    navigator.geolocation.getCurrentPosition(
+      pos=>GEO._processarFix(pos),
+      err=>{
+        if(err && err.code===1){ // PERMISSION_DENIED
+          GEO._mostrarBloqueio('perm-negada', 0);
+          GEO._log('perm-negada', null);
+          return;
+        }
+        // Timeout ou position unavailable: tenta low accuracy se ainda não tentou
+        if(highAccuracy){ GEO._pedirLocalizacao(false); return; }
+        // Falhou de novo: usa cache se disponível
+        const cache=GEO._cacheValido();
+        if(cache){
+          if(cache.distanciaM<=GEO.getRaio()){
+            GEO._liberar();
+            GEO._agendarReverificacao();
+          } else {
+            GEO._mostrarBloqueio('fora', cache.distanciaM);
+          }
+          return;
+        }
+        GEO._mostrarBloqueio('falha', 0);
+        GEO._log('falha', null);
+      },
+      opts
+    );
+  },
+  _processarFix(pos){
+    const lat=pos.coords.latitude, lng=pos.coords.longitude;
+    const acc=pos.coords.accuracy||0;
+    const d=GEO.distancia(lat,lng, GEO.getLat(), GEO.getLng());
+    const fix={lat,lng,accuracy:acc,t:Date.now(),distanciaM:d};
+    GEO._salvarCache(fix);
+    const dentro = d<=GEO.getRaio();
+    GEO._log(dentro?'ok':'fora', fix);
+    if(dentro){
+      GEO._liberar();
+      GEO._agendarReverificacao();
+    } else {
+      GEO._mostrarBloqueio('fora', d);
+      GEO._agendarReverificacao();
+    }
+  },
+  _cacheValido(){
+    const fix=LS.g('fdo_geo_ultimofix',null);
+    if(!fix || typeof fix.lat!=='number' || typeof fix.lng!=='number') return null;
+    const idade=Date.now()-(fix.t||0);
+    if(idade > 30*60*1000) return null; // > 30 min
+    // Recalcula a distância (lat/lng/raio podem ter mudado em Config)
+    fix.distanciaM=GEO.distancia(fix.lat,fix.lng, GEO.getLat(), GEO.getLng());
+    return fix;
+  },
+  _salvarCache(fix){
+    // Não passa pelo FB.push (chave fora de FB_SYNC_KEYS); fica só local
+    try{ localStorage.setItem('fdo_geo_ultimofix', JSON.stringify(fix)); }catch{}
+  },
+  _liberar(){
+    if(GEO._callback){
+      const cb=GEO._callback; GEO._callback=null; cb();
+      return;
+    }
+    // Reverificação posterior: se a tela atual era de bloqueio, volta pra start
+    const visivel=document.querySelector('.scr:not(.off)');
+    if(visivel && /^s-geo/.test(visivel.id)){
+      if(!getKey()) ir('config');
+      else if(typeof batRestaurar!=='function' || !batRestaurar()) ir('start');
+    }
+  },
+  _chamarCallback(){
+    if(GEO._callback){ const cb=GEO._callback; GEO._callback=null; cb(); }
+  },
+  _mostrarBloqueio(tipo, distancia){
+    if(tipo==='perm-negada' || tipo==='sem-suporte'){
+      ir('geo-perm');
+    } else {
+      const el=document.getElementById('geo-dist');
+      if(el) el.textContent = (distancia>0) ? (distancia + ' m') : '—';
+      ir('geo');
+    }
+    // v23: mostra "Sou operador autorizado" se houver operadores com bypass
+    try{
+      const btn=document.getElementById('geo-bypass-btn');
+      if(btn) btn.style.display = (OP.comBypass().length>0) ? '' : 'none';
+    }catch{}
+    // Se ainda tem callback pendente (1ª init), descarta — o usuário só sai
+    // dali via "Tentar Novamente", "Configurações" ou login autorizado.
+    GEO._callback=null;
+  },
+  tentarNovamente(){ GEO.iniciar(); },
+  _agendarReverificacao(){
+    if(GEO._timer) clearInterval(GEO._timer);
+    GEO._timer=setInterval(()=>GEO._reverificar(), 15*60*1000); // 15 min
+  },
+  // Reverificação silenciosa (não mostra loading se já estiver liberado)
+  _reverificar(){
+    if(!GEO.ativo()) return;
+    // v23: operador autorizado nesta sessão (entrou via "Sou operador
+    // autorizado" na tela de bloqueio) ou operador logado tem geo_bypass:
+    // não reverifica nem bloqueia.
+    if(bypassGeoSessao) return;
+    if(OP.lista().length && OP.atual() && OP.pode('geo_bypass')) return;
+    if(!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      pos=>{
+        const lat=pos.coords.latitude, lng=pos.coords.longitude;
+        const acc=pos.coords.accuracy||0;
+        const d=GEO.distancia(lat,lng, GEO.getLat(), GEO.getLng());
+        const fix={lat,lng,accuracy:acc,t:Date.now(),distanciaM:d};
+        GEO._salvarCache(fix);
+        const dentro = d<=GEO.getRaio();
+        GEO._log(dentro?'ok':'fora', fix);
+        const visivel=document.querySelector('.scr:not(.off)');
+        const naTelaBloqueio = visivel && /^s-geo/.test(visivel.id);
+        if(!dentro && !naTelaBloqueio){
+          // Operador saiu da fábrica com o aparelho ligado: bloqueia
+          GEO._mostrarBloqueio('fora', d);
+        } else if(dentro && naTelaBloqueio){
+          // Voltou pra fábrica: libera
+          GEO._liberar();
+        }
+      },
+      err=>{
+        if(err && err.code===1){
+          GEO._mostrarBloqueio('perm-negada', 0);
+          GEO._log('perm-negada', null);
+        }
+        // Outros erros (timeout, pos unavailable) silenciam: o cache vale por 30 min
+      },
+      {enableHighAccuracy:false, timeout:15000, maximumAge:5*60*1000}
+    );
+  },
+  _log(status, fix){
+    try{
+      if(!FB.db) return; // sem Firebase, não loga
+      const op=getOp();
+      const reg={
+        t: Date.now(),
+        op: op||'?',
+        status: status,
+        lat: fix? fix.lat : null,
+        lng: fix? fix.lng : null,
+        accuracy: fix? Math.round(fix.accuracy||0) : null,
+        distanciaM: fix? fix.distanciaM : null,
+        raio: GEO.getRaio()
+      };
+      FB.db.ref('fdo_acessos').push(reg).catch(()=>{});
+    }catch{}
+  },
+  // Reverifica ao voltar do background (Android suspende GPS quando app fica em segundo plano)
+  registrarVisibility(){
+    document.addEventListener('visibilitychange',()=>{
+      if(document.visibilityState==='visible' && GEO.ativo() && getKey()){
+        GEO._reverificar();
+      }
+    });
+  }
+};
+
+function ir(id){
+  document.querySelectorAll('.scr').forEach(s=>s.classList.add('off'));
+  document.getElementById('s-'+id).classList.remove('off');
+  if(id==='history') renderHist();
+  if(id==='config') carregarConfig();
+  if(id==='start' && typeof aplicarPermsStart==='function') aplicarPermsStart();
+  if(id==='login' && typeof renderLogin==='function') renderLogin();
+  if(id==='geo'){
+    try{
+      const btn=document.getElementById('geo-bypass-btn');
+      if(btn) btn.style.display = (OP.comBypass().length>0) ? '' : 'none';
+    }catch{}
+  }
+}
 function carregarConfig(){
   const k=getKey(); if(k)document.getElementById('inp-key').value=k;
   const op=LS.g('fdo_op',''); if(op)document.getElementById('inp-op').value=op;
@@ -1247,6 +1723,13 @@ function carregarConfig(){
   document.getElementById('inp-bt4').value=getBatT4();
   document.getElementById('inp-bdiv').value=getBatDiv();
   document.getElementById('inp-tara').value=getTara();
+  // Restrição por localização (v22)
+  document.getElementById('chk-geo').checked=GEO.ativo();
+  document.getElementById('inp-geo-lat').value=GEO.getLat();
+  document.getElementById('inp-geo-lng').value=GEO.getLng();
+  document.getElementById('inp-geo-raio').value=GEO.getRaio();
+  // Lista de operadores (v23)
+  if(typeof renderOpList==='function') renderOpList();
 }
 function salvarConfig(){
   const k=document.getElementById('inp-key').value.trim();
@@ -1275,6 +1758,18 @@ function salvarConfig(){
   const dv=parseInt(document.getElementById('inp-bdiv').value,10); LS.s('fdo_bat_div',(isFinite(dv)&&dv>=1)?dv:8);
   const tv=parseInt(document.getElementById('inp-tara').value,10); LS.s('fdo_tara_balde',(isFinite(tv)&&tv>=0)?tv:474);
   PESO_BALDE1=getTara();
+  // Restrição por localização (v22)
+  LS.s('fdo_geo_ativo',document.getElementById('chk-geo').checked);
+  const flat=parseFloat(document.getElementById('inp-geo-lat').value);
+  if(isFinite(flat) && flat>=-90 && flat<=90) LS.s('fdo_geo_lat',flat);
+  const flng=parseFloat(document.getElementById('inp-geo-lng').value);
+  if(isFinite(flng) && flng>=-180 && flng<=180) LS.s('fdo_geo_lng',flng);
+  const fraio=parseInt(document.getElementById('inp-geo-raio').value,10);
+  if(isFinite(fraio) && fraio>=10) LS.s('fdo_geo_raio',fraio);
+  // Se geo ativo, sempre revalida (cobre: acabou de ativar, mudou coordenadas,
+  // mudou raio, ou veio destravar da tela de bloqueio). Cache válido + dentro
+  // do raio libera instantâneo sem mostrar loading.
+  if(GEO.ativo()){ GEO.bootstrap(()=>ir('start')); return; }
   ir('start');
 }
 
@@ -1286,13 +1781,17 @@ function getPin(){ const p=LS.g('fdo_pin',null); return (p==null||p==='')?'12378
 function pinAtivo(){ return LS.g('fdo_pin_ativo',true)===true; }
 // Senha das Configurações (separada; padrão 456). Sempre exigida ao abrir o Config.
 function getCfgPin(){ const p=LS.g('fdo_cfg_pin',null); return (p==null||p==='')?'456':String(p); }
-// PIN esperado conforme o tipo de acesso em andamento
-function pinEsperado(){ return st.pinTipo==='config' ? getCfgPin() : getPin(); }
+function pinEsperado(){
+  if(st.pinTipo==='config') return getCfgPin();
+  if(st.pinTipo==='login'){ const o=OP.porId(st.loginOpId); return o?String(o.pin||''):''; }
+  return getPin();
+}
 
 // Entradas dos módulos protegidos pelo PIN
-function entrarPorcionamento(){ exigirAcesso(()=>ir('porc-menu')); }
-function entrarBatimento(){ abrirBatimentoLotes(); }      // sem senha — só Porcionamento exige PIN
-function entrarFermentacao(){ abrirFermentacaoLotes(); }  // sem senha
+function entrarPorcionamento(){ exigeP('porcionamento', ()=> exigirAcesso(()=>ir('porc-menu'))); }
+function entrarBatimento(){ exigeP('batimento', ()=> abrirBatimentoLotes()); }
+function entrarFermentacao(){ exigeP('fermentacao', ()=> abrirFermentacaoLotes()); }
+function entrarLaminacao(){ exigeP('laminacao', ()=> abrirLaminacao()); }
 // Configurações: senha própria (456), pedida TODA vez. Exceção: 1ª configuração (sem chave) entra direto.
 function entrarConfig(){
   if(!getKey()){ ir('config'); return; }
@@ -1338,8 +1837,9 @@ function pinApagar(){ st.pinBuf=st.pinBuf.slice(0,-1); atualizarPinDots(); docum
 function pinLimpar(){ st.pinBuf=''; atualizarPinDots(); document.getElementById('pin-err').textContent=''; }
 function verificarPin(){
   if(st.pinBuf===pinEsperado()){
-    // Só o acesso à produção fica desbloqueado pela sessão; o Config pede senha sempre.
-    if(st.pinTipo!=='config') sessaoDesbloqueada=true;
+    // Só o acesso à produção fica desbloqueado pela sessão; o Config e o
+    // login de operador pedem senha sempre.
+    if(st.pinTipo==='producao') sessaoDesbloqueada=true;
     const fn=st.pinAlvo; st.pinAlvo=null; st.pinBuf='';
     if(typeof fn==='function') fn(); else ir('start');
   }else{
@@ -1349,7 +1849,225 @@ function verificarPin(){
     w.classList.remove('err'); void w.offsetWidth; w.classList.add('err');
   }
 }
-function cancelarPin(){ st.pinAlvo=null; st.pinBuf=''; st.pinTipo='producao'; ir('start'); }
+function cancelarPin(){
+  const tipoAnt=st.pinTipo;
+  st.pinAlvo=null; st.pinBuf=''; st.pinTipo='producao';
+  if(tipoAnt==='login'){
+    // Se veio do fluxo bypass (estava bloqueado por geo), volta pro bloqueio
+    if(st.loginFiltro==='bypass'){ st.loginFiltro=''; ir('geo'); return; }
+    st.loginFiltro=''; ir('login'); return;
+  }
+  ir('start');
+}
+
+// ════════════════════════════════════════════════════════════
+// OPERADORES — login, troca, cadastro, permissões (v23)
+// ════════════════════════════════════════════════════════════
+function exigeP(perm, fn){
+  if(OP.pode(perm)){ fn(); return; }
+  alert('Você não tem permissão para acessar este módulo.\n\nPeça ao administrador.');
+}
+
+// Atualiza a barrinha do operador atual na start (avatar + nome + Trocar)
+function atualizarOpBar(){
+  const bar=document.getElementById('op-bar'); if(!bar) return;
+  const a=OP.atual();
+  const semCad=OP.lista().length===0;
+  if(semCad || !a){ bar.style.display='none'; return; }
+  bar.style.display='';
+  const av=document.getElementById('op-bar-av');
+  const nm=document.getElementById('op-bar-nome');
+  if(av){ av.textContent=(a.nome||'?').charAt(0).toUpperCase(); av.style.background=a.cor||'#c9973a'; }
+  if(nm) nm.textContent=a.nome;
+}
+
+// Aplica permissões na tela inicial: oculta módulos/botões sem acesso
+function aplicarPermsStart(){
+  const semCad=OP.lista().length===0;
+  document.querySelectorAll('#s-start [data-perm]').forEach(el=>{
+    const p=el.dataset.perm;
+    if(semCad){ el.style.display=''; return; }
+    el.style.display = OP.pode(p) ? '' : 'none';
+  });
+  atualizarOpBar();
+}
+
+// Helper de escape pra interpolação segura em innerHTML
+function _escHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ─── Tela "Quem está usando?" ───────────────────────────────────────
+function renderLogin(){
+  const grid=document.getElementById('login-grid');
+  const sub=document.getElementById('login-sub');
+  if(!grid) return;
+  const todos=OP.lista().filter(o=>o.ativo);
+  const filtro=st.loginFiltro||'';
+  const lista = (filtro==='bypass') ? todos.filter(o=>o.perms && o.perms.geo_bypass) : todos;
+  if(sub){
+    sub.textContent = (filtro==='bypass')
+      ? 'Apenas operadores com acesso fora da fábrica'
+      : 'Toque no seu nome';
+  }
+  if(!lista.length){
+    grid.innerHTML = '<div style="grid-column:1/-1;padding:1.5rem;text-align:center;color:var(--mut);font-size:.9rem;line-height:1.6">'
+      + (filtro==='bypass'
+          ? 'Nenhum operador autorizado a acessar fora da fábrica.<br>Acesse Configurações para liberar.'
+          : 'Nenhum operador cadastrado.<br>Acesse Configurações para cadastrar.')
+      + '</div>';
+    return;
+  }
+  grid.innerHTML = lista.map(o=>{
+    const ini=_escHtml((o.nome||'?').charAt(0).toUpperCase());
+    const cor=_escHtml(o.cor||'#c9973a');
+    return `<button class="login-card" onclick="loginCard('${_escHtml(o.id)}')">
+      <div class="op-av" style="background:${cor}">${ini}</div>
+      <div class="login-nome">${_escHtml(o.nome)}</div>
+    </button>`;
+  }).join('');
+}
+
+function loginCard(opId){
+  const op=OP.porId(opId);
+  if(!op||!op.ativo){ alert('Operador inativo.'); return; }
+  const filtro=st.loginFiltro||'';
+  if(filtro==='bypass' && !(op.perms && op.perms.geo_bypass)){
+    alert('Este operador não está autorizado a acessar fora da fábrica.');
+    return;
+  }
+  st.pinTipo='login';
+  st.loginOpId=opId;
+  st.pinBuf='';
+  st.pinAlvo=()=>{
+    OP.setAtual(opId);
+    if(filtro==='bypass'){ bypassGeoSessao=true; }
+    st.loginFiltro='';
+    sessaoDesbloqueada=false; // novo operador → PIN do porcionamento revalida
+    ir('start');
+  };
+  document.getElementById('pin-err').textContent='';
+  document.getElementById('pin-title').textContent=op.nome;
+  document.getElementById('pin-sub').textContent='Digite o PIN';
+  renderPinPad(); atualizarPinDots(); ir('pin');
+}
+
+function trocarOperador(){
+  OP.sair();
+  sessaoDesbloqueada=false;
+  // bypassGeoSessao mantido: se o aparelho está fora da fábrica e a sessão
+  // foi liberada por operador autorizado, derrubar a flag aqui bricaria o
+  // próximo login até voltar à fábrica. O bypass cai só quando a aba fecha.
+  ir('login');
+}
+
+function abrirLoginBypass(){
+  st.loginFiltro='bypass';
+  ir('login');
+}
+
+// ─── Lista de operadores em Configurações ───────────────────────────
+function renderOpList(){
+  const el=document.getElementById('op-list'); if(!el) return;
+  const arr=OP.lista();
+  if(!arr.length){
+    el.innerHTML='<div style="padding:.9rem;text-align:center;color:var(--mut);font-size:.78rem;line-height:1.5;border:1px dashed var(--brd);border-radius:.4rem">Nenhum operador cadastrado.<br>Sem operadores, o app funciona sem login.</div>';
+  } else {
+    el.innerHTML = arr.map(o=>{
+      const ini=_escHtml((o.nome||'?').charAt(0).toUpperCase());
+      const cor=_escHtml(o.cor||'#c9973a');
+      const meta=o.ativo?'PIN ••••':'inativo';
+      return `<div class="op-item ${o.ativo?'':'inativo'}" onclick="abrirOpEdit('${_escHtml(o.id)}')">
+        <div class="op-item-av" style="background:${cor}">${ini}</div>
+        <div class="op-item-nome">${_escHtml(o.nome)}</div>
+        <div class="op-item-meta">${meta}</div>
+      </div>`;
+    }).join('');
+  }
+  const btn=document.getElementById('op-add-btn');
+  if(btn) btn.style.display = arr.length>=6 ? 'none' : '';
+}
+
+// ─── Edição / cadastro de operador ─────────────────────────────────
+let opEditId=null;
+
+function abrirOpEdit(id){
+  opEditId = id || null;
+  const isNovo=!opEditId;
+  const op = isNovo ? null : OP.porId(opEditId);
+  document.getElementById('opedit-title').textContent = isNovo ? 'Novo operador' : 'Editar operador';
+  document.getElementById('opedit-nome').value = op?op.nome:'';
+  document.getElementById('opedit-pin').value = op?(op.pin||''):'';
+  document.getElementById('opedit-ativo').checked = op?!!op.ativo:true;
+  // Cores
+  const corSel = op?(op.cor||OP_CORES[0]):OP_CORES[0];
+  document.getElementById('opedit-cores').innerHTML = OP_CORES.map(c=>
+    `<div class="op-cor${c===corSel?' sel':''}" style="background:${c}" data-cor="${c}" onclick="opEditSelCor('${c}')"></div>`
+  ).join('');
+  // Permissões
+  const perms = op?(op.perms||OP_permsDefault()):OP_permsDefault();
+  document.getElementById('opedit-perms').innerHTML = OP_PERMS_MOD.map(p=>{
+    const checked = perms[p.k]?'checked':'';
+    return `<label class="op-perm">
+      <input type="checkbox" data-permk="${p.k}" ${checked}>
+      <span class="op-perm-icon">${p.icon}</span>
+      <span class="op-perm-nome">${p.label}</span>
+    </label>`;
+  }).join('');
+  document.getElementById('opedit-perms-esp').innerHTML = OP_PERMS_ESP.map(p=>{
+    const checked = perms[p.k]?'checked':'';
+    const dangerCls = p.danger?' danger':'';
+    return `<label class="op-perm${dangerCls}">
+      <input type="checkbox" data-permk="${p.k}" ${checked}>
+      <span class="op-perm-icon">${p.icon}</span>
+      <span class="op-perm-nome">${p.label}</span>
+    </label>`;
+  }).join('');
+  const delBtn=document.getElementById('opedit-del');
+  if(delBtn) delBtn.style.display = isNovo ? 'none' : '';
+  ir('op-edit');
+}
+
+function opEditSelCor(c){
+  document.querySelectorAll('#opedit-cores .op-cor').forEach(el=>{
+    el.classList.toggle('sel', el.dataset.cor===c);
+  });
+}
+
+function salvarOpEdit(){
+  const nome=(document.getElementById('opedit-nome').value||'').trim();
+  if(nome.length<2){ alert('Digite um nome com pelo menos 2 letras.'); return; }
+  if(nome.length>20){ alert('Nome muito longo (máx. 20 letras).'); return; }
+  const pin=(document.getElementById('opedit-pin').value||'').replace(/\D/g,'');
+  if(pin.length!==4){ alert('O PIN deve ter exatamente 4 dígitos.'); return; }
+  if(OP.pinUsado(pin, opEditId)){
+    alert('Esse PIN já está em uso por outro operador.\nEscolha um diferente.');
+    return;
+  }
+  const corEl=document.querySelector('#opedit-cores .op-cor.sel');
+  const cor = corEl ? corEl.dataset.cor : OP_CORES[0];
+  const ativo = document.getElementById('opedit-ativo').checked;
+  const perms={};
+  document.querySelectorAll('#opedit-perms input[type=checkbox], #opedit-perms-esp input[type=checkbox]').forEach(c=>{
+    perms[c.dataset.permk] = !!c.checked;
+  });
+  if(opEditId){
+    const atual=OP.porId(opEditId)||{};
+    OP.upd(opEditId, Object.assign({}, atual, {id:opEditId, nome, pin, cor, ativo, perms}));
+  } else {
+    if(OP.lista().length>=6){ alert('Limite máximo de 6 operadores.'); return; }
+    OP.add({id:'op_'+Date.now()+'_'+Math.floor(Math.random()*1000), nome, pin, cor, ativo, perms});
+  }
+  opEditId=null;
+  ir('config');
+}
+
+function apagarOpAtualEdit(){
+  if(!opEditId) return;
+  const op=OP.porId(opEditId); if(!op) return;
+  if(!confirm('Apagar o operador "'+op.nome+'"?\n\nO histórico de baldes e laminações não é afetado.')) return;
+  OP.del(opEditId);
+  opEditId=null;
+  ir('config');
+}
 
 // ════════════════════════════════════════════════════════════
 // AUTOFALANTE — liga/desliga o TTS (botão na tela + por voz)
@@ -1421,6 +2139,10 @@ function criarLoteSecos(){
 }
 
 function apagarLote(id){
+  if(!OP.pode('apagar')){
+    alert('Você não tem permissão para apagar baldes.\nPeça ao administrador.');
+    return;
+  }
   const todos=LS.g('fdo_lotes',[]);
   const lote=todos.find(l=>l.id===id);
   if(!lote) return;
@@ -2882,6 +3604,7 @@ function renderHist(){
     el.innerHTML='<div style="padding:2rem;text-align:center;color:var(--mut);font-size:.9rem">Nenhum balde ainda.<br>Conclua um porcionamento para criar o primeiro balde.</div>';
     return;
   }
+  const podeApagar = OP.pode('apagar');
   el.innerHTML=todos.map(l=>{
     const p=porcInfo(l);
     const meta=[
@@ -2901,13 +3624,14 @@ function renderHist(){
       const ok=l.etapas&&l.etapas[k]&&l.etapas[k].feito;
       return `<span class="etapa-chip ${ok?'ok':'pend'}">${ok?'✓ ':''}${nomeEtapa(k)}</span>`;
     }).join('');
+    const btnDel = podeApagar ? `<button class="lote-del" onclick="apagarLote('${l.id}')" title="Apagar balde">🗑</button>` : '';
     return `<div class="lote-card">
       <div class="lote-head">
         <span class="lote-num">Balde #${l.num}</span>
         <span class="lote-rec">${l.receitaNome||l.rotulo||'—'}</span>
         <button class="lote-etq" onclick="abrirEtiqueta('${l.id}')" title="Etiqueta do balde">🏷</button>
         <button class="lote-etq etq-4x" onclick="abrirEtiqueta('${l.id}','massas')" title="Etiqueta das massas (4×)">🏷×4</button>
-        <button class="lote-del" onclick="apagarLote('${l.id}')" title="Apagar balde">🗑</button>
+        ${btnDel}
       </div>
       <div class="lote-meta">${meta}</div>
       <div class="lote-etapas">${chips}</div>
@@ -2991,13 +3715,15 @@ function renderLamFeitas(){
   const lams=LS.g('fdo_laminacoes',[]);
   const el=document.getElementById('lam-feitas-list');
   if(!lams.length){ el.innerHTML='<div class="lam-empty">Nenhum lote criado ainda.</div>'; return; }
+  const podeApagar = OP.pode('apagar');
   el.innerHTML=lams.map(x=>{
     const comp=(x.composicao||[]).map(c=>`${c.partes}× Balde #${c.loteNum} (${c.dataLote})`).join(' + ');
+    const btnDel = podeApagar ? `<button class="lote-del" onclick="apagarLaminacao('${x.id}')" title="Apagar lote">🗑</button>` : '';
     return `<div class="lam-fcard">
       <div class="lam-fcard-top">
         <span class="lam-fcard-num">${x.nome}</span>
         <span class="lam-fcard-rec">${x.receitaNome||''}</span>
-        <button class="lote-del" onclick="apagarLaminacao('${x.id}')" title="Apagar lote">🗑</button>
+        ${btnDel}
       </div>
       <div class="lam-fcard-comp">${x.totalPartes} partes · ${comp}${x.temMassaAnterior?' · <span style="color:var(--red)">contém massa de dia anterior</span>':''}</div>
     </div>`;
@@ -3041,6 +3767,10 @@ function criarLaminacao(){
   falar(`Lote ${nome} criado. ${total} ${total===1?'parte':'partes'}. ${compFala}.`+(temAnterior?' Atenção: inclui massa de dia anterior.':''));
 }
 function apagarLaminacao(id){
+  if(!OP.pode('apagar')){
+    alert('Você não tem permissão para apagar laminações.\nPeça ao administrador.');
+    return;
+  }
   const lams=LS.g('fdo_laminacoes',[]);
   const lam=lams.find(x=>x.id===id); if(!lam) return;
   if(!confirm(`Apagar o lote ${lam.nome}?\n\nAs partes voltam para o estoque dos baldes de origem.`)) return;
@@ -3086,6 +3816,20 @@ function monitorarBateria(){
   }).catch(()=>{});
 }
 
+// Boot do app (chamado pelo callback do GEO.bootstrap após a geo passar)
+function bootApp(){
+  // Primeira configuração: sem chave Gemini → vai direto pra Config
+  if(!getKey()){ ir('config'); return; }
+  // Retoma batimento em andamento, se houver
+  if(typeof batRestaurar==='function' && batRestaurar()) return;
+  // Modo legado: sem operadores cadastrados → app sem login
+  if(!OP.lista().length){ ir('start'); return; }
+  // Há operadores e algum está logado → vai pra start
+  if(OP.atual()){ ir('start'); return; }
+  // Há operadores mas ninguém logado → tela "Quem está usando?"
+  st.loginFiltro=''; ir('login');
+}
+
 (function(){
   // Sincronia multi-aparelho via Firebase Realtime Database
   FB.init();
@@ -3104,9 +3848,12 @@ function monitorarBateria(){
   speechSynthesis?.addEventListener('voiceschanged',()=>speechSynthesis.getVoices());
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
   monitorarBateria();
-  // Retoma uma batida em andamento (se a aba foi recarregada/descartada); senão, fluxo normal
-  if(!getKey()){ ir('config'); }
-  else if(!batRestaurar()){ ir('start'); }
+  // Restrição por localização (v22): registra reverificação ao voltar do background
+  GEO.registrarVisibility();
+  // Verifica localização ANTES de mostrar a interface. Se passar (ou estiver
+  // desativado, ou se houver operador autorizado logado, ou for primeira
+  // config sem chave Gemini), executa o bootApp que escolhe Login/Start/Config.
+  GEO.bootstrap(bootApp);
 })();
 </script>
 </body>
