@@ -1,5 +1,5 @@
 {
-  "_obs": "OBS 25/06/2026 (fdo-v16): Terceira opção de fermentação — 19°C / fermento 58 g / 12 h. Base v15: nomenclatura balde/lote; etiqueta das massas; Laminação redesenhada. Base v14: Temperatura da Noite com 2 opções (ambas 17°C) por tempo de fermentação — fermento 70 g (14 h) ou 64 g (17 h); Bater a Massa mostra fermento, sal e manteiga no balde 1. Base v12: porcionamento dividido em Secos/Líquidos; senha das Configurações; impressão MDK-022 ESC/POS·TSPL·CPCL.",
+  "_obs": "OBS 25/06/2026 (fdo-v17): Quarta opção de fermentação — 19°C / 48 g / 17 h. Opção 3 ajustada: 19°C / 58 g passa para 14 h. Etiqueta do Balde e Etiqueta das Massas imprimem temperatura e horas. Base v16: 3ª opção de fermentação 19°C / 58 g. Base v15: nomenclatura balde/lote; etiqueta das massas; Laminação redesenhada. Base v14: Temperatura da Noite com 2 opções (ambas 17°C) por tempo de fermentação. Base v12: porcionamento dividido em Secos/Líquidos; senha das Configurações; impressão MDK-022 ESC/POS·TSPL·CPCL.",
   "name": "Folhados d'Ouro — Produção",
   "short_name": "Folhados d'Ouro",
   "description": "Checklist por voz para produção de croissants",

@@ -1,5 +1,8 @@
 // Folhados d'Ouro — Service Worker
-// OBS 25/06/2026: cache fdo-v16 —
+// OBS 25/06/2026: cache fdo-v17 —
+//   • Quarta opção de fermentação: 19°C / 48 g / 17 horas.
+//   • Opção 3 ajustada: 19°C / 58 g passa para 14 horas.
+// cache fdo-v16 —
 //   • Terceira opção de fermentação: 19°C / fermento 58 g / 12 horas.
 // cache fdo-v15 —
 //   • Nomenclatura "balde" no lugar de "lote" (porcionamento gera balde).
@@ -25,7 +28,7 @@
 //   • Lotes numerados/apagáveis, PIN do Porcionamento, autofalante, calculadora,
 //     previsão de madrugada (Open-Meteo), Gemini no contexto da receita.
 // IMPORTANTE: a cada publicação, troque a versão (fdo-vN) para o celular atualizar.
-const CACHE = 'fdo-v16';
+const CACHE = 'fdo-v17';
 
 self.addEventListener('install', e => {
   e.waitUntil(

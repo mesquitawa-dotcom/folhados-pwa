@@ -2,7 +2,12 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — OBS 25/06/2026 (atualização v16)
+       FOLHADOS D'OURO — OBS 25/06/2026 (atualização v17)
+       NOVIDADES v17:
+       • Quarta opção de fermentação: 19°C / fermento 48 g / 17 horas.
+       • Opção 3 ajustada: 19°C / 58 g passa para 14 horas (era 12 h).
+       • Etiqueta do Balde e Etiqueta das Massas imprimem temperatura
+         e horas (ex.: "19ºC  17 horas fermentação").
        NOVIDADES v16:
        • Terceira opção de fermentação: 19°C / fermento 58 g / 12 horas.
          Exibida junto com as duas opções existentes na tela Temperatura
@@ -58,7 +63,7 @@
        --- base v11/v10/v9/v8/v7 ---
        • Alarme forte do batimento. Lotes numerados/apagáveis. Fermentação.
          PIN do Porcionamento. Autofalante 🔊/🔇. Calculadora. Wake Lock.
-       • Service Worker: cache fdo-v16.
+       • Service Worker: cache fdo-v17.
        ════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -955,13 +960,14 @@
 const TEMP_FERMENTO = {15:120,16:112,17:104,18:96,19:90,20:84,21:78,22:74,23:68,24:64};
 
 // Opções de fermento mostradas na tela "Temperatura da Noite".
-// Três opções, escolhidas pelo TEMPO de fermentação desejado:
+// Quatro opções, escolhidas pelo TEMPO de fermentação desejado:
 //   • mais fermento  → fermenta mais rápido (menos horas)
 //   • menos fermento → fermenta mais devagar (mais horas)
 const OPCOES_FERMENTO = [
   {temp:17, fermento:70, horas:14},
   {temp:17, fermento:64, horas:17},
-  {temp:19, fermento:58, horas:12},
+  {temp:19, fermento:58, horas:14},
+  {temp:19, fermento:48, horas:17},
 ];
 
 // Peso do balde 1 vazio (tara), para conferência na balança.
