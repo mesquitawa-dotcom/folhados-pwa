@@ -1,5 +1,17 @@
 // Folhados d'Ouro — Service Worker
-// OBS 29/06/2026: cache fdo-v20 —
+// OBS 29/06/2026: cache fdo-v21 —
+//   • CORREÇÃO CRÍTICA da sincronia: quando uma chave (fdo_lotes,
+//     fdo_laminacoes) ficava VAZIA em outro aparelho, o Firebase converte
+//     em null (peculiaridade do RTDB) e o listener antigo IGNORAVA esse
+//     evento. Resultado: baldes/laminações apagados num aparelho ficavam
+//     "fantasma" nos outros até a próxima atualização sobrescrever.
+//     RISCO OPERACIONAL: balde fantasma podia iniciar batimento/laminação.
+//   • Listener agora distingue:
+//       - Primeira sincronia com nuvem vazia → não apaga local, sobe local.
+//       - Nuvem foi esvaziada depois → reflete localmente (removeItem).
+//   • Comportamento entre 2+ aparelhos agora é simétrico: apagar em
+//     qualquer aparelho propaga em 1-2 s para os demais.
+// cache fdo-v20 —
 //   • Sincronia multi-aparelho via Firebase Realtime Database (plano Spark).
 //     Wrapper híbrido no helper LS: localStorage continua como fonte de
 //     verdade local (leitura instantânea, offline-first); ao gravar, espelha
@@ -51,7 +63,7 @@
 //   • Lotes numerados/apagáveis, PIN do Porcionamento, autofalante, calculadora,
 //     previsão de madrugada (Open-Meteo), Gemini no contexto da receita.
 // IMPORTANTE: a cada publicação, troque a versão (fdo-vN) para o celular atualizar.
-const CACHE = 'fdo-v20';
+const CACHE = 'fdo-v21';
 
 self.addEventListener('install', e => {
   e.waitUntil(

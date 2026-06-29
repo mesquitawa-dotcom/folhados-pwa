@@ -1172,10 +1172,33 @@ const FB={
       FB_SYNC_KEYS.forEach(k=>{
         this.db.ref(k).on('value',snap=>{
           const v=snap.val();
-          if(v===null||v===undefined) return;
-          const json=JSON.stringify(v);
+          const ehVazio=(v===null||v===undefined);
+          // Normaliza para detecção de eco: vazio sempre vira 'null'.
+          const json=ehVazio?'null':JSON.stringify(v);
           if(this.lastJson[k]===json) return; // ignora eco da própria escrita
+          const primeiraVez=!(k in this.lastJson);
           this.lastJson[k]=json;
+          if(ehVazio){
+            // Nuvem está vazia para essa chave.
+            if(primeiraVez){
+              // Primeira sincronia e a nuvem não tem dado. Se o aparelho
+              // já tem dado local, sobe para a nuvem (não apaga o local).
+              const local=localStorage.getItem(k);
+              if(local!==null){
+                try{ this.db.ref(k).set(JSON.parse(local)); }catch(e){ console.warn('[FB] sync up',k,e); }
+              }
+              return;
+            }
+            // Já vimos esta chave antes; agora foi esvaziada/apagada na nuvem.
+            // Reflete localmente — senão sobram baldes fantasma neste aparelho
+            // que poderiam iniciar batimento/laminação inexistente.
+            this.applying=true;
+            try{ localStorage.removeItem(k); }catch{}
+            this.applying=false;
+            this.repaint();
+            return;
+          }
+          // Valor não-nulo recebido da nuvem: espelha local e re-renderiza.
           this.applying=true;
           try{ localStorage.setItem(k,json); }catch{}
           this.applying=false;

@@ -1,5 +1,5 @@
 {
-  "_obs": "OBS 29/06/2026 (fdo-v20): Sincronia multi-aparelho via Firebase Realtime Database. Wrapper híbrido no LS: localStorage como fonte de verdade local (offline-first) + espelho remoto nas chaves de produção (fdo_lotes, fdo_laminacoes, fdo_lote_seq). Configs locais (PIN, Gemini, impressora) ficam só locais. Listener em tempo real re-renderiza a tela ao receber alteração de outro celular. Base v19: Tela 'Secos Concluídos' com botão 'Voltar sem imprimir'; Etiqueta das Massas com seletor 1/2 etiquetas (padrão 2).",
+  "_obs": "OBS 29/06/2026 (fdo-v21): CORREÇÃO CRÍTICA da sincronia. Quando uma chave (fdo_lotes/fdo_laminacoes) ficava vazia em outro aparelho, o Firebase convertia em null e o listener ignorava — baldes apagados permaneciam fantasma nos outros aparelhos até a próxima atualização sobrescrever. Listener agora distingue primeira sincronia (não apaga local, sobe local) de esvaziamento posterior (reflete removeItem local). Base v20: Sincronia Firebase Realtime Database; wrapper híbrido no LS. Base v19: Tela 'Secos Concluídos' com 'Voltar sem imprimir'; Etiqueta das Massas com seletor 1/2 etiquetas (padrão 2).",
   "name": "Folhados d'Ouro — Produção",
   "short_name": "Folhados d'Ouro",
   "description": "Checklist por voz para produção de croissants",
