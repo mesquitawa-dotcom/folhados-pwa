@@ -1,5 +1,17 @@
 // Folhados d'Ouro — Service Worker
-// OBS 29/06/2026: cache fdo-v19 —
+// OBS 29/06/2026: cache fdo-v20 —
+//   • Sincronia multi-aparelho via Firebase Realtime Database (plano Spark).
+//     Wrapper híbrido no helper LS: localStorage continua como fonte de
+//     verdade local (leitura instantânea, offline-first); ao gravar, espelha
+//     no Firebase para as chaves de produção (fdo_lotes, fdo_laminacoes,
+//     fdo_lote_seq). Outras chaves (PINs, chave Gemini, modo impressora,
+//     tempos do batimento, tara, qtd etiquetas) ficam SÓ locais.
+//   • Listener em tempo real: quando outro celular grava, o dado chega,
+//     atualiza o localStorage e re-renderiza a tela atual sem F5.
+//   • Offline-first preservado: se o Firebase não responder, o app trabalha
+//     direto do localStorage; SDK enfileira escritas e sincroniza ao voltar.
+//   • SDK Firebase compat carregado via CDN gstatic (sem build).
+// cache fdo-v19 —
 //   • Tela "Secos Concluídos": novo botão "↩ Voltar sem imprimir" para
 //     voltar ao menu "Secos ou Líquidos?" sem precisar imprimir agora.
 //     Aparece só na conclusão dos Secos (Líquidos esconde).
@@ -39,7 +51,7 @@
 //   • Lotes numerados/apagáveis, PIN do Porcionamento, autofalante, calculadora,
 //     previsão de madrugada (Open-Meteo), Gemini no contexto da receita.
 // IMPORTANTE: a cada publicação, troque a versão (fdo-vN) para o celular atualizar.
-const CACHE = 'fdo-v19';
+const CACHE = 'fdo-v20';
 
 self.addEventListener('install', e => {
   e.waitUntil(

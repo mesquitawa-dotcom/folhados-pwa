@@ -431,6 +431,9 @@
     .lam-bar{background:var(--bg2);border-top:.1rem solid var(--brd);padding:.8rem 1rem;display:flex;flex-direction:column;gap:.6rem;flex-shrink:0}
     .lam-bar-info{font-size:.9rem;color:var(--gl)}
   </style>
+  <!-- Firebase Realtime Database (compat, namespaced) — CDN, sem build -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -1138,7 +1141,73 @@ const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0,temp:n
   fermLote:null,fermStart:0,fermMin:24,fermMax:28,lamSel:{}};
 // Desbloqueio por sessão do app: o PIN é pedido só 1x por abertura (rápido p/ produção)
 let sessaoDesbloqueada=false;
-const LS={g:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch{return d}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+const LS={g:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch{return d}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{} FB.push(k,v);}};
+// ===== Firebase Realtime Database (sincronia multi-aparelho) ============
+// • Fonte de verdade local: localStorage (leitura instantânea, offline-first).
+// • Espelho remoto: Realtime Database. LS.s grava no local E empurra para o FB.
+// • Listener: quando outro celular grava, o dado chega aqui, é salvo no
+//   localStorage e a tela atual é re-renderizada (sem F5).
+// • Chaves sincronizadas: só dados de produção (fdo_lotes, fdo_laminacoes,
+//   fdo_lote_seq). Configs locais (PIN, chave Gemini, modo impressora,
+//   tempos do batimento, tara, qtd de etiquetas) NÃO sobem para a nuvem.
+const FB_CFG={
+  apiKey:"AIzaSyDN3uZEjtmKE678io-61aIhgFnkxG1PrnE",
+  authDomain:"producaofolhadosdouro-b6fb5.firebaseapp.com",
+  databaseURL:"https://producaofolhadosdouro-b6fb5-default-rtdb.firebaseio.com",
+  projectId:"producaofolhadosdouro-b6fb5",
+  storageBucket:"producaofolhadosdouro-b6fb5.firebasestorage.app",
+  messagingSenderId:"904726497964",
+  appId:"1:904726497964:web:03b4b9111ff0ff2580ed09"
+};
+const FB_SYNC_KEYS=['fdo_lotes','fdo_laminacoes','fdo_lote_seq'];
+const FB={
+  db:null, applying:false, lastJson:{},
+  init(){
+    if(typeof firebase==='undefined'||!firebase.initializeApp) return;
+    try{
+      if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
+      this.db=firebase.database();
+      // Escuta cada chave sincronizada. Quando muda na nuvem, aplica local
+      // e re-renderiza a tela atual.
+      FB_SYNC_KEYS.forEach(k=>{
+        this.db.ref(k).on('value',snap=>{
+          const v=snap.val();
+          if(v===null||v===undefined) return;
+          const json=JSON.stringify(v);
+          if(this.lastJson[k]===json) return; // ignora eco da própria escrita
+          this.lastJson[k]=json;
+          this.applying=true;
+          try{ localStorage.setItem(k,json); }catch{}
+          this.applying=false;
+          this.repaint();
+        },err=>{ console.warn('[FB] listen',k,err); });
+      });
+    }catch(e){ console.warn('[FB] init falhou',e); }
+  },
+  push(k,v){
+    if(this.applying) return; // veio do listener, não devolve
+    if(!FB_SYNC_KEYS.includes(k)) return; // só sincroniza chaves de produção
+    if(!this.db) return; // offline ou SDK não carregou: fica só local
+    try{
+      const json=JSON.stringify(v);
+      this.lastJson[k]=json;
+      this.db.ref(k).set(v).catch(e=>console.warn('[FB] set',k,e));
+    }catch(e){ console.warn('[FB] push',k,e); }
+  },
+  // Re-renderiza a tela visível quando dado chega da nuvem
+  repaint(){
+    try{
+      const visivel=document.querySelector('.scr:not(.off)');
+      if(!visivel) return;
+      const id=visivel.id||'';
+      if(id==='s-history' && typeof renderHist==='function') renderHist();
+      else if(id==='s-bater-lotes' && typeof renderBatLotes==='function') renderBatLotes();
+      else if(id==='s-liquidos-lotes' && typeof renderLiquidosLotes==='function') renderLiquidosLotes();
+      else if(id==='s-ferm-lotes' && typeof renderFermLotes==='function') renderFermLotes();
+      else if(id==='s-laminacao' && typeof renderLaminacao==='function') renderLaminacao();
+    }catch(e){ console.warn('[FB] repaint',e); }
+  }
+};
 const getKey=()=>LS.g('fdo_key','');
 const getOp=()=>LS.g('fdo_op','Padeiro');
 
@@ -2995,6 +3064,8 @@ function monitorarBateria(){
 }
 
 (function(){
+  // Sincronia multi-aparelho via Firebase Realtime Database
+  FB.init();
   // PIN padrão na primeira execução
   if(LS.g('fdo_pin',null)===null) LS.s('fdo_pin','123789');
   if(LS.g('fdo_pin_ativo',null)===null) LS.s('fdo_pin_ativo',true);
