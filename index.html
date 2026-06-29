@@ -2,7 +2,12 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — OBS 25/06/2026 (atualização v17)
+       FOLHADOS D'OURO — OBS 29/06/2026 (atualização v18)
+       NOVIDADES v18:
+       • Etiqueta das Massas redesenhada: 2 linhas GRANDES por faixa.
+         Linha 1: nome da receita em negrito grande.
+         Linha 2: "DD/MM/AA  -  19°C  14 horas" (data curta + fermentação).
+         As fontes se auto-ajustam à largura da etiqueta (60 mm).
        NOVIDADES v17:
        • Quarta opção de fermentação: 19°C / fermento 48 g / 17 horas.
        • Opção 3 ajustada: 19°C / 58 g passa para 14 horas (era 12 h).
@@ -63,7 +68,7 @@
        --- base v11/v10/v9/v8/v7 ---
        • Alarme forte do batimento. Lotes numerados/apagáveis. Fermentação.
          PIN do Porcionamento. Autofalante 🔊/🔇. Calculadora. Wake Lock.
-       • Service Worker: cache fdo-v17.
+       • Service Worker: cache fdo-v18.
        ════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -1889,7 +1894,10 @@ function desenharEtiqueta(lote){
   }
   return c;
 }
-// Etiqueta das MASSAS — 4 faixas iguais (receita + data + fermentação), com risco para cortar em 4.
+// Etiqueta das MASSAS — 4 faixas iguais, 2 linhas grandes por faixa:
+//   linha 1: nome da receita (NEGRITO, grande)
+//   linha 2: "DD/MM/AA  -  19°C  14 horas"  (única linha de info, fácil de ler)
+// As fontes diminuem se necessário pra caber na largura.
 function desenharEtiquetaMassas(lote){
   const c=document.createElement('canvas'); c.width=ETQ_W; c.height=ETQ_H;
   const x=c.getContext('2d');
@@ -1897,15 +1905,35 @@ function desenharEtiquetaMassas(lote){
   x.fillStyle='#000'; x.strokeStyle='#000';
   const d=loteEtqDados(lote);
   const pi=porcInfo(lote);
+  // Data curta DD/MM/AA (economiza espaço na 2ª linha)
+  const dataCurta = (d.data||'').replace(/\/(\d{2})(\d{2})$/,'/$2');
+  const tem=(pi.temp!=null && pi.fermento_horas!=null);
+  const info = tem ? (dataCurta+'  -  '+pi.temp+'°C  '+pi.fermento_horas+' horas') : dataCurta;
   let rec=d.receita; if(rec.length>30) rec=rec.slice(0,30);
-  const fermLinha=(pi.temp!=null && pi.fermento_horas!=null) ? pi.temp+'ºC  '+pi.fermento_horas+' horas fermentação' : '';
-  const fh=ETQ_H/4; // 100px por faixa
-  x.textAlign='center';
+  const fh=ETQ_H/4;             // 100 px por faixa
+  const maxW=ETQ_W-24;          // margem lateral pra não tocar a borda
+  // Ajusta a fonte até caber: começa grande, reduz até a largura caber.
+  function ajustar(txt, alvo, peso, minP){
+    let s=alvo;
+    while(s>minP){
+      x.font=peso+' '+s+'px Arial, sans-serif';
+      if(x.measureText(txt).width<=maxW) break;
+      s--;
+    }
+    return s;
+  }
+  x.textAlign='center'; x.textBaseline='alphabetic';
   for(let i=0;i<4;i++){
     const cy=i*fh;
-    x.font='bold 28px Arial, sans-serif'; x.fillText(rec, ETQ_W/2, cy+34);
-    x.font='24px Arial, sans-serif';     x.fillText(d.data, ETQ_W/2, cy+64);
-    if(fermLinha){ x.font='20px Arial, sans-serif'; x.fillText(fermLinha, ETQ_W/2, cy+88); }
+    // Linha 1 — receita (bem grande)
+    const s1=ajustar(rec, 44, 'bold', 26);
+    x.font='bold '+s1+'px Arial, sans-serif';
+    x.fillText(rec, ETQ_W/2, cy+50);
+    // Linha 2 — data + fermentação (grande)
+    const s2=ajustar(info, 32, 'bold', 20);
+    x.font='bold '+s2+'px Arial, sans-serif';
+    x.fillText(info, ETQ_W/2, cy+88);
+    // Risco para cortar entre as faixas
     if(i<3){ x.lineWidth=2; x.beginPath(); x.moveTo(0,cy+fh); x.lineTo(ETQ_W,cy+fh); x.stroke(); }
   }
   return c;
