@@ -286,6 +286,40 @@
     /* Esconde o badge "Ativo" — as 5 receitas estão todas ativas, libera largura */
     #s-receitas .modulo-badge{display:none}
 
+    /* v24.4: Compactar seleção de baldes do Batimento — cabeçalho slim + cards horizontais */
+    #s-batimento-lotes .start-top{padding:.6rem 1.2rem .25rem}
+    #s-batimento-lotes .start-brand{font-size:.55rem;letter-spacing:.25rem;margin-bottom:.15rem}
+    #s-batimento-lotes .start-title{font-size:1.15rem;margin-bottom:.1rem}
+    #s-batimento-lotes .start-sub{font-size:.7rem}
+    #s-batimento-lotes .modulos-label{padding:0 1.2rem .25rem;font-size:.6rem;letter-spacing:.18rem}
+    #s-batimento-lotes .modulos{padding:0 .7rem 1rem;gap:.4rem}
+    #s-batimento-lotes .modulo{padding:.55rem .8rem;gap:.6rem}
+    #s-batimento-lotes .modulo-icon{font-size:1.3rem;width:1.6rem}
+    #s-batimento-lotes .modulo-nome{font-size:.92rem;margin-bottom:.15rem;white-space:nowrap;
+      overflow:hidden;text-overflow:ellipsis}
+    #s-batimento-lotes .modulo-desc{font-size:.68rem;line-height:1.3;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    /* v24.4: Compactar tela de batimento — botões visíveis sem rolar a tela */
+    #s-batimento .bat-body{padding:0 1rem .9rem;gap:.55rem}
+    #s-batimento .bat-card{padding:.65rem .9rem}
+    #s-batimento .bat-card-lbl{font-size:.6rem;letter-spacing:.14rem;margin-bottom:.3rem}
+    /* Layout horizontal para "Balde selecionado" — número e receita na mesma linha */
+    #s-batimento .bat-lote-num{font-size:1.35rem;display:inline}
+    #s-batimento .bat-lote-rec{font-size:.92rem;display:inline;margin-top:0}
+    #s-batimento .bat-lote-rec::before{content:' · ';color:var(--mut);font-weight:normal}
+    /* Esconde meta do balde (data/op/total) e descrições longas dos ingredientes */
+    #s-batimento #bat-lote-meta,
+    #s-batimento #bat-b1-det,
+    #s-batimento #bat-b2-det{display:none}
+    /* Fontes/paddings reduzidos nas fases internas */
+    #s-batimento .bat-peso-alvo{font-size:1.85rem;line-height:1.05}
+    #s-batimento .bat-fase{gap:.55rem}
+    #s-batimento .bat-fase .inp{padding:.6rem .7rem;font-size:1rem}
+    #s-batimento .bat-divisao{font-size:1.15rem;margin-top:.4rem;min-height:0}
+    #s-batimento .bat-cron{font-size:3rem;margin:.1rem 0}
+    #s-batimento .bat-aviso{font-size:.9rem}
+
     /* Botão Voltar destacado na tela do PIN (sempre visível, fácil de achar) */
     .pin-back-btn{background:var(--bg3);border:1px solid var(--brd);color:var(--gl);
       font-family:Georgia,serif;font-weight:bold;font-size:.85rem;letter-spacing:.15rem;
@@ -960,7 +994,6 @@
 <!-- ═══ BATER A MASSA — seleção de lote ═══ -->
 <div id="s-batimento-lotes" class="scr off">
   <div class="start-top">
-    <div class="start-icon">🥣</div>
     <div class="start-brand">Folhados d'Ouro</div>
     <div class="start-title">Bater a Massa</div>
     <div class="start-sub">Selecione o balde porcionado</div>
@@ -987,20 +1020,6 @@
       <div class="bat-lote-num" id="bat-lote-num">#—</div>
       <div class="bat-lote-rec" id="bat-lote-rec">—</div>
       <div class="bat-note" id="bat-lote-meta"></div>
-    </div>
-
-    <!-- FASE 1: temperatura ambiente -->
-    <div class="bat-fase" id="bat-fase-temp">
-      <div class="bat-card">
-        <div class="bat-card-lbl">Temperatura ambiente</div>
-        <div class="step-ctrl">
-          <button class="step-pm" onclick="ajustarTempBat(-1)">−</button>
-          <div class="step-val"><span id="bat-temp-val">20</span><small>°C</small></div>
-          <button class="step-pm" onclick="ajustarTempBat(1)">+</button>
-        </div>
-        <div class="bat-note" id="bat-temp-note">Defina a temperatura ambiente.</div>
-      </div>
-      <button class="btn-main" onclick="batConfirmarTemp()">Confirmar temperatura →</button>
     </div>
 
     <!-- FASE 2: conferir balde 1 -->
@@ -2412,7 +2431,7 @@ function pesoBalde2Lote(lote){
 let batCronInt=null, batBatStartMs=0, batAvisados=[], batTempoSeg=0, batAudioCtx=null;
 
 function setBatFase(f){
-  ['temp','balde1','balde2','batendo','peso'].forEach(x=>{
+  ['balde1','balde2','batendo','peso'].forEach(x=>{
     const el=document.getElementById('bat-fase-'+x); if(el) el.style.display=(x===f?'':'none');
   });
 }
@@ -2435,24 +2454,22 @@ function abrirBatimento(id){
   document.getElementById('bat-lote-num').textContent='#'+lote.num;
   document.getElementById('bat-lote-rec').textContent=lote.receitaNome||lote.rotulo||'';
   document.getElementById('bat-lote-meta').textContent=[lote.criado||'', p.op?('op. '+p.op):'', p.total_g?('total '+formatPeso(p.total_g)):''].filter(Boolean).join(' · ');
+  // v24.4: temperatura ambiente puxada do dia (ou 20°C padrão) — sem mais tela de confirmação
   const tDia=tempAmbienteDoDia();
-  const note=document.getElementById('bat-temp-note');
-  if(tDia!=null){ st.batTemp=tDia; note.textContent='Puxado de um batimento de hoje — confirme ou ajuste.'; note.classList.add('puxado'); }
-  else{ st.batTemp=20; note.textContent='Defina a temperatura ambiente.'; note.classList.remove('puxado'); }
-  document.getElementById('bat-temp-val').textContent=st.batTemp;
-  setBatFase('temp');
+  st.batTemp=(tDia!=null?tDia:20);
+  // Vai direto para a conferência do balde 1
+  batPrepararBalde1(lote);
   atualizarBotoesTTS();
   ir('batimento');
-  falar(`Batimento do balde ${lote.num}. `+(tDia!=null?`Temperatura ambiente de hoje, ${st.batTemp} graus. Confirme ou ajuste.`:'Defina a temperatura ambiente.'));
-}
-function ajustarTempBat(d){
-  st.batTemp=Math.max(0,Math.min(45,(st.batTemp||20)+d));
-  document.getElementById('bat-temp-val').textContent=st.batTemp;
 }
 function batLoteAtual(){ return LS.g('fdo_lotes',[]).find(l=>l.id===st.batLote); }
 
-function batConfirmarTemp(){
-  const lote=batLoteAtual(); if(!lote){abrirBatimentoLotes();return;}
+// v24.4: prepara o card do balde 1 (secos) e entra na fase 'balde1'.
+// Antes era batConfirmarTemp(), chamado após a tela de temperatura ambiente
+// (que foi eliminada — a temperatura já vem puxada do dia em abrirBatimento).
+function batPrepararBalde1(lote){
+  if(!lote){ lote=batLoteAtual(); }
+  if(!lote){ abrirBatimentoLotes(); return; }
   // Balde 1 (agora inclui sal e manteiga, que vão pesados no balde sem misturar)
   const b1=pesoBalde1Lote(lote);
   const a1=document.getElementById('bat-b1-alvo'), d1=document.getElementById('bat-b1-det');
@@ -2468,12 +2485,12 @@ function batConfirmarTemp(){
     if(sm.manteiga!=null && sm.manteiga>0) extra.push('manteiga '+formatPeso(sm.manteiga));
     if(extra.length) txt+=' No balde, sem misturar: '+extra.join(' · ')+'.';
     if(sm.manteiga===0) txt+=' Esta receita não leva manteiga.';
-    d1.textContent=txt;
+    d1.textContent=txt; // info preservada no DOM; CSS esconde da UI
   }
   else{ a1.textContent='—'; d1.textContent='Confira o balde 1 conforme a receita (lote antigo sem dados).'; }
   const i1=document.getElementById('bat-b1-inp'); if(i1) i1.value=''; const df1=document.getElementById('bat-b1-diff'); if(df1) df1.textContent='';
   setBatFase('balde1');
-  falar(b1!=null?`Temperatura ${st.batTemp} graus. Confira o peso do balde 1: ${falaPeso(b1+PESO_BALDE1)}. Pode falar o peso ou digitar.`:'Confira o peso do balde 1.');
+  falar(b1!=null?`Batimento do balde ${lote.num}. Temperatura ${st.batTemp} graus. Confira o peso do balde 1: ${falaPeso(b1+PESO_BALDE1)}. Pode falar o peso ou digitar.`:`Batimento do balde ${lote.num}. Confira o peso do balde 1.`);
   batMicConf('b1');
 }
 function batConferirBalde1(){
@@ -2715,7 +2732,6 @@ function batRestaurar(){
   document.getElementById('bat-lote-num').textContent='#'+lote.num;
   document.getElementById('bat-lote-rec').textContent=lote.receitaNome||lote.rotulo||'';
   document.getElementById('bat-lote-meta').textContent=[lote.criado||'', p.op?('op. '+p.op):''].filter(Boolean).join(' · ');
-  document.getElementById('bat-temp-val').textContent=st.batTemp;
   batBatStartMs=run.startMs||Date.now();
   batAvisados=Array.isArray(run.avisados)?run.avisados.slice():[];
   batTempoSeg=Math.floor((Date.now()-batBatStartMs)/1000);
