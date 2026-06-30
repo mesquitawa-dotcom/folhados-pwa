@@ -51,7 +51,7 @@
          do prédio); reverificação a cada 15 min e ao voltar do background.
        • Tela "Acesso restrito" mostra a distância atual + botão Tentar
          Novamente. Tela "Permissão necessária" se o usuário negar GPS.
-       • Bypass via Configurações (senha 456) caso seja preciso desativar
+       • Bypass via Configurações (senha 4561) caso seja preciso desativar
          em emergência. Tela de Config também acessível se a chave Gemini
          ainda não estiver cadastrada (primeira configuração).
        • Log de auditoria em 'fdo_acessos' no Firebase: cada verificação
@@ -251,8 +251,6 @@
     .modulo-nome{font-size:1rem;font-weight:bold;color:var(--gl);margin-bottom:.15rem}
     .modulo.inativo .modulo-nome{color:var(--mut)}
     .modulo-desc{font-size:.75rem;color:var(--mut);line-height:1.3}
-    .modulo-slim{padding:.7rem 1rem}
-    .modulo-slim .modulo-nome{font-size:1.05rem;margin-bottom:0}
     .modulo-badge{font-size:.55rem;letter-spacing:.15rem;text-transform:uppercase;
       padding:.25rem .55rem;border-radius:.2rem;flex-shrink:0;font-weight:bold}
     .badge-ativo{background:rgba(201,151,58,.18);color:var(--gold);border:1px solid rgba(201,151,58,.35)}
@@ -272,6 +270,21 @@
     #s-start .start-footer{padding:.55rem .8rem 1rem;gap:.5rem}
     #s-start .start-footer .link-btn{padding:.6rem .5rem;font-size:.7rem;
       letter-spacing:.1rem;flex:1;min-width:0;min-height:2.5rem}
+
+    /* v24.3: Compactar tela de Receitas — cabeçalho enxuto, cards horizontais slim */
+    #s-receitas .start-top{padding:.6rem 1.2rem .25rem}
+    #s-receitas .start-brand{font-size:.55rem;letter-spacing:.25rem;margin-bottom:.15rem}
+    #s-receitas .start-title{font-size:1.15rem;margin-bottom:.1rem}
+    #s-receitas .start-sub{font-size:.7rem}
+    #s-receitas .modulos-label{padding:0 1.2rem .25rem;font-size:.6rem;letter-spacing:.18rem}
+    #s-receitas .modulos{padding:0 .7rem 1rem;gap:.4rem}
+    #s-receitas .modulo{padding:.55rem .8rem;gap:.6rem}
+    #s-receitas .modulo-icon{font-size:1.3rem;width:1.6rem}
+    #s-receitas .modulo-nome{font-size:.92rem;margin-bottom:.15rem;white-space:nowrap;
+      overflow:hidden;text-overflow:ellipsis}
+    #s-receitas .modulo-desc{font-size:.68rem;line-height:1.3}
+    /* Esconde o badge "Ativo" — as 5 receitas estão todas ativas, libera largura */
+    #s-receitas .modulo-badge{display:none}
 
     /* Botão Voltar destacado na tela do PIN (sempre visível, fácil de achar) */
     .pin-back-btn{background:var(--bg3);border:1px solid var(--brd);color:var(--gl);
@@ -511,6 +524,13 @@
       background:var(--gold);color:#0a0905;font-weight:bold;font-size:1.5rem;font-family:Georgia,serif;
       box-shadow:0 .15rem .6rem rgba(0,0,0,.4);flex-shrink:0}
     .login-nome{font-size:1.05rem;font-weight:bold;color:var(--gl);line-height:1.2;word-break:break-word}
+    /* v24.3: operador bloqueado por 4 erros de PIN */
+    .login-card.bloqueado{opacity:.55;border-color:#5a1a0e}
+    .login-card.bloqueado .op-av{filter:grayscale(.6)}
+    .login-card .op-av{position:relative}
+    .login-blq{position:absolute;right:-.2rem;bottom:-.2rem;background:var(--bg);
+      border:1px solid #f08060;border-radius:50%;width:1.4rem;height:1.4rem;
+      display:flex;align-items:center;justify-content:center;font-size:.8rem;line-height:1}
 
     /* Barra do operador atual (na tela inicial) */
     .op-bar{margin:.5rem 1rem 0;padding:.55rem .85rem;background:rgba(201,151,58,.08);
@@ -584,7 +604,7 @@
   <label class="cfg-row"><input type="checkbox" id="chk-pin"> Exigir senha no Porcionamento</label>
   <div class="cfg-sep"></div>
   <div class="cfg-s" style="font-size:.75rem">🔑 Senha das Configurações (só o gerente):</div>
-  <input id="inp-cfgpin" class="inp" type="tel" inputmode="numeric" maxlength="8" placeholder="456" autocomplete="off">
+  <input id="inp-cfgpin" class="inp" type="tel" inputmode="numeric" maxlength="8" placeholder="4561" autocomplete="off">
   <label class="cfg-row" style="font-size:.72rem;line-height:1.3">Pedida toda vez que abrir as Configurações. Deixe em branco para manter a atual.</label>
   <div class="cfg-sep"></div>
   <div class="cfg-s" style="font-size:.75rem">🔊 Voz do autofalante (TTS):</div>
@@ -711,37 +731,15 @@
   </div>
 </div>
 
-<div id="s-porc-menu" class="scr off">
-  <div class="start-top">
-    <div class="start-icon">⚖️</div>
-    <div class="start-brand">Folhados d'Ouro</div>
-    <div class="start-title">Porcionamento</div>
-    <div class="start-sub">Secos ou Líquidos?</div>
-  </div>
-  <div class="modulos-label">Etapas do porcionamento</div>
-  <div class="modulos">
-    <div class="modulo ativo modulo-slim" onclick="ir('receitas')">
-      <div class="modulo-icon">🧂</div>
-      <div class="modulo-info"><div class="modulo-nome">Porcionamento de Secos</div></div>
-    </div>
-    <div class="modulo ativo modulo-slim" onclick="abrirLiquidosLotes()">
-      <div class="modulo-icon">💧</div>
-      <div class="modulo-info"><div class="modulo-nome">Porcionamento de Líquidos</div></div>
-    </div>
-  </div>
-  <div class="start-footer">
-    <button class="link-btn" onclick="ir('start')">← Início</button>
-  </div>
-</div>
-
+<!-- ═══ PORCIONAMENTO DE SECOS — seleção de receita ═══ -->
+<!-- v24.3: tela "Secos ou Líquidos?" removida — Porcionamento agora entra direto aqui -->
 <div id="s-receitas" class="scr off">
   <div class="start-top">
-    <div class="start-icon">🧂</div>
     <div class="start-brand">Folhados d'Ouro</div>
-    <div class="start-title">Porcionamento de Secos</div>
+    <div class="start-title">Porcionamento</div>
     <div class="start-sub">Selecione a receita</div>
   </div>
-  <div class="modulos-label">Receitas de Porcionamento</div>
+  <div class="modulos-label">Receitas</div>
   <div class="modulos">
     <div class="modulo ativo" onclick="iniciarReceita('r1')">
       <div class="modulo-icon">1️⃣</div>
@@ -785,7 +783,7 @@
     </div>
   </div>
   <div class="start-footer">
-    <button class="link-btn" onclick="ir('porc-menu')">← Voltar</button>
+    <button class="link-btn" onclick="ir('start')">← Voltar</button>
   </div>
 </div>
 
@@ -800,7 +798,7 @@
   <div class="modulos-label">Baldes aguardando os líquidos</div>
   <div class="modulos" id="liq-lotes-list"></div>
   <div class="start-footer">
-    <button class="link-btn" onclick="ir('porc-menu')">← Voltar</button>
+    <button class="link-btn" onclick="ir('start')">← Voltar</button>
   </div>
 </div>
 
@@ -888,7 +886,7 @@
   <div class="done-tot" id="done-tot"></div>
   <button class="btn-main" id="done-etq-btn" style="width:auto;padding:1rem 2rem;margin-top:.6rem" onclick="abrirEtiqueta(st.ultimoLoteId)">🏷 Etiqueta do balde</button>
   <button class="link-btn" id="done-etq-massas-btn" style="width:auto;padding:.8rem 2rem" onclick="abrirEtiqueta(st.ultimoLoteId,'massas')">🏷 Etiqueta das massas (4×)</button>
-  <button class="link-btn" id="done-voltar-porc-btn" style="width:auto;padding:.8rem 2rem;display:none" onclick="ir('porc-menu')">↩ Voltar sem imprimir</button>
+  <button class="link-btn" id="done-voltar-porc-btn" style="width:auto;padding:.8rem 2rem;display:none" onclick="ir('start')">↩ Voltar sem imprimir</button>
   <button class="link-btn" style="width:auto;padding:.8rem 2rem" onclick="ir('start')">← Início</button>
 </div>
 
@@ -951,6 +949,7 @@
   <div class="cfg-s" style="font-size:.78rem;color:var(--gl);font-weight:bold">Permissões especiais</div>
   <div class="op-perms" id="opedit-perms-esp"></div>
   <label class="cfg-row" style="margin-top:.4rem"><input type="checkbox" id="opedit-ativo" checked> Operador ativo (desmarque para suspender sem apagar)</label>
+  <label class="cfg-row" id="opedit-bloqueado-wrap" style="margin-top:.3rem;display:none"><input type="checkbox" id="opedit-bloqueado"> 🔒 Operador bloqueado por 4 erros de PIN — <b>desmarque para liberar</b></label>
   <div class="op-edit-btns">
     <button class="btn-main" onclick="salvarOpEdit()">Salvar</button>
     <button class="btn-danger" id="opedit-del" onclick="apagarOpAtualEdit()" style="display:none">🗑 Apagar</button>
@@ -1848,8 +1847,8 @@ function salvarConfig(){
 // ════════════════════════════════════════════════════════════
 function getPin(){ const p=LS.g('fdo_pin',null); return (p==null||p==='')?'123789':String(p); }
 function pinAtivo(){ return LS.g('fdo_pin_ativo',true)===true; }
-// Senha das Configurações (separada; padrão 456). Sempre exigida ao abrir o Config.
-function getCfgPin(){ const p=LS.g('fdo_cfg_pin',null); return (p==null||p==='')?'456':String(p); }
+// Senha das Configurações (separada; padrão 4561). Sempre exigida ao abrir o Config.
+function getCfgPin(){ const p=LS.g('fdo_cfg_pin',null); return (p==null||p==='')?'4561':String(p); }
 function pinEsperado(){
   if(st.pinTipo==='config') return getCfgPin();
   if(st.pinTipo==='login'){ const o=OP.porId(st.loginOpId); return o?String(o.pin||''):''; }
@@ -1857,11 +1856,11 @@ function pinEsperado(){
 }
 
 // Entradas dos módulos protegidos pelo PIN
-function entrarPorcionamento(){ exigeP('porcionamento', ()=> exigirAcesso(()=>ir('porc-menu'))); }
+function entrarPorcionamento(){ exigeP('porcionamento', ()=> exigirAcesso(()=>ir('receitas'))); }
 function entrarBatimento(){ exigeP('batimento', ()=> abrirBatimentoLotes()); }
 function entrarFermentacao(){ exigeP('fermentacao', ()=> abrirFermentacaoLotes()); }
 function entrarLaminacao(){ exigeP('laminacao', ()=> abrirLaminacao()); }
-// Configurações: senha própria (456), pedida TODA vez. Exceção: 1ª configuração (sem chave) entra direto.
+// Configurações: senha própria (4561), pedida TODA vez. Exceção: 1ª configuração (sem chave) entra direto.
 function entrarConfig(){
   if(!getKey()){ ir('config'); return; }
   st.pinTipo='config'; st.pinAlvo=()=>ir('config'); st.pinBuf='';
@@ -1913,7 +1912,27 @@ function verificarPin(){
     if(typeof fn==='function') fn(); else ir('start');
   }else{
     st.pinBuf=''; atualizarPinDots();
-    document.getElementById('pin-err').textContent='Senha incorreta. Tente de novo.';
+    let msg='Senha incorreta. Tente de novo.';
+    // v24.3: login de operador — contar erros e bloquear ao chegar a 4
+    if(st.pinTipo==='login' && st.loginOpId){
+      const op=OP.porId(st.loginOpId);
+      if(op){
+        const novos=(op.errosPin||0)+1;
+        if(novos>=4){
+          OP.upd(op.id, Object.assign({}, op, {errosPin:novos, bloqueado:true}));
+          st.pinAlvo=null; st.pinBuf=''; st.pinTipo='producao';
+          st.loginOpId=null;
+          alert('Operador BLOQUEADO após 4 tentativas erradas.\n\nPeça a um responsável para liberar em Configurações → Operadores.');
+          if(st.loginFiltro==='bypass'){ st.loginFiltro=''; ir('geo'); return; }
+          st.loginFiltro=''; ir('login'); return;
+        } else {
+          OP.upd(op.id, Object.assign({}, op, {errosPin:novos}));
+          const restantes=4-novos;
+          msg='Senha incorreta. '+restantes+(restantes===1?' tentativa restante':' tentativas restantes')+' antes de bloquear.';
+        }
+      }
+    }
+    document.getElementById('pin-err').textContent=msg;
     const w=document.getElementById('pin-wrap');
     w.classList.remove('err'); void w.offsetWidth; w.classList.add('err');
   }
@@ -1988,8 +2007,11 @@ function renderLogin(){
   grid.innerHTML = lista.map(o=>{
     const ini=_escHtml((o.nome||'?').charAt(0).toUpperCase());
     const cor=_escHtml(o.cor||'#c9973a');
-    return `<button class="login-card" onclick="loginCard('${_escHtml(o.id)}')">
-      <div class="op-av" style="background:${cor}">${ini}</div>
+    // v24.3: operador bloqueado mostra 🔒 sobre o avatar e fica clicável só pra alerta
+    const blqCls = o.bloqueado ? ' bloqueado' : '';
+    const blqIcon = o.bloqueado ? '<div class="login-blq">🔒</div>' : '';
+    return `<button class="login-card${blqCls}" onclick="loginCard('${_escHtml(o.id)}')">
+      <div class="op-av" style="background:${cor}">${ini}${blqIcon}</div>
       <div class="login-nome">${_escHtml(o.nome)}</div>
     </button>`;
   }).join('');
@@ -1998,6 +2020,10 @@ function renderLogin(){
 function loginCard(opId){
   const op=OP.porId(opId);
   if(!op||!op.ativo){ alert('Operador inativo.'); return; }
+  if(op.bloqueado){
+    alert('Operador BLOQUEADO por 4 erros de PIN.\n\nPeça a um responsável para liberar em Configurações → Operadores → desmarcar "Operador bloqueado".');
+    return;
+  }
   const filtro=st.loginFiltro||'';
   if(filtro==='bypass' && !(op.perms && op.perms.geo_bypass)){
     alert('Este operador não está autorizado a acessar fora da fábrica.');
@@ -2007,6 +2033,11 @@ function loginCard(opId){
   st.loginOpId=opId;
   st.pinBuf='';
   st.pinAlvo=()=>{
+    // Login OK: zera contador de erros e persiste
+    const o=OP.porId(opId);
+    if(o && (o.errosPin||0)>0){
+      OP.upd(opId, Object.assign({}, o, {errosPin:0}));
+    }
     OP.setAtual(opId);
     if(filtro==='bypass'){ bypassGeoSessao=true; }
     st.loginFiltro='';
@@ -2043,7 +2074,11 @@ function renderOpList(){
     el.innerHTML = arr.map(o=>{
       const ini=_escHtml((o.nome||'?').charAt(0).toUpperCase());
       const cor=_escHtml(o.cor||'#c9973a');
-      const meta=o.ativo?'PIN ••••':'inativo';
+      // v24.3: meta mostra "🔒 BLOQUEADO" para operador bloqueado por 4 erros
+      let meta;
+      if(o.bloqueado) meta='🔒 BLOQUEADO';
+      else if(!o.ativo) meta='inativo';
+      else meta='PIN ••••';
       return `<div class="op-item ${o.ativo?'':'inativo'}" onclick="abrirOpEdit('${_escHtml(o.id)}')">
         <div class="op-item-av" style="background:${cor}">${ini}</div>
         <div class="op-item-nome">${_escHtml(o.nome)}</div>
@@ -2066,6 +2101,18 @@ function abrirOpEdit(id){
   document.getElementById('opedit-nome').value = op?op.nome:'';
   document.getElementById('opedit-pin').value = op?(op.pin||''):'';
   document.getElementById('opedit-ativo').checked = op?!!op.ativo:true;
+  // v24.3: checkbox de bloqueio aparece só quando o operador está bloqueado
+  const blqWrap=document.getElementById('opedit-bloqueado-wrap');
+  const blqChk=document.getElementById('opedit-bloqueado');
+  if(blqWrap && blqChk){
+    if(op && op.bloqueado){
+      blqWrap.style.display='';
+      blqChk.checked=true;
+    } else {
+      blqWrap.style.display='none';
+      blqChk.checked=false;
+    }
+  }
   // Cores
   const corSel = op?(op.cor||OP_CORES[0]):OP_CORES[0];
   document.getElementById('opedit-cores').innerHTML = OP_CORES.map(c=>
@@ -2114,16 +2161,22 @@ function salvarOpEdit(){
   const corEl=document.querySelector('#opedit-cores .op-cor.sel');
   const cor = corEl ? corEl.dataset.cor : OP_CORES[0];
   const ativo = document.getElementById('opedit-ativo').checked;
+  // v24.3: lê estado do checkbox de bloqueio (só visível se já estava bloqueado).
+  // Desmarcar libera o operador e zera o contador de erros.
+  const blqChk=document.getElementById('opedit-bloqueado');
+  const bloqueado = blqChk ? !!blqChk.checked : false;
   const perms={};
   document.querySelectorAll('#opedit-perms input[type=checkbox], #opedit-perms-esp input[type=checkbox]').forEach(c=>{
     perms[c.dataset.permk] = !!c.checked;
   });
   if(opEditId){
     const atual=OP.porId(opEditId)||{};
-    OP.upd(opEditId, Object.assign({}, atual, {id:opEditId, nome, pin, cor, ativo, perms}));
+    // Se está sendo desbloqueado (estava true, virou false), zera errosPin.
+    const errosPin = (atual.bloqueado && !bloqueado) ? 0 : (atual.errosPin||0);
+    OP.upd(opEditId, Object.assign({}, atual, {id:opEditId, nome, pin, cor, ativo, perms, bloqueado, errosPin}));
   } else {
     if(OP.lista().length>=6){ alert('Limite máximo de 6 operadores.'); return; }
-    OP.add({id:'op_'+Date.now()+'_'+Math.floor(Math.random()*1000), nome, pin, cor, ativo, perms});
+    OP.add({id:'op_'+Date.now()+'_'+Math.floor(Math.random()*1000), nome, pin, cor, ativo, perms, bloqueado:false, errosPin:0});
   }
   opEditId=null;
   ir('config');
@@ -3959,7 +4012,7 @@ function bootApp(){ destinoBoot(); }
   // PIN padrão na primeira execução
   if(LS.g('fdo_pin',null)===null) LS.s('fdo_pin','123789');
   if(LS.g('fdo_pin_ativo',null)===null) LS.s('fdo_pin_ativo',true);
-  if(LS.g('fdo_cfg_pin',null)===null) LS.s('fdo_cfg_pin','456'); // senha das Configurações
+  if(LS.g('fdo_cfg_pin',null)===null) LS.s('fdo_cfg_pin','4561'); // senha das Configurações
   // Migra sessões antigas concluídas para o sistema de lotes (uma vez)
   migrarLotesAntigos();
   PESO_BALDE1=getTara();           // aplica a tara configurada
