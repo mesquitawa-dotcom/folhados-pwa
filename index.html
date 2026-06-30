@@ -262,6 +262,24 @@
       font-family:Georgia,serif;font-weight:bold;font-size:.75rem;letter-spacing:.15rem;
       text-transform:uppercase;padding:.65rem 1.1rem;border-radius:.35rem;cursor:pointer;min-height:2.6rem}
 
+    /* Compactar cabeçalho da tela "Produção" (libera espaço pros módulos) */
+    #s-start .start-top{padding:.7rem 1.2rem .3rem}
+    #s-start .start-icon{font-size:1.3rem;margin-bottom:.1rem;line-height:1}
+    #s-start .start-brand{font-size:.55rem;letter-spacing:.25rem;margin-bottom:.1rem}
+    #s-start .start-title{font-size:1.05rem;margin-bottom:.1rem}
+    #s-start .start-sub{font-size:.65rem}
+    /* Footer da Produção: 3 botões cabendo na largura, sem quebra */
+    #s-start .start-footer{padding:.55rem .8rem 1rem;gap:.5rem}
+    #s-start .start-footer .link-btn{padding:.6rem .5rem;font-size:.7rem;
+      letter-spacing:.1rem;flex:1;min-width:0;min-height:2.5rem}
+
+    /* Botão Voltar destacado na tela do PIN (sempre visível, fácil de achar) */
+    .pin-back-btn{background:var(--bg3);border:1px solid var(--brd);color:var(--gl);
+      font-family:Georgia,serif;font-weight:bold;font-size:.85rem;letter-spacing:.15rem;
+      text-transform:uppercase;padding:.85rem 1.5rem;border-radius:.45rem;cursor:pointer;
+      min-height:3rem;width:100%;max-width:20rem}
+    .pin-back-btn:active{opacity:.75;transform:scale(.97)}
+
     /* ════ PRE TEMP SCREEN (NOVA TELA) ════ */
     #s-pre-temp{padding:0}
     .pre-temp-container{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;gap:1rem;text-align:center}
@@ -569,6 +587,13 @@
   <input id="inp-cfgpin" class="inp" type="tel" inputmode="numeric" maxlength="8" placeholder="456" autocomplete="off">
   <label class="cfg-row" style="font-size:.72rem;line-height:1.3">Pedida toda vez que abrir as Configurações. Deixe em branco para manter a atual.</label>
   <div class="cfg-sep"></div>
+  <div class="cfg-s" style="font-size:.75rem">🔊 Voz do autofalante (TTS):</div>
+  <select id="inp-tts-voz" class="inp">
+    <option value="">Padrão do sistema</option>
+  </select>
+  <div class="cfg-s" style="font-size:.7rem;line-height:1.4;margin-top:-.2rem">As vozes disponíveis dependem do aparelho. No Android, podem aparecer vozes do Google TTS (geralmente femininas); no PC com Chrome, costumam aparecer as vozes da Microsoft (Daniel é masculina, Maria é feminina). A escolha é específica deste aparelho.</div>
+  <button class="link-btn" style="width:auto;padding:.55rem 1rem;align-self:flex-start;color:var(--gl)" onclick="testarVoz()">▶ Testar voz</button>
+  <div class="cfg-sep"></div>
   <div class="cfg-s" style="font-size:.75rem">⏱ Tempos do batimento (minutos, somados em sequência):</div>
   <div class="cfg-grid">
     <label class="cfg-mini">Batimento inicial lento<input id="inp-bt1" class="inp" type="number" min="0" placeholder="4"></label>
@@ -680,7 +705,7 @@
     </div>
   </div>
   <div class="start-footer">
-    <button class="link-btn" data-perm="calculadora" onclick="abrirCalc('start')">🧮 Calculadora</button>
+    <button class="link-btn" data-perm="calculadora" onclick="abrirCalc('start')">🧮 Calc</button>
     <button class="link-btn" data-perm="historico" onclick="ir('history')">Baldes</button>
     <button class="link-btn" onclick="entrarConfig()">Config</button>
   </div>
@@ -892,7 +917,7 @@
     <div class="pin-err" id="pin-err"></div>
   </div>
   <div class="start-footer">
-    <button class="link-btn" onclick="cancelarPin()">← Voltar</button>
+    <button class="pin-back-btn" onclick="cancelarPin()">← Voltar</button>
   </div>
 </div>
 
@@ -1766,6 +1791,8 @@ function carregarConfig(){
   document.getElementById('inp-geo-lat').value=GEO.getLat();
   document.getElementById('inp-geo-lng').value=GEO.getLng();
   document.getElementById('inp-geo-raio').value=GEO.getRaio();
+  // Voz do TTS (v24.2)
+  if(typeof popularVozesSelect==='function') popularVozesSelect();
   // Lista de operadores (v23)
   if(typeof renderOpList==='function') renderOpList();
 }
@@ -1804,6 +1831,9 @@ function salvarConfig(){
   if(isFinite(flng) && flng>=-180 && flng<=180) LS.s('fdo_geo_lng',flng);
   const fraio=parseInt(document.getElementById('inp-geo-raio').value,10);
   if(isFinite(fraio) && fraio>=10) LS.s('fdo_geo_raio',fraio);
+  // Voz preferida do TTS (v24.2) — local, não sincroniza
+  const selVoz=document.getElementById('inp-tts-voz');
+  if(selVoz) LS.s('fdo_tts_voz', selVoz.value || '');
   // Se geo ativo, sempre revalida (cobre: acabou de ativar, mudou coordenadas,
   // mudou raio, ou veio destravar da tela de bloqueio). Cache válido + dentro
   // do raio libera instantâneo. O destino respeita operadores/login via
@@ -3400,7 +3430,10 @@ function falar(texto){
   const u=new SpeechSynthesisUtterance(texto);
   u.lang='pt-BR';u.rate=1.0;u.pitch=1.0;
   const v=speechSynthesis.getVoices();
-  const voz=v.find(x=>x.lang==='pt-BR')||v.find(x=>x.lang.startsWith('pt'));
+  const pref=getVozPreferida();
+  const voz=(pref ? v.find(x=>x.name===pref) : null)
+         || v.find(x=>x.lang==='pt-BR')
+         || v.find(x=>x.lang.startsWith('pt'));
   if(voz)u.voice=voz;
   speechSynthesis.speak(u);
 }
@@ -3411,9 +3444,45 @@ function falarForcado(texto){
   const u=new SpeechSynthesisUtterance(texto);
   u.lang='pt-BR'; u.rate=1.0; u.pitch=1.0; u.volume=1.0;
   const v=speechSynthesis.getVoices();
-  const voz=v.find(x=>x.lang==='pt-BR')||v.find(x=>x.lang.startsWith('pt'));
+  const pref=getVozPreferida();
+  const voz=(pref ? v.find(x=>x.name===pref) : null)
+         || v.find(x=>x.lang==='pt-BR')
+         || v.find(x=>x.lang.startsWith('pt'));
   if(voz)u.voice=voz;
   speechSynthesis.speak(u);
+}
+
+// ════════════════════════════════════════════════════════════
+// VOZ PREFERIDA DO TTS (escolha do usuário no Config)
+// Específica do aparelho — NÃO sincroniza via Firebase, porque cada
+// dispositivo tem um catálogo diferente de vozes pt-BR instaladas.
+// ════════════════════════════════════════════════════════════
+function getVozPreferida(){ return LS.g('fdo_tts_voz','') || ''; }
+function listarVozesPtBR(){
+  if(!window.speechSynthesis) return [];
+  const v=speechSynthesis.getVoices()||[];
+  return v.filter(x=>(x.lang||'').toLowerCase().startsWith('pt'));
+}
+function popularVozesSelect(){
+  const sel=document.getElementById('inp-tts-voz');
+  if(!sel) return;
+  const atual=getVozPreferida();
+  const vozes=listarVozesPtBR();
+  let opts='<option value="">Padrão do sistema</option>';
+  vozes.forEach(v=>{
+    const marc = (v.name===atual) ? ' selected' : '';
+    opts += `<option value="${_escHtml(v.name)}"${marc}>${_escHtml(v.name)} (${_escHtml(v.lang)})</option>`;
+  });
+  sel.innerHTML=opts;
+  // Se a voz salva não está mais disponível, mantém a referência no LS
+  // mas o select cai pra "Padrão do sistema" — o fallback de falar() cuida.
+}
+function testarVoz(){
+  // Salva a escolha atual ANTES de testar, para refletir imediatamente
+  const sel=document.getElementById('inp-tts-voz');
+  if(sel) LS.s('fdo_tts_voz', sel.value || '');
+  // Usa falarForcado pra tocar mesmo se o autofalante estiver mudo
+  falarForcado('Olá! Sou a voz selecionada para o aplicativo Folhados d\'Ouro.');
 }
 
 function mostrarAI(txt){
@@ -3898,7 +3967,15 @@ function bootApp(){ destinoBoot(); }
   if(op)document.getElementById('inp-op').value=op;
   atualizarBotoesTTS();
   speechSynthesis?.getVoices();
-  speechSynthesis?.addEventListener('voiceschanged',()=>speechSynthesis.getVoices());
+  speechSynthesis?.addEventListener('voiceschanged',()=>{
+    speechSynthesis.getVoices();
+    // Se a tela Config já estiver aberta quando as vozes carregarem
+    // (típico no Android), repopula o select sem perder a escolha atual.
+    const cfg=document.getElementById('s-config');
+    if(cfg && !cfg.classList.contains('off') && typeof popularVozesSelect==='function'){
+      popularVozesSelect();
+    }
+  });
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
   monitorarBateria();              // alerta de bateria baixa por voz
   // Restrição por localização (v22): registra reverificação ao voltar do background
