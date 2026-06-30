@@ -2830,33 +2830,87 @@ function desenharEtiqueta(lote){
   x.strokeRect(10,10,ETQ_W-20,ETQ_H-20);
   const d=loteEtqDados(lote); const liq=loteLiquidos(lote); const mas=loteMassas(lote);
   const pi=porcInfo(lote);
-  x.textAlign='center';
-  x.font='bold 56px Arial, sans-serif'; x.fillText('BALDE #'+d.num, ETQ_W/2, 66);
-  x.font='24px Arial, sans-serif';
-  let rec=d.receita; if(rec.length>34) rec=rec.slice(0,34);
-  x.fillText(rec, ETQ_W/2, 100);
-  x.font='bold 26px Arial, sans-serif';
-  x.fillText(d.data+'    '+d.hora, ETQ_W/2, 132);
-  // divisória
-  x.lineWidth=2; x.beginPath(); x.moveTo(40,150); x.lineTo(ETQ_W-40,150); x.stroke();
-  // valores: líquidos (balde 2) + massas (laminada / sem laminar)
+  // v24.5: Os rótulos abaixo são o que a pessoa que pega o balde vai porcionar.
+  // ÁGUA/GELO, LEITE EM PÓ, MASSA LAMINADA precisam ficar BEM visíveis na etiqueta.
   const linhas=[];
   if(liq){
-    if(liq.agua!=null)  linhas.push('Água/gelo:  '+formatPeso(liq.agua));
-    if(liq.leite!=null) linhas.push('Leite em pó:  '+formatPeso(liq.leite));
+    if(liq.agua!=null)  linhas.push({rotulo:'ÁGUA/GELO',   valor:formatPeso(liq.agua)});
+    if(liq.leite!=null) linhas.push({rotulo:'LEITE EM PÓ', valor:formatPeso(liq.leite)});
   }
   if(mas){
-    if(mas.laminada!=null)                        linhas.push('Massa laminada:  '+formatPeso(mas.laminada));
-    if(mas.semLaminar!=null && mas.semLaminar>0)  linhas.push('Massa sem laminar:  '+formatPeso(mas.semLaminar));
+    if(mas.laminada!=null)                        linhas.push({rotulo:'MASSA LAMINADA',    valor:formatPeso(mas.laminada)});
+    if(mas.semLaminar!=null && mas.semLaminar>0)  linhas.push({rotulo:'MASSA SEM LAMINAR', valor:formatPeso(mas.semLaminar)});
   }
-  if(pi.temp!=null && pi.fermento_horas!=null) linhas.push(pi.temp+'ºC  '+pi.fermento_horas+' horas fermentação');
+  // Auto-ajuste de fonte por largura (mesma técnica da etiqueta das massas)
+  const maxW=ETQ_W-36;
+  function ajustar(txt, alvo, peso, minP){
+    let s=alvo;
+    while(s>minP){
+      x.font=peso+' '+s+'px Arial, sans-serif';
+      if(x.measureText(txt).width<=maxW) break;
+      s--;
+    }
+    return s;
+  }
+  x.textAlign='center';
+  // ═══ TOPO COMPACTO: BALDE #N + receita + data/hora ═══
+  const txtBalde='BALDE #'+d.num;
+  const sBalde=ajustar(txtBalde, 50, 'bold', 36);
+  x.font='bold '+sBalde+'px Arial, sans-serif';
+  x.fillText(txtBalde, ETQ_W/2, 54);
+  let rec=d.receita; if(rec.length>40) rec=rec.slice(0,40);
+  const sRec=ajustar(rec, 22, '', 14);
+  x.font=sRec+'px Arial, sans-serif';
+  x.fillText(rec, ETQ_W/2, 82);
+  const txtDh=d.data+'   '+d.hora;
+  const sDh=ajustar(txtDh, 20, 'bold', 14);
+  x.font='bold '+sDh+'px Arial, sans-serif';
+  x.fillText(txtDh, ETQ_W/2, 106);
+  // Divisória abaixo do topo
+  x.lineWidth=2; x.beginPath(); x.moveTo(20,118); x.lineTo(ETQ_W-20,118); x.stroke();
+  // ═══ BLOCO PRINCIPAL: os porcionamentos GIGANTES ═══
+  const ferm=(pi.temp!=null && pi.fermento_horas!=null);
+  const yTop=122;
+  const yBot=ETQ_H-(ferm?32:18);
+  const altDisp=yBot-yTop;
   if(linhas.length){
-    x.textAlign='left'; x.font='24px Arial, sans-serif';
-    let yy=188;
-    linhas.forEach(t=>{ x.fillText(t, 40, yy); yy+=33; });
-    x.textAlign='center';
+    const n=linhas.length;
+    const altPorBloco=altDisp/n;
+    // Fonte do VALOR proporcional à altura do bloco (62%), do RÓTULO menor (28%)
+    const sValorAlvo  = Math.min(Math.floor(altPorBloco*0.62), 64);
+    const sRotuloAlvo = Math.min(Math.floor(altPorBloco*0.28), 28);
+    // Auto-ajuste por LARGURA: aplica a TODAS as linhas a menor fonte que coube em qualquer uma
+    let sRotulo=sRotuloAlvo, sValor=sValorAlvo;
+    linhas.forEach(l=>{
+      const sR=ajustar(l.rotulo, sRotuloAlvo, 'bold', 14);
+      if(sR<sRotulo) sRotulo=sR;
+      const sV=ajustar(l.valor,  sValorAlvo,  'bold', 24);
+      if(sV<sValor) sValor=sV;
+    });
+    linhas.forEach((l,i)=>{
+      const cyTop=yTop+i*altPorBloco;
+      const yRot =cyTop+sRotulo+2;
+      const yVal =cyTop+altPorBloco-8;
+      x.font='bold '+sRotulo+'px Arial, sans-serif';
+      x.fillText(l.rotulo, ETQ_W/2, yRot);
+      x.font='bold '+sValor+'px Arial, sans-serif';
+      x.fillText(l.valor,  ETQ_W/2, yVal);
+      // Separador fino entre blocos
+      if(i<n-1){
+        x.lineWidth=1; x.beginPath();
+        x.moveTo(40, cyTop+altPorBloco); x.lineTo(ETQ_W-40, cyTop+altPorBloco); x.stroke();
+      }
+    });
   } else {
-    x.font='22px Arial, sans-serif'; x.fillText('(conforme a receita)', ETQ_W/2, 250);
+    x.font='22px Arial, sans-serif';
+    x.fillText('(conforme a receita)', ETQ_W/2, yTop+altDisp/2);
+  }
+  // ═══ RODAPÉ: temperatura + horas fermentação ═══
+  if(ferm){
+    const txtFerm=pi.temp+'°C  '+pi.fermento_horas+' horas fermentação';
+    const sFerm=ajustar(txtFerm, 22, '', 14);
+    x.font=sFerm+'px Arial, sans-serif';
+    x.fillText(txtFerm, ETQ_W/2, ETQ_H-14);
   }
   return c;
 }
