@@ -2,6 +2,17 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
+       FOLHADOS D'OURO — atualização v24.8
+       NOVIDADES v24.8:
+       • Senha das Configurações: padrão 456 → 4567.
+       • Balde dividido em 4 partes (antes 8): default do divisor 8 → 4.
+       • Migração única por aparelho (fdo_migr_v248): força cfg_pin=4567 e
+         bat_div=4 uma vez, porque mudar o default não é retroativo.
+       • LAMINAÇÃO: um lote agora exige MESMA receita + MESMA data da massa
+         (dia do batimento) + MESMA fermentação (temp/fermento/horas). Antes
+         só travava a receita e deixava misturar dias/fermentações.
+       • Texto da tela e voz da laminação atualizados para a nova regra.
+       ────────────────────────────────────────────────────────────
        FOLHADOS D'OURO — OBS 29/06/2026 (atualização v24.1)
        NOVIDADES v24.1 (correção CRÍTICA do boot travado):
        • CAUSA RAIZ: o IIFE de boot chamava iniciarMonitorBateria(), uma
@@ -94,8 +105,8 @@
        • Nomenclatura: o que o porcionamento gera agora se chama BALDE
          (nº do balde), não mais "lote". A tela "Lotes" virou "Baldes".
        • O LOTE passa a nascer na LAMINAÇÃO: agrupamento de partes batidas
-         do mesmo dia + MESMA RECEITA (uma receita por lote — travado na UI;
-         misturar dias continua liberado). Nomenclatura mantida: DD/MM · N.
+         com MESMA receita + MESMA data da massa + MESMA fermentação (travado
+         na UI — ver v24.8). Nomenclatura mantida: DD/MM · N.
        • Etiqueta do balde: passa a mostrar "Massa laminada" e (quando > 0)
          "Massa sem laminar", lidos da receita.
        • Nova etiqueta 60×50 mm das MASSAS: 4 faixas iguais (receita + data),
@@ -599,7 +610,7 @@
     <label class="cfg-mini">Colocar a massa<input id="inp-bt3" class="inp" type="number" min="0" placeholder="3"></label>
     <label class="cfg-mini">Ver ponto de véu<input id="inp-bt4" class="inp" type="number" min="0" placeholder="2"></label>
   </div>
-  <label class="cfg-mini" style="margin-top:.1rem">Dividir massa em (partes p/ gelar)<input id="inp-bdiv" class="inp" type="number" min="1" placeholder="8"></label>
+  <label class="cfg-mini" style="margin-top:.1rem">Dividir massa em (partes p/ gelar)<input id="inp-bdiv" class="inp" type="number" min="1" placeholder="4"></label>
   <label class="cfg-mini" style="margin-top:.1rem">Peso do balde vazio / tara (g)<input id="inp-tara" class="inp" type="number" min="0" placeholder="474"></label>
   <div class="cfg-sep"></div>
   <div class="cfg-s" style="font-size:.75rem">📍 Restrição por localização (GPS):</div>
@@ -1220,7 +1231,7 @@
     <button class="link-btn" onclick="ir('start')">← Voltar</button>
   </div>
   <div class="lam-scroll">
-    <div class="lam-hint">Toque <b>+</b> nas partes de cada balde. Um lote = <b>uma receita</b> (pode misturar dias).</div>
+    <div class="lam-hint">Toque <b>+</b> nas partes de cada balde. Um lote = <b>mesma receita, mesma data da massa e mesma fermentação</b>.</div>
     <div id="lam-disp-list"></div>
     <div class="lam-sec-lbl">Lotes criados</div>
     <div id="lam-feitas-list"></div>
@@ -1852,7 +1863,7 @@ function salvarConfig(){
   LS.s('fdo_bat_t2',numPos('inp-bt2',6));
   LS.s('fdo_bat_t3',numPos('inp-bt3',3));
   LS.s('fdo_bat_t4',numPos('inp-bt4',2));
-  const dv=parseInt(document.getElementById('inp-bdiv').value,10); LS.s('fdo_bat_div',(isFinite(dv)&&dv>=1)?dv:8);
+  const dv=parseInt(document.getElementById('inp-bdiv').value,10); LS.s('fdo_bat_div',(isFinite(dv)&&dv>=1)?dv:4);
   const tv=parseInt(document.getElementById('inp-tara').value,10); LS.s('fdo_tara_balde',(isFinite(tv)&&tv>=0)?tv:474);
   PESO_BALDE1=getTara();
   // Restrição por localização (v22)
@@ -1877,8 +1888,8 @@ function salvarConfig(){
 // ════════════════════════════════════════════════════════════
 function getPin(){ const p=LS.g('fdo_pin',null); return (p==null||p==='')?'123789':String(p); }
 function pinAtivo(){ return LS.g('fdo_pin_ativo',true)===true; }
-// Senha das Configurações (separada; padrão 456). Sempre exigida ao abrir o Config.
-function getCfgPin(){ const p=LS.g('fdo_cfg_pin',null); return (p==null||p==='')?'456':String(p); }
+// Senha das Configurações (separada; padrão 4567). Sempre exigida ao abrir o Config.
+function getCfgPin(){ const p=LS.g('fdo_cfg_pin',null); return (p==null||p==='')?'4567':String(p); }
 function pinEsperado(){
   if(st.pinTipo==='config') return getCfgPin();
   if(st.pinTipo==='login'){ const o=OP.porId(st.loginOpId); return o?String(o.pin||''):''; }
@@ -1890,7 +1901,7 @@ function entrarPorcionamento(){ exigeP('porcionamento', ()=> exigirAcesso(()=>ir
 function entrarBatimento(){ exigeP('batimento', ()=> abrirBatimentoLotes()); }
 function entrarFermentacao(){ exigeP('fermentacao', ()=> abrirFermentacaoLotes()); }
 function entrarLaminacao(){ exigeP('laminacao', ()=> abrirLaminacao()); }
-// Configurações: senha própria (456), pedida TODA vez. Exceção: 1ª configuração (sem chave) entra direto.
+// Configurações: senha própria (4567), pedida TODA vez. Exceção: 1ª configuração (sem chave) entra direto.
 function entrarConfig(){
   if(!getKey()){ ir('config'); return; }
   st.pinTipo='config'; st.pinAlvo=()=>ir('config'); st.pinBuf='';
@@ -2347,7 +2358,7 @@ function getBatT1(){ return Number(LS.g('fdo_bat_t1',4))||4; }   // batida lenta
 function getBatT2(){ return Number(LS.g('fdo_bat_t2',6))||6; }   // depois → fermento + farinha
 function getBatT3(){ return Number(LS.g('fdo_bat_t3',3))||3; }   // depois → massa antiga (20°C)
 function getBatT4(){ return Number(LS.g('fdo_bat_t4',2))||2; }   // depois → ponto de véu (22°C)
-function getBatDiv(){ return Number(LS.g('fdo_bat_div',8))||8; } // partes para gelar
+function getBatDiv(){ return Number(LS.g('fdo_bat_div',4))||4; } // partes para gelar
 function getTara(){ return Number(LS.g('fdo_tara_balde',474))||474; } // tara (g) do balde vazio, para conferência
 
 // Fermento (g) deste lote: prefere o valor gravado; cai p/ a tabela por temperatura; por fim, o padrão da receita
@@ -3805,7 +3816,8 @@ function renderHistBatimentos(){
 // ════════════════════════════════════════════════════════════
 // LAMINAÇÃO (Fase 1) — agrupa PARTES geladas de lotes batidos.
 // Cada lote batido gera N partes (÷ divisor). Aqui o operador seleciona
-// quantas partes de cada lote vão laminar (pode misturar dias), gera a
+// quantas partes vão laminar. Um lote só junta baldes com a MESMA receita +
+// MESMA data da massa (dia do batimento) + MESMA fermentação. Gera a
 // nomenclatura DD/MM · N e baixa as partes do estoque de cada lote.
 // ════════════════════════════════════════════════════════════
 function lotePartesDisp(l){
@@ -3820,18 +3832,36 @@ function proxLamSeqDia(ts){
   const dia=dataCurta(ts);
   return LS.g('fdo_laminacoes',[]).filter(x=>dataCurta(x.dataTs)===dia).length + 1;
 }
-function abrirLaminacao(){ st.lamSel={}; renderLaminacao(); ir('laminacao'); falar('Laminação. Escolha as partes dos baldes. Cada lote tem uma receita só, e pode misturar dias.'); }
-// Receita "travada" = a do primeiro balde já selecionado (um lote = uma receita)
-function lamRecLock(){
+function abrirLaminacao(){ st.lamSel={}; renderLaminacao(); ir('laminacao'); falar('Laminação. Escolha as partes dos baldes. Cada lote tem a mesma receita, a mesma data da massa e a mesma fermentação.'); }
+// ── Compatibilidade de um balde para agrupar em UM lote de laminação ──
+// Um lote só junta baldes com a MESMA receita + a MESMA data da massa (dia do
+// batimento) + a MESMA fermentação (temperatura + fermento g + horas). Massas
+// com fermentação/descanso diferentes NÃO podem ser misturadas.
+function lamPorc(l){ return (l&&l.etapas&&(l.etapas.porcionamento_secos||l.etapas.porcionamento))||{}; }
+// Dia da MASSA = dia em que o balde foi batido (fallback: criação do balde).
+function lamDiaMassa(l){
+  const b=(l&&l.etapas&&l.etapas.batimento)||null;
+  const ts=(b&&b.emTs)?b.emTs:((l&&l.criadoTs)||0);
+  return ts?dataCurta(ts):'—';
+}
+// Assinatura da fermentação (temp | fermento g | horas). Baldes antigos sem os
+// campos ficam com assinatura vazia e só combinam entre si.
+function lamFermChave(l){ const p=lamPorc(l); return [p.temp,p.fermento_g,p.fermento_horas].map(v=>v==null?'':v).join('|'); }
+// Descrição curta da fermentação p/ o card (ex.: "19°C·17h").
+function lamFermDesc(l){ const p=lamPorc(l); const a=[]; if(p.temp!=null)a.push(p.temp+'°C'); if(p.fermento_horas!=null)a.push(p.fermento_horas+'h'); return a.join('·'); }
+// Chave de compatibilidade completa do balde.
+function lamChave(l){ return l?((l.receita||'')+'§'+lamDiaMassa(l)+'§'+lamFermChave(l)):null; }
+// "Trava" = chave do 1º balde já selecionado. Só entram baldes com a mesma chave.
+function lamLock(){
   const sel=st.lamSel||{};
   const ids=Object.keys(sel).filter(id=>(Number(sel[id])||0)>0);
   if(!ids.length) return null;
   const l=LS.g('fdo_lotes',[]).find(x=>x.id===ids[0]);
-  return l ? l.receita : null;
+  return l ? lamChave(l) : null;
 }
 function lamAjustar(loteId, delta){
   const l=LS.g('fdo_lotes',[]).find(x=>x.id===loteId); if(!l) return;
-  if(delta>0){ const lock=lamRecLock(); if(lock && l.receita!==lock){ falar('Esse balde é de outra receita. Um lote tem uma receita só.'); return; } }
+  if(delta>0){ const lock=lamLock(); if(lock && lamChave(l)!==lock){ falar('Esse balde não combina. Um lote precisa da mesma receita, da mesma data da massa e da mesma fermentação.'); return; } }
   const disp=lotePartesDisp(l);
   let novo=(Number(st.lamSel[loteId])||0)+delta;
   if(novo<0) novo=0; if(novo>disp) novo=disp;
@@ -3841,7 +3871,7 @@ function lamAjustar(loteId, delta){
 function lamTotalSel(){ return Object.values(st.lamSel||{}).reduce((s,n)=>s+(Number(n)||0),0); }
 function renderLaminacao(){
   const lotes=lotesComPartes();
-  const lock=lamRecLock();
+  const lock=lamLock();
   const el=document.getElementById('lam-disp-list');
   if(!lotes.length){
     el.innerHTML='<div class="lam-empty">🧊 Nenhum balde batido com partes disponíveis.<br>Bata uma massa para liberar partes.</div>';
@@ -3849,10 +3879,11 @@ function renderLaminacao(){
     el.innerHTML=lotes.map(l=>{
       const disp=lotePartesDisp(l);
       const sel=Number(st.lamSel[l.id])||0;
-      const dia=l.criadoTs?dataCurta(l.criadoTs):'—';
+      const dia=lamDiaMassa(l);
       const rec=l.receitaNome||l.rotulo||'—';
-      const travado = lock!=null && l.receita!==lock;
-      const sub = travado ? 'outra receita — trava (um lote = uma receita)' : `${rec} · ${dia} · ${disp} ${disp===1?'parte':'partes'}`;
+      const fdesc=lamFermDesc(l);
+      const travado = lock!=null && lamChave(l)!==lock;
+      const sub = travado ? 'não combina — receita, data ou fermentação diferente' : `${rec} · ${dia}${fdesc?(' · '+fdesc):''} · ${disp} ${disp===1?'parte':'partes'}`;
       return `<div class="lam-card ${sel>0?'sel':''} ${travado?'lock':''}">
         <div class="lam-card-main">
           <div class="lam-card-num">Balde #${l.num}</div>
@@ -3869,7 +3900,7 @@ function renderLaminacao(){
   const tot=lamTotalSel();
   document.getElementById('lam-sel-tot').textContent=tot;
   const hoje=dataCurta(Date.now());
-  const temAnterior=Object.keys(st.lamSel||{}).some(id=>{ const l=lotes.find(x=>x.id===id); return l&&l.criadoTs&&dataCurta(l.criadoTs)!==hoje; });
+  const temAnterior=Object.keys(st.lamSel||{}).some(id=>{ const l=lotes.find(x=>x.id===id); return l&&lamDiaMassa(l)!==hoje; });
   document.getElementById('lam-sel-aviso').innerHTML = temAnterior ? '<span style="color:var(--red)">· inclui massa de dia anterior</span>' : '';
   document.getElementById('lam-bar').style.display = tot>0 ? 'flex' : 'none';
   renderLamFeitas();
@@ -3898,12 +3929,13 @@ function criarLaminacao(){
   if(total<=0){ falar('Selecione ao menos uma parte para criar o lote.'); return; }
   const todos=LS.g('fdo_lotes',[]);
   const hoje=dataCurta(Date.now());
-  const receitas=new Set(), composicao=[]; let temAnterior=false;
+  const chaves=new Set(), receitas=new Set(), composicao=[]; let temAnterior=false;
   Object.keys(sel).forEach(id=>{
     const l=todos.find(x=>x.id===id); if(!l) return;
     const q=Number(sel[id])||0; if(q<=0) return;
-    const dia=l.criadoTs?dataCurta(l.criadoTs):'—';
+    const dia=lamDiaMassa(l);
     if(dia!==hoje) temAnterior=true;
+    chaves.add(lamChave(l));
     receitas.add(l.receita);
     composicao.push({loteId:id, loteNum:l.num, dataLote:dia, partes:q, receita:l.receita});
     l.etapas=l.etapas||{}; l.etapas.batimento=l.etapas.batimento||{};
@@ -3911,7 +3943,7 @@ function criarLaminacao(){
     if(!l.etapas.laminacao || !l.etapas.laminacao.feito){ l.etapas.laminacao={feito:true, em:new Date().toLocaleString('pt-BR'), emTs:Date.now()}; }
   });
   if(!composicao.length){ falar('Nenhuma parte válida selecionada.'); return; }
-  if(receitas.size>1){ falar('Um lote tem uma receita só. Remova os baldes de outra receita.'); return; }
+  if(chaves.size>1){ falar('Não pode misturar. Um lote precisa da mesma receita, da mesma data da massa e da mesma fermentação. Remova os baldes que não combinam.'); return; }
   const agora=new Date();
   const seqDia=proxLamSeqDia(agora.getTime());
   const nome=dataCurta(agora.getTime())+' · '+seqDia;
@@ -4014,7 +4046,17 @@ function bootApp(){ destinoBoot(); }
   // PIN padrão na primeira execução
   if(LS.g('fdo_pin',null)===null) LS.s('fdo_pin','123789');
   if(LS.g('fdo_pin_ativo',null)===null) LS.s('fdo_pin_ativo',true);
-  if(LS.g('fdo_cfg_pin',null)===null) LS.s('fdo_cfg_pin','456'); // senha das Configurações
+  if(LS.g('fdo_cfg_pin',null)===null) LS.s('fdo_cfg_pin','4567'); // senha das Configurações
+  // Migração v24.8 (uma única vez por aparelho): força a senha das Configurações
+  // para 4567 e a divisão do balde para 4 partes. Necessário porque mudar o
+  // default NÃO é retroativo em aparelhos que já têm a chave gravada (ex.: quem
+  // salvou o Config alguma vez guardou div=8). Depois desta migração, o operador
+  // pode reajustar pelo Config normalmente que passa a valer.
+  if(LS.g('fdo_migr_v248',null)===null){
+    LS.s('fdo_cfg_pin','4567');
+    LS.s('fdo_bat_div',4);
+    LS.s('fdo_migr_v248',true);
+  }
   // Migra sessões antigas concluídas para o sistema de lotes (uma vez)
   migrarLotesAntigos();
   PESO_BALDE1=getTara();           // aplica a tara configurada
