@@ -51,7 +51,7 @@
          do prédio); reverificação a cada 15 min e ao voltar do background.
        • Tela "Acesso restrito" mostra a distância atual + botão Tentar
          Novamente. Tela "Permissão necessária" se o usuário negar GPS.
-       • Bypass via Configurações (senha 4561) caso seja preciso desativar
+       • Bypass via Configurações (senha 456) caso seja preciso desativar
          em emergência. Tela de Config também acessível se a chave Gemini
          ainda não estiver cadastrada (primeira configuração).
        • Log de auditoria em 'fdo_acessos' no Firebase: cada verificação
@@ -106,7 +106,7 @@
        • Tela de Laminação refeita para celular em pé: cabeçalho enxuto,
          seleção mais prática (cartões com estado, trava de receita).
        --- base v14/v13/v12/v11/v10/v9/v8/v7 (histórico abreviado) ---
-       • Service Worker: cache fdo-v24-1.
+       • Service Worker: cache fdo-v24-6.
        ════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -251,6 +251,8 @@
     .modulo-nome{font-size:1rem;font-weight:bold;color:var(--gl);margin-bottom:.15rem}
     .modulo.inativo .modulo-nome{color:var(--mut)}
     .modulo-desc{font-size:.75rem;color:var(--mut);line-height:1.3}
+    .modulo-slim{padding:.7rem 1rem}
+    .modulo-slim .modulo-nome{font-size:1.05rem;margin-bottom:0}
     .modulo-badge{font-size:.55rem;letter-spacing:.15rem;text-transform:uppercase;
       padding:.25rem .55rem;border-radius:.2rem;flex-shrink:0;font-weight:bold}
     .badge-ativo{background:rgba(201,151,58,.18);color:var(--gold);border:1px solid rgba(201,151,58,.35)}
@@ -259,73 +261,6 @@
     .link-btn{background:transparent;border:1px solid var(--brd);color:var(--mut);
       font-family:Georgia,serif;font-weight:bold;font-size:.75rem;letter-spacing:.15rem;
       text-transform:uppercase;padding:.65rem 1.1rem;border-radius:.35rem;cursor:pointer;min-height:2.6rem}
-
-    /* Compactar cabeçalho da tela "Produção" (libera espaço pros módulos) */
-    #s-start .start-top{padding:.7rem 1.2rem .3rem}
-    #s-start .start-icon{font-size:1.3rem;margin-bottom:.1rem;line-height:1}
-    #s-start .start-brand{font-size:.55rem;letter-spacing:.25rem;margin-bottom:.1rem}
-    #s-start .start-title{font-size:1.05rem;margin-bottom:.1rem}
-    #s-start .start-sub{font-size:.65rem}
-    /* Footer da Produção: 3 botões cabendo na largura, sem quebra */
-    #s-start .start-footer{padding:.55rem .8rem 1rem;gap:.5rem}
-    #s-start .start-footer .link-btn{padding:.6rem .5rem;font-size:.7rem;
-      letter-spacing:.1rem;flex:1;min-width:0;min-height:2.5rem}
-
-    /* v24.3: Compactar tela de Receitas — cabeçalho enxuto, cards horizontais slim */
-    #s-receitas .start-top{padding:.6rem 1.2rem .25rem}
-    #s-receitas .start-brand{font-size:.55rem;letter-spacing:.25rem;margin-bottom:.15rem}
-    #s-receitas .start-title{font-size:1.15rem;margin-bottom:.1rem}
-    #s-receitas .start-sub{font-size:.7rem}
-    #s-receitas .modulos-label{padding:0 1.2rem .25rem;font-size:.6rem;letter-spacing:.18rem}
-    #s-receitas .modulos{padding:0 .7rem 1rem;gap:.4rem}
-    #s-receitas .modulo{padding:.55rem .8rem;gap:.6rem}
-    #s-receitas .modulo-icon{font-size:1.3rem;width:1.6rem}
-    #s-receitas .modulo-nome{font-size:.92rem;margin-bottom:.15rem;white-space:nowrap;
-      overflow:hidden;text-overflow:ellipsis}
-    #s-receitas .modulo-desc{font-size:.68rem;line-height:1.3}
-    /* Esconde o badge "Ativo" — as 5 receitas estão todas ativas, libera largura */
-    #s-receitas .modulo-badge{display:none}
-
-    /* v24.4: Compactar seleção de baldes do Batimento — cabeçalho slim + cards horizontais */
-    #s-batimento-lotes .start-top{padding:.6rem 1.2rem .25rem}
-    #s-batimento-lotes .start-brand{font-size:.55rem;letter-spacing:.25rem;margin-bottom:.15rem}
-    #s-batimento-lotes .start-title{font-size:1.15rem;margin-bottom:.1rem}
-    #s-batimento-lotes .start-sub{font-size:.7rem}
-    #s-batimento-lotes .modulos-label{padding:0 1.2rem .25rem;font-size:.6rem;letter-spacing:.18rem}
-    #s-batimento-lotes .modulos{padding:0 .7rem 1rem;gap:.4rem}
-    #s-batimento-lotes .modulo{padding:.55rem .8rem;gap:.6rem}
-    #s-batimento-lotes .modulo-icon{font-size:1.3rem;width:1.6rem}
-    #s-batimento-lotes .modulo-nome{font-size:.92rem;margin-bottom:.15rem;white-space:nowrap;
-      overflow:hidden;text-overflow:ellipsis}
-    #s-batimento-lotes .modulo-desc{font-size:.68rem;line-height:1.3;
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-    /* v24.4: Compactar tela de batimento — botões visíveis sem rolar a tela */
-    #s-batimento .bat-body{padding:0 1rem .9rem;gap:.55rem}
-    #s-batimento .bat-card{padding:.65rem .9rem}
-    #s-batimento .bat-card-lbl{font-size:.6rem;letter-spacing:.14rem;margin-bottom:.3rem}
-    /* Layout horizontal para "Balde selecionado" — número e receita na mesma linha */
-    #s-batimento .bat-lote-num{font-size:1.35rem;display:inline}
-    #s-batimento .bat-lote-rec{font-size:.92rem;display:inline;margin-top:0}
-    #s-batimento .bat-lote-rec::before{content:' · ';color:var(--mut);font-weight:normal}
-    /* Esconde meta do balde (data/op/total) e descrições longas dos ingredientes */
-    #s-batimento #bat-lote-meta,
-    #s-batimento #bat-b1-det,
-    #s-batimento #bat-b2-det{display:none}
-    /* Fontes/paddings reduzidos nas fases internas */
-    #s-batimento .bat-peso-alvo{font-size:1.85rem;line-height:1.05}
-    #s-batimento .bat-fase{gap:.55rem}
-    #s-batimento .bat-fase .inp{padding:.6rem .7rem;font-size:1rem}
-    #s-batimento .bat-divisao{font-size:1.15rem;margin-top:.4rem;min-height:0}
-    #s-batimento .bat-cron{font-size:3rem;margin:.1rem 0}
-    #s-batimento .bat-aviso{font-size:.9rem}
-
-    /* Botão Voltar destacado na tela do PIN (sempre visível, fácil de achar) */
-    .pin-back-btn{background:var(--bg3);border:1px solid var(--brd);color:var(--gl);
-      font-family:Georgia,serif;font-weight:bold;font-size:.85rem;letter-spacing:.15rem;
-      text-transform:uppercase;padding:.85rem 1.5rem;border-radius:.45rem;cursor:pointer;
-      min-height:3rem;width:100%;max-width:20rem}
-    .pin-back-btn:active{opacity:.75;transform:scale(.97)}
 
     /* ════ PRE TEMP SCREEN (NOVA TELA) ════ */
     #s-pre-temp{padding:0}
@@ -414,6 +349,29 @@
       padding:.28rem .55rem;border-radius:.25rem;border:1px solid var(--brd)}
     .etapa-chip.ok{background:rgba(74,222,128,.12);color:var(--grn);border-color:rgba(74,222,128,.35)}
     .etapa-chip.pend{background:rgba(42,30,8,.5);color:#6a5a3a}
+
+    /* ════ HISTÓRICO DE BATIMENTOS (v24.6) ════ */
+    #s-hist-batimentos{padding:0}
+    .hbat-medias{display:flex;flex-wrap:wrap;gap:.4rem;
+      padding:.6rem 1rem;background:rgba(201,151,58,.05);
+      border-bottom:1px solid var(--brd);flex-shrink:0}
+    .hbat-media-chip{background:rgba(201,151,58,.15);border:1px solid var(--brd);
+      border-radius:.4rem;padding:.28rem .55rem;font-size:.72rem;color:var(--gl);
+      font-variant-numeric:tabular-nums}
+    .hbat-media-chip b{color:var(--gold);margin-left:.25rem}
+    .hbat-medias-vazio{color:var(--mut);font-size:.72rem;font-style:italic}
+    .hbat-item{background:var(--bg3);border:1px solid var(--brd);border-radius:.5rem;
+      padding:.7rem .9rem;margin-bottom:.6rem}
+    .hbat-item-head{display:flex;align-items:center;gap:.6rem;margin-bottom:.4rem;flex-wrap:nowrap}
+    .hbat-item-num{font-size:1rem;font-weight:bold;color:var(--gold);flex-shrink:0}
+    .hbat-item-rec{font-size:.82rem;color:var(--gl);font-weight:bold;flex:1;min-width:0;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .hbat-item-tempo{margin-left:auto;background:var(--gold);color:var(--bg);
+      padding:.3rem .65rem;border-radius:.4rem;font-weight:bold;font-size:1.05rem;
+      font-variant-numeric:tabular-nums;letter-spacing:.05rem;flex-shrink:0}
+    .hbat-item-meta{font-size:.7rem;color:var(--mut);letter-spacing:.02rem;line-height:1.5}
+    .hbat-item-meta .sep{opacity:.5;margin:0 .3rem}
+    .hbat-empty{padding:2.5rem 1rem;text-align:center;color:var(--mut);font-size:.9rem}
 
     /* ════ BATER A MASSA ════ */
     #s-batimento-lotes{padding:0}
@@ -558,13 +516,6 @@
       background:var(--gold);color:#0a0905;font-weight:bold;font-size:1.5rem;font-family:Georgia,serif;
       box-shadow:0 .15rem .6rem rgba(0,0,0,.4);flex-shrink:0}
     .login-nome{font-size:1.05rem;font-weight:bold;color:var(--gl);line-height:1.2;word-break:break-word}
-    /* v24.3: operador bloqueado por 4 erros de PIN */
-    .login-card.bloqueado{opacity:.55;border-color:#5a1a0e}
-    .login-card.bloqueado .op-av{filter:grayscale(.6)}
-    .login-card .op-av{position:relative}
-    .login-blq{position:absolute;right:-.2rem;bottom:-.2rem;background:var(--bg);
-      border:1px solid #f08060;border-radius:50%;width:1.4rem;height:1.4rem;
-      display:flex;align-items:center;justify-content:center;font-size:.8rem;line-height:1}
 
     /* Barra do operador atual (na tela inicial) */
     .op-bar{margin:.5rem 1rem 0;padding:.55rem .85rem;background:rgba(201,151,58,.08);
@@ -638,15 +589,8 @@
   <label class="cfg-row"><input type="checkbox" id="chk-pin"> Exigir senha no Porcionamento</label>
   <div class="cfg-sep"></div>
   <div class="cfg-s" style="font-size:.75rem">🔑 Senha das Configurações (só o gerente):</div>
-  <input id="inp-cfgpin" class="inp" type="tel" inputmode="numeric" maxlength="8" placeholder="4561" autocomplete="off">
+  <input id="inp-cfgpin" class="inp" type="tel" inputmode="numeric" maxlength="8" placeholder="456" autocomplete="off">
   <label class="cfg-row" style="font-size:.72rem;line-height:1.3">Pedida toda vez que abrir as Configurações. Deixe em branco para manter a atual.</label>
-  <div class="cfg-sep"></div>
-  <div class="cfg-s" style="font-size:.75rem">🔊 Voz do autofalante (TTS):</div>
-  <select id="inp-tts-voz" class="inp">
-    <option value="">Padrão do sistema</option>
-  </select>
-  <div class="cfg-s" style="font-size:.7rem;line-height:1.4;margin-top:-.2rem">As vozes disponíveis dependem do aparelho. No Android, podem aparecer vozes do Google TTS (geralmente femininas); no PC com Chrome, costumam aparecer as vozes da Microsoft (Daniel é masculina, Maria é feminina). A escolha é específica deste aparelho.</div>
-  <button class="link-btn" style="width:auto;padding:.55rem 1rem;align-self:flex-start;color:var(--gl)" onclick="testarVoz()">▶ Testar voz</button>
   <div class="cfg-sep"></div>
   <div class="cfg-s" style="font-size:.75rem">⏱ Tempos do batimento (minutos, somados em sequência):</div>
   <div class="cfg-grid">
@@ -759,21 +703,39 @@
     </div>
   </div>
   <div class="start-footer">
-    <button class="link-btn" data-perm="calculadora" onclick="abrirCalc('start')">🧮 Calc</button>
-    <button class="link-btn" data-perm="historico" onclick="ir('history')">Baldes</button>
+    <button class="link-btn" data-perm="calculadora" onclick="abrirCalc('start')">🧮 Calculadora</button>
+    <button class="link-btn" data-perm="historico" onclick="ir('historico-menu')">📋 Histórico</button>
     <button class="link-btn" onclick="entrarConfig()">Config</button>
   </div>
 </div>
 
-<!-- ═══ PORCIONAMENTO DE SECOS — seleção de receita ═══ -->
-<!-- v24.3: tela "Secos ou Líquidos?" removida — Porcionamento agora entra direto aqui -->
-<div id="s-receitas" class="scr off">
+<div id="s-porc-menu" class="scr off">
   <div class="start-top">
+    <div class="start-icon">⚖️</div>
     <div class="start-brand">Folhados d'Ouro</div>
     <div class="start-title">Porcionamento</div>
+    <div class="start-sub">Secos ou Líquidos?</div>
+  </div>
+  <div class="modulos-label">Etapas do porcionamento</div>
+  <div class="modulos">
+    <div class="modulo ativo modulo-slim" onclick="ir('receitas')">
+      <div class="modulo-icon">🧂</div>
+      <div class="modulo-info"><div class="modulo-nome">Porcionamento de Secos</div></div>
+    </div>
+  </div>
+  <div class="start-footer">
+    <button class="link-btn" onclick="ir('start')">← Início</button>
+  </div>
+</div>
+
+<div id="s-receitas" class="scr off">
+  <div class="start-top">
+    <div class="start-icon">🧂</div>
+    <div class="start-brand">Folhados d'Ouro</div>
+    <div class="start-title">Porcionamento de Secos</div>
     <div class="start-sub">Selecione a receita</div>
   </div>
-  <div class="modulos-label">Receitas</div>
+  <div class="modulos-label">Receitas de Porcionamento</div>
   <div class="modulos">
     <div class="modulo ativo" onclick="iniciarReceita('r1')">
       <div class="modulo-icon">1️⃣</div>
@@ -817,7 +779,7 @@
     </div>
   </div>
   <div class="start-footer">
-    <button class="link-btn" onclick="ir('start')">← Voltar</button>
+    <button class="link-btn" onclick="ir('porc-menu')">← Voltar</button>
   </div>
 </div>
 
@@ -832,7 +794,7 @@
   <div class="modulos-label">Baldes aguardando os líquidos</div>
   <div class="modulos" id="liq-lotes-list"></div>
   <div class="start-footer">
-    <button class="link-btn" onclick="ir('start')">← Voltar</button>
+    <button class="link-btn" onclick="ir('porc-menu')">← Voltar</button>
   </div>
 </div>
 
@@ -920,19 +882,53 @@
   <div class="done-tot" id="done-tot"></div>
   <button class="btn-main" id="done-etq-btn" style="width:auto;padding:1rem 2rem;margin-top:.6rem" onclick="abrirEtiqueta(st.ultimoLoteId)">🏷 Etiqueta do balde</button>
   <button class="link-btn" id="done-etq-massas-btn" style="width:auto;padding:.8rem 2rem" onclick="abrirEtiqueta(st.ultimoLoteId,'massas')">🏷 Etiqueta das massas (4×)</button>
-  <button class="link-btn" id="done-voltar-porc-btn" style="width:auto;padding:.8rem 2rem;display:none" onclick="ir('start')">↩ Voltar sem imprimir</button>
+  <button class="link-btn" id="done-voltar-porc-btn" style="width:auto;padding:.8rem 2rem;display:none" onclick="ir('porc-menu')">↩ Voltar sem imprimir</button>
   <button class="link-btn" style="width:auto;padding:.8rem 2rem" onclick="ir('start')">← Início</button>
 </div>
 
 <div id="s-history" class="scr off">
   <div class="hdr">
     <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Baldes de Produção</div></div>
-    <button class="link-btn" onclick="ir('start')">← Início</button>
+    <button class="link-btn" onclick="ir('historico-menu')">← Voltar</button>
   </div>
   <div class="hist-list" id="hist-list"></div>
   <div class="bot">
     <button class="btn-danger" onclick="reiniciarNumeracaoLotes()">🔄 Reiniciar numeração dos baldes</button>
   </div>
+</div>
+
+<!-- ═══ HISTÓRICO — central (v24.6) ═══ -->
+<div id="s-historico-menu" class="scr off">
+  <div class="start-top">
+    <div class="start-icon">📋</div>
+    <div class="start-brand">Folhados d'Ouro</div>
+    <div class="start-title">Histórico</div>
+    <div class="start-sub">O que você quer consultar?</div>
+  </div>
+  <div class="modulos-label">Relatórios de produção</div>
+  <div class="modulos">
+    <div class="modulo ativo modulo-slim" onclick="ir('history')">
+      <div class="modulo-icon">🪣</div>
+      <div class="modulo-info"><div class="modulo-nome">Baldes de Produção</div></div>
+    </div>
+    <div class="modulo ativo modulo-slim" onclick="abrirHistBatimentos()">
+      <div class="modulo-icon">🥣</div>
+      <div class="modulo-info"><div class="modulo-nome">Batimentos concluídos</div></div>
+    </div>
+  </div>
+  <div class="start-footer">
+    <button class="link-btn" onclick="ir('start')">← Início</button>
+  </div>
+</div>
+
+<!-- ═══ HISTÓRICO — Batimentos concluídos (v24.6) ═══ -->
+<div id="s-hist-batimentos" class="scr off">
+  <div class="hdr">
+    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Batimentos concluídos</div></div>
+    <button class="link-btn" onclick="ir('historico-menu')">← Voltar</button>
+  </div>
+  <div class="hbat-medias" id="hbat-medias"></div>
+  <div class="hist-list" id="hbat-list"></div>
 </div>
 
 <!-- ═══ PIN / SENHA DE ACESSO ═══ -->
@@ -949,7 +945,7 @@
     <div class="pin-err" id="pin-err"></div>
   </div>
   <div class="start-footer">
-    <button class="pin-back-btn" onclick="cancelarPin()">← Voltar</button>
+    <button class="link-btn" onclick="cancelarPin()">← Voltar</button>
   </div>
 </div>
 
@@ -983,7 +979,6 @@
   <div class="cfg-s" style="font-size:.78rem;color:var(--gl);font-weight:bold">Permissões especiais</div>
   <div class="op-perms" id="opedit-perms-esp"></div>
   <label class="cfg-row" style="margin-top:.4rem"><input type="checkbox" id="opedit-ativo" checked> Operador ativo (desmarque para suspender sem apagar)</label>
-  <label class="cfg-row" id="opedit-bloqueado-wrap" style="margin-top:.3rem;display:none"><input type="checkbox" id="opedit-bloqueado"> 🔒 Operador bloqueado por 4 erros de PIN — <b>desmarque para liberar</b></label>
   <div class="op-edit-btns">
     <button class="btn-main" onclick="salvarOpEdit()">Salvar</button>
     <button class="btn-danger" id="opedit-del" onclick="apagarOpAtualEdit()" style="display:none">🗑 Apagar</button>
@@ -994,6 +989,7 @@
 <!-- ═══ BATER A MASSA — seleção de lote ═══ -->
 <div id="s-batimento-lotes" class="scr off">
   <div class="start-top">
+    <div class="start-icon">🥣</div>
     <div class="start-brand">Folhados d'Ouro</div>
     <div class="start-title">Bater a Massa</div>
     <div class="start-sub">Selecione o balde porcionado</div>
@@ -1020,6 +1016,20 @@
       <div class="bat-lote-num" id="bat-lote-num">#—</div>
       <div class="bat-lote-rec" id="bat-lote-rec">—</div>
       <div class="bat-note" id="bat-lote-meta"></div>
+    </div>
+
+    <!-- FASE 1: temperatura ambiente -->
+    <div class="bat-fase" id="bat-fase-temp">
+      <div class="bat-card">
+        <div class="bat-card-lbl">Temperatura ambiente</div>
+        <div class="step-ctrl">
+          <button class="step-pm" onclick="ajustarTempBat(-1)">−</button>
+          <div class="step-val"><span id="bat-temp-val">20</span><small>°C</small></div>
+          <button class="step-pm" onclick="ajustarTempBat(1)">+</button>
+        </div>
+        <div class="bat-note" id="bat-temp-note">Defina a temperatura ambiente.</div>
+      </div>
+      <button class="btn-main" onclick="batConfirmarTemp()">Confirmar temperatura →</button>
     </div>
 
     <!-- FASE 2: conferir balde 1 -->
@@ -1490,6 +1500,7 @@ const FB={
       if(!visivel) return;
       const id=visivel.id||'';
       if(id==='s-history' && typeof renderHist==='function') renderHist();
+      else if(id==='s-hist-batimentos' && typeof renderHistBatimentos==='function') renderHistBatimentos();
       else if(id==='s-bater-lotes' && typeof renderBatLotes==='function') renderBatLotes();
       else if(id==='s-batimento-lotes' && typeof renderBatLotes==='function') renderBatLotes();
       else if(id==='s-liquidos-lotes' && typeof renderLiquidosLotes==='function') renderLiquidosLotes();
@@ -1514,7 +1525,7 @@ const OP_PERMS_MOD=[
   {k:'batimento',     icon:'🥣', label:'Bater a Massa'},
   {k:'fermentacao',   icon:'🌡️', label:'Fermentação'},
   {k:'laminacao',     icon:'📐', label:'Laminação'},
-  {k:'historico',     icon:'📋', label:'Histórico (Baldes)'},
+  {k:'historico',     icon:'📋', label:'Histórico'},
   {k:'calculadora',   icon:'🧮', label:'Calculadora'},
   {k:'assistente',    icon:'🤖', label:'Assistente IA'}
 ];
@@ -1782,6 +1793,7 @@ function ir(id){
   document.querySelectorAll('.scr').forEach(s=>s.classList.add('off'));
   document.getElementById('s-'+id).classList.remove('off');
   if(id==='history') renderHist();
+  if(id==='hist-batimentos') renderHistBatimentos();
   if(id==='config') carregarConfig();
   if(id==='start' && typeof aplicarPermsStart==='function') aplicarPermsStart();
   if(id==='login' && typeof renderLogin==='function') renderLogin();
@@ -1809,8 +1821,6 @@ function carregarConfig(){
   document.getElementById('inp-geo-lat').value=GEO.getLat();
   document.getElementById('inp-geo-lng').value=GEO.getLng();
   document.getElementById('inp-geo-raio').value=GEO.getRaio();
-  // Voz do TTS (v24.2)
-  if(typeof popularVozesSelect==='function') popularVozesSelect();
   // Lista de operadores (v23)
   if(typeof renderOpList==='function') renderOpList();
 }
@@ -1849,9 +1859,6 @@ function salvarConfig(){
   if(isFinite(flng) && flng>=-180 && flng<=180) LS.s('fdo_geo_lng',flng);
   const fraio=parseInt(document.getElementById('inp-geo-raio').value,10);
   if(isFinite(fraio) && fraio>=10) LS.s('fdo_geo_raio',fraio);
-  // Voz preferida do TTS (v24.2) — local, não sincroniza
-  const selVoz=document.getElementById('inp-tts-voz');
-  if(selVoz) LS.s('fdo_tts_voz', selVoz.value || '');
   // Se geo ativo, sempre revalida (cobre: acabou de ativar, mudou coordenadas,
   // mudou raio, ou veio destravar da tela de bloqueio). Cache válido + dentro
   // do raio libera instantâneo. O destino respeita operadores/login via
@@ -1866,8 +1873,8 @@ function salvarConfig(){
 // ════════════════════════════════════════════════════════════
 function getPin(){ const p=LS.g('fdo_pin',null); return (p==null||p==='')?'123789':String(p); }
 function pinAtivo(){ return LS.g('fdo_pin_ativo',true)===true; }
-// Senha das Configurações (separada; padrão 4561). Sempre exigida ao abrir o Config.
-function getCfgPin(){ const p=LS.g('fdo_cfg_pin',null); return (p==null||p==='')?'4561':String(p); }
+// Senha das Configurações (separada; padrão 456). Sempre exigida ao abrir o Config.
+function getCfgPin(){ const p=LS.g('fdo_cfg_pin',null); return (p==null||p==='')?'456':String(p); }
 function pinEsperado(){
   if(st.pinTipo==='config') return getCfgPin();
   if(st.pinTipo==='login'){ const o=OP.porId(st.loginOpId); return o?String(o.pin||''):''; }
@@ -1875,11 +1882,11 @@ function pinEsperado(){
 }
 
 // Entradas dos módulos protegidos pelo PIN
-function entrarPorcionamento(){ exigeP('porcionamento', ()=> exigirAcesso(()=>ir('receitas'))); }
+function entrarPorcionamento(){ exigeP('porcionamento', ()=> exigirAcesso(()=>ir('porc-menu'))); }
 function entrarBatimento(){ exigeP('batimento', ()=> abrirBatimentoLotes()); }
 function entrarFermentacao(){ exigeP('fermentacao', ()=> abrirFermentacaoLotes()); }
 function entrarLaminacao(){ exigeP('laminacao', ()=> abrirLaminacao()); }
-// Configurações: senha própria (4561), pedida TODA vez. Exceção: 1ª configuração (sem chave) entra direto.
+// Configurações: senha própria (456), pedida TODA vez. Exceção: 1ª configuração (sem chave) entra direto.
 function entrarConfig(){
   if(!getKey()){ ir('config'); return; }
   st.pinTipo='config'; st.pinAlvo=()=>ir('config'); st.pinBuf='';
@@ -1931,27 +1938,7 @@ function verificarPin(){
     if(typeof fn==='function') fn(); else ir('start');
   }else{
     st.pinBuf=''; atualizarPinDots();
-    let msg='Senha incorreta. Tente de novo.';
-    // v24.3: login de operador — contar erros e bloquear ao chegar a 4
-    if(st.pinTipo==='login' && st.loginOpId){
-      const op=OP.porId(st.loginOpId);
-      if(op){
-        const novos=(op.errosPin||0)+1;
-        if(novos>=4){
-          OP.upd(op.id, Object.assign({}, op, {errosPin:novos, bloqueado:true}));
-          st.pinAlvo=null; st.pinBuf=''; st.pinTipo='producao';
-          st.loginOpId=null;
-          alert('Operador BLOQUEADO após 4 tentativas erradas.\n\nPeça a um responsável para liberar em Configurações → Operadores.');
-          if(st.loginFiltro==='bypass'){ st.loginFiltro=''; ir('geo'); return; }
-          st.loginFiltro=''; ir('login'); return;
-        } else {
-          OP.upd(op.id, Object.assign({}, op, {errosPin:novos}));
-          const restantes=4-novos;
-          msg='Senha incorreta. '+restantes+(restantes===1?' tentativa restante':' tentativas restantes')+' antes de bloquear.';
-        }
-      }
-    }
-    document.getElementById('pin-err').textContent=msg;
+    document.getElementById('pin-err').textContent='Senha incorreta. Tente de novo.';
     const w=document.getElementById('pin-wrap');
     w.classList.remove('err'); void w.offsetWidth; w.classList.add('err');
   }
@@ -2026,11 +2013,8 @@ function renderLogin(){
   grid.innerHTML = lista.map(o=>{
     const ini=_escHtml((o.nome||'?').charAt(0).toUpperCase());
     const cor=_escHtml(o.cor||'#c9973a');
-    // v24.3: operador bloqueado mostra 🔒 sobre o avatar e fica clicável só pra alerta
-    const blqCls = o.bloqueado ? ' bloqueado' : '';
-    const blqIcon = o.bloqueado ? '<div class="login-blq">🔒</div>' : '';
-    return `<button class="login-card${blqCls}" onclick="loginCard('${_escHtml(o.id)}')">
-      <div class="op-av" style="background:${cor}">${ini}${blqIcon}</div>
+    return `<button class="login-card" onclick="loginCard('${_escHtml(o.id)}')">
+      <div class="op-av" style="background:${cor}">${ini}</div>
       <div class="login-nome">${_escHtml(o.nome)}</div>
     </button>`;
   }).join('');
@@ -2039,10 +2023,6 @@ function renderLogin(){
 function loginCard(opId){
   const op=OP.porId(opId);
   if(!op||!op.ativo){ alert('Operador inativo.'); return; }
-  if(op.bloqueado){
-    alert('Operador BLOQUEADO por 4 erros de PIN.\n\nPeça a um responsável para liberar em Configurações → Operadores → desmarcar "Operador bloqueado".');
-    return;
-  }
   const filtro=st.loginFiltro||'';
   if(filtro==='bypass' && !(op.perms && op.perms.geo_bypass)){
     alert('Este operador não está autorizado a acessar fora da fábrica.');
@@ -2052,11 +2032,6 @@ function loginCard(opId){
   st.loginOpId=opId;
   st.pinBuf='';
   st.pinAlvo=()=>{
-    // Login OK: zera contador de erros e persiste
-    const o=OP.porId(opId);
-    if(o && (o.errosPin||0)>0){
-      OP.upd(opId, Object.assign({}, o, {errosPin:0}));
-    }
     OP.setAtual(opId);
     if(filtro==='bypass'){ bypassGeoSessao=true; }
     st.loginFiltro='';
@@ -2093,11 +2068,7 @@ function renderOpList(){
     el.innerHTML = arr.map(o=>{
       const ini=_escHtml((o.nome||'?').charAt(0).toUpperCase());
       const cor=_escHtml(o.cor||'#c9973a');
-      // v24.3: meta mostra "🔒 BLOQUEADO" para operador bloqueado por 4 erros
-      let meta;
-      if(o.bloqueado) meta='🔒 BLOQUEADO';
-      else if(!o.ativo) meta='inativo';
-      else meta='PIN ••••';
+      const meta=o.ativo?'PIN ••••':'inativo';
       return `<div class="op-item ${o.ativo?'':'inativo'}" onclick="abrirOpEdit('${_escHtml(o.id)}')">
         <div class="op-item-av" style="background:${cor}">${ini}</div>
         <div class="op-item-nome">${_escHtml(o.nome)}</div>
@@ -2120,18 +2091,6 @@ function abrirOpEdit(id){
   document.getElementById('opedit-nome').value = op?op.nome:'';
   document.getElementById('opedit-pin').value = op?(op.pin||''):'';
   document.getElementById('opedit-ativo').checked = op?!!op.ativo:true;
-  // v24.3: checkbox de bloqueio aparece só quando o operador está bloqueado
-  const blqWrap=document.getElementById('opedit-bloqueado-wrap');
-  const blqChk=document.getElementById('opedit-bloqueado');
-  if(blqWrap && blqChk){
-    if(op && op.bloqueado){
-      blqWrap.style.display='';
-      blqChk.checked=true;
-    } else {
-      blqWrap.style.display='none';
-      blqChk.checked=false;
-    }
-  }
   // Cores
   const corSel = op?(op.cor||OP_CORES[0]):OP_CORES[0];
   document.getElementById('opedit-cores').innerHTML = OP_CORES.map(c=>
@@ -2180,22 +2139,16 @@ function salvarOpEdit(){
   const corEl=document.querySelector('#opedit-cores .op-cor.sel');
   const cor = corEl ? corEl.dataset.cor : OP_CORES[0];
   const ativo = document.getElementById('opedit-ativo').checked;
-  // v24.3: lê estado do checkbox de bloqueio (só visível se já estava bloqueado).
-  // Desmarcar libera o operador e zera o contador de erros.
-  const blqChk=document.getElementById('opedit-bloqueado');
-  const bloqueado = blqChk ? !!blqChk.checked : false;
   const perms={};
   document.querySelectorAll('#opedit-perms input[type=checkbox], #opedit-perms-esp input[type=checkbox]').forEach(c=>{
     perms[c.dataset.permk] = !!c.checked;
   });
   if(opEditId){
     const atual=OP.porId(opEditId)||{};
-    // Se está sendo desbloqueado (estava true, virou false), zera errosPin.
-    const errosPin = (atual.bloqueado && !bloqueado) ? 0 : (atual.errosPin||0);
-    OP.upd(opEditId, Object.assign({}, atual, {id:opEditId, nome, pin, cor, ativo, perms, bloqueado, errosPin}));
+    OP.upd(opEditId, Object.assign({}, atual, {id:opEditId, nome, pin, cor, ativo, perms}));
   } else {
     if(OP.lista().length>=6){ alert('Limite máximo de 6 operadores.'); return; }
-    OP.add({id:'op_'+Date.now()+'_'+Math.floor(Math.random()*1000), nome, pin, cor, ativo, perms, bloqueado:false, errosPin:0});
+    OP.add({id:'op_'+Date.now()+'_'+Math.floor(Math.random()*1000), nome, pin, cor, ativo, perms});
   }
   opEditId=null;
   ir('config');
@@ -2431,7 +2384,7 @@ function pesoBalde2Lote(lote){
 let batCronInt=null, batBatStartMs=0, batAvisados=[], batTempoSeg=0, batAudioCtx=null;
 
 function setBatFase(f){
-  ['balde1','balde2','batendo','peso'].forEach(x=>{
+  ['temp','balde1','balde2','batendo','peso'].forEach(x=>{
     const el=document.getElementById('bat-fase-'+x); if(el) el.style.display=(x===f?'':'none');
   });
 }
@@ -2454,22 +2407,24 @@ function abrirBatimento(id){
   document.getElementById('bat-lote-num').textContent='#'+lote.num;
   document.getElementById('bat-lote-rec').textContent=lote.receitaNome||lote.rotulo||'';
   document.getElementById('bat-lote-meta').textContent=[lote.criado||'', p.op?('op. '+p.op):'', p.total_g?('total '+formatPeso(p.total_g)):''].filter(Boolean).join(' · ');
-  // v24.4: temperatura ambiente puxada do dia (ou 20°C padrão) — sem mais tela de confirmação
   const tDia=tempAmbienteDoDia();
-  st.batTemp=(tDia!=null?tDia:20);
-  // Vai direto para a conferência do balde 1
-  batPrepararBalde1(lote);
+  const note=document.getElementById('bat-temp-note');
+  if(tDia!=null){ st.batTemp=tDia; note.textContent='Puxado de um batimento de hoje — confirme ou ajuste.'; note.classList.add('puxado'); }
+  else{ st.batTemp=20; note.textContent='Defina a temperatura ambiente.'; note.classList.remove('puxado'); }
+  document.getElementById('bat-temp-val').textContent=st.batTemp;
+  setBatFase('temp');
   atualizarBotoesTTS();
   ir('batimento');
+  falar(`Batimento do balde ${lote.num}. `+(tDia!=null?`Temperatura ambiente de hoje, ${st.batTemp} graus. Confirme ou ajuste.`:'Defina a temperatura ambiente.'));
+}
+function ajustarTempBat(d){
+  st.batTemp=Math.max(0,Math.min(45,(st.batTemp||20)+d));
+  document.getElementById('bat-temp-val').textContent=st.batTemp;
 }
 function batLoteAtual(){ return LS.g('fdo_lotes',[]).find(l=>l.id===st.batLote); }
 
-// v24.4: prepara o card do balde 1 (secos) e entra na fase 'balde1'.
-// Antes era batConfirmarTemp(), chamado após a tela de temperatura ambiente
-// (que foi eliminada — a temperatura já vem puxada do dia em abrirBatimento).
-function batPrepararBalde1(lote){
-  if(!lote){ lote=batLoteAtual(); }
-  if(!lote){ abrirBatimentoLotes(); return; }
+function batConfirmarTemp(){
+  const lote=batLoteAtual(); if(!lote){abrirBatimentoLotes();return;}
   // Balde 1 (agora inclui sal e manteiga, que vão pesados no balde sem misturar)
   const b1=pesoBalde1Lote(lote);
   const a1=document.getElementById('bat-b1-alvo'), d1=document.getElementById('bat-b1-det');
@@ -2485,12 +2440,12 @@ function batPrepararBalde1(lote){
     if(sm.manteiga!=null && sm.manteiga>0) extra.push('manteiga '+formatPeso(sm.manteiga));
     if(extra.length) txt+=' No balde, sem misturar: '+extra.join(' · ')+'.';
     if(sm.manteiga===0) txt+=' Esta receita não leva manteiga.';
-    d1.textContent=txt; // info preservada no DOM; CSS esconde da UI
+    d1.textContent=txt;
   }
   else{ a1.textContent='—'; d1.textContent='Confira o balde 1 conforme a receita (lote antigo sem dados).'; }
   const i1=document.getElementById('bat-b1-inp'); if(i1) i1.value=''; const df1=document.getElementById('bat-b1-diff'); if(df1) df1.textContent='';
   setBatFase('balde1');
-  falar(b1!=null?`Batimento do balde ${lote.num}. Temperatura ${st.batTemp} graus. Confira o peso do balde 1: ${falaPeso(b1+PESO_BALDE1)}. Pode falar o peso ou digitar.`:`Batimento do balde ${lote.num}. Confira o peso do balde 1.`);
+  falar(b1!=null?`Temperatura ${st.batTemp} graus. Confira o peso do balde 1: ${falaPeso(b1+PESO_BALDE1)}. Pode falar o peso ou digitar.`:'Confira o peso do balde 1.');
   batMicConf('b1');
 }
 function batConferirBalde1(){
@@ -2732,6 +2687,7 @@ function batRestaurar(){
   document.getElementById('bat-lote-num').textContent='#'+lote.num;
   document.getElementById('bat-lote-rec').textContent=lote.receitaNome||lote.rotulo||'';
   document.getElementById('bat-lote-meta').textContent=[lote.criado||'', p.op?('op. '+p.op):''].filter(Boolean).join(' · ');
+  document.getElementById('bat-temp-val').textContent=st.batTemp;
   batBatStartMs=run.startMs||Date.now();
   batAvisados=Array.isArray(run.avisados)?run.avisados.slice():[];
   batTempoSeg=Math.floor((Date.now()-batBatStartMs)/1000);
@@ -2830,87 +2786,33 @@ function desenharEtiqueta(lote){
   x.strokeRect(10,10,ETQ_W-20,ETQ_H-20);
   const d=loteEtqDados(lote); const liq=loteLiquidos(lote); const mas=loteMassas(lote);
   const pi=porcInfo(lote);
-  // v24.5: Os rótulos abaixo são o que a pessoa que pega o balde vai porcionar.
-  // ÁGUA/GELO, LEITE EM PÓ, MASSA LAMINADA precisam ficar BEM visíveis na etiqueta.
+  x.textAlign='center';
+  x.font='bold 56px Arial, sans-serif'; x.fillText('BALDE #'+d.num, ETQ_W/2, 66);
+  x.font='24px Arial, sans-serif';
+  let rec=d.receita; if(rec.length>34) rec=rec.slice(0,34);
+  x.fillText(rec, ETQ_W/2, 100);
+  x.font='bold 26px Arial, sans-serif';
+  x.fillText(d.data+'    '+d.hora, ETQ_W/2, 132);
+  // divisória
+  x.lineWidth=2; x.beginPath(); x.moveTo(40,150); x.lineTo(ETQ_W-40,150); x.stroke();
+  // valores: líquidos (balde 2) + massas (laminada / sem laminar)
   const linhas=[];
   if(liq){
-    if(liq.agua!=null)  linhas.push({rotulo:'ÁGUA/GELO',   valor:formatPeso(liq.agua)});
-    if(liq.leite!=null) linhas.push({rotulo:'LEITE EM PÓ', valor:formatPeso(liq.leite)});
+    if(liq.agua!=null)  linhas.push('Água/gelo:  '+formatPeso(liq.agua));
+    if(liq.leite!=null) linhas.push('Leite em pó:  '+formatPeso(liq.leite));
   }
   if(mas){
-    if(mas.laminada!=null)                        linhas.push({rotulo:'MASSA LAMINADA',    valor:formatPeso(mas.laminada)});
-    if(mas.semLaminar!=null && mas.semLaminar>0)  linhas.push({rotulo:'MASSA SEM LAMINAR', valor:formatPeso(mas.semLaminar)});
+    if(mas.laminada!=null)                        linhas.push('Massa laminada:  '+formatPeso(mas.laminada));
+    if(mas.semLaminar!=null && mas.semLaminar>0)  linhas.push('Massa sem laminar:  '+formatPeso(mas.semLaminar));
   }
-  // Auto-ajuste de fonte por largura (mesma técnica da etiqueta das massas)
-  const maxW=ETQ_W-36;
-  function ajustar(txt, alvo, peso, minP){
-    let s=alvo;
-    while(s>minP){
-      x.font=peso+' '+s+'px Arial, sans-serif';
-      if(x.measureText(txt).width<=maxW) break;
-      s--;
-    }
-    return s;
-  }
-  x.textAlign='center';
-  // ═══ TOPO COMPACTO: BALDE #N + receita + data/hora ═══
-  const txtBalde='BALDE #'+d.num;
-  const sBalde=ajustar(txtBalde, 50, 'bold', 36);
-  x.font='bold '+sBalde+'px Arial, sans-serif';
-  x.fillText(txtBalde, ETQ_W/2, 54);
-  let rec=d.receita; if(rec.length>40) rec=rec.slice(0,40);
-  const sRec=ajustar(rec, 22, '', 14);
-  x.font=sRec+'px Arial, sans-serif';
-  x.fillText(rec, ETQ_W/2, 82);
-  const txtDh=d.data+'   '+d.hora;
-  const sDh=ajustar(txtDh, 20, 'bold', 14);
-  x.font='bold '+sDh+'px Arial, sans-serif';
-  x.fillText(txtDh, ETQ_W/2, 106);
-  // Divisória abaixo do topo
-  x.lineWidth=2; x.beginPath(); x.moveTo(20,118); x.lineTo(ETQ_W-20,118); x.stroke();
-  // ═══ BLOCO PRINCIPAL: os porcionamentos GIGANTES ═══
-  const ferm=(pi.temp!=null && pi.fermento_horas!=null);
-  const yTop=122;
-  const yBot=ETQ_H-(ferm?32:18);
-  const altDisp=yBot-yTop;
+  if(pi.temp!=null && pi.fermento_horas!=null) linhas.push(pi.temp+'ºC  '+pi.fermento_horas+' horas fermentação');
   if(linhas.length){
-    const n=linhas.length;
-    const altPorBloco=altDisp/n;
-    // Fonte do VALOR proporcional à altura do bloco (62%), do RÓTULO menor (28%)
-    const sValorAlvo  = Math.min(Math.floor(altPorBloco*0.62), 64);
-    const sRotuloAlvo = Math.min(Math.floor(altPorBloco*0.28), 28);
-    // Auto-ajuste por LARGURA: aplica a TODAS as linhas a menor fonte que coube em qualquer uma
-    let sRotulo=sRotuloAlvo, sValor=sValorAlvo;
-    linhas.forEach(l=>{
-      const sR=ajustar(l.rotulo, sRotuloAlvo, 'bold', 14);
-      if(sR<sRotulo) sRotulo=sR;
-      const sV=ajustar(l.valor,  sValorAlvo,  'bold', 24);
-      if(sV<sValor) sValor=sV;
-    });
-    linhas.forEach((l,i)=>{
-      const cyTop=yTop+i*altPorBloco;
-      const yRot =cyTop+sRotulo+2;
-      const yVal =cyTop+altPorBloco-8;
-      x.font='bold '+sRotulo+'px Arial, sans-serif';
-      x.fillText(l.rotulo, ETQ_W/2, yRot);
-      x.font='bold '+sValor+'px Arial, sans-serif';
-      x.fillText(l.valor,  ETQ_W/2, yVal);
-      // Separador fino entre blocos
-      if(i<n-1){
-        x.lineWidth=1; x.beginPath();
-        x.moveTo(40, cyTop+altPorBloco); x.lineTo(ETQ_W-40, cyTop+altPorBloco); x.stroke();
-      }
-    });
+    x.textAlign='left'; x.font='24px Arial, sans-serif';
+    let yy=188;
+    linhas.forEach(t=>{ x.fillText(t, 40, yy); yy+=33; });
+    x.textAlign='center';
   } else {
-    x.font='22px Arial, sans-serif';
-    x.fillText('(conforme a receita)', ETQ_W/2, yTop+altDisp/2);
-  }
-  // ═══ RODAPÉ: temperatura + horas fermentação ═══
-  if(ferm){
-    const txtFerm=pi.temp+'°C  '+pi.fermento_horas+' horas fermentação';
-    const sFerm=ajustar(txtFerm, 22, '', 14);
-    x.font=sFerm+'px Arial, sans-serif';
-    x.fillText(txtFerm, ETQ_W/2, ETQ_H-14);
+    x.font='22px Arial, sans-serif'; x.fillText('(conforme a receita)', ETQ_W/2, 250);
   }
   return c;
 }
@@ -3553,10 +3455,7 @@ function falar(texto){
   const u=new SpeechSynthesisUtterance(texto);
   u.lang='pt-BR';u.rate=1.0;u.pitch=1.0;
   const v=speechSynthesis.getVoices();
-  const pref=getVozPreferida();
-  const voz=(pref ? v.find(x=>x.name===pref) : null)
-         || v.find(x=>x.lang==='pt-BR')
-         || v.find(x=>x.lang.startsWith('pt'));
+  const voz=v.find(x=>x.lang==='pt-BR')||v.find(x=>x.lang.startsWith('pt'));
   if(voz)u.voice=voz;
   speechSynthesis.speak(u);
 }
@@ -3567,45 +3466,9 @@ function falarForcado(texto){
   const u=new SpeechSynthesisUtterance(texto);
   u.lang='pt-BR'; u.rate=1.0; u.pitch=1.0; u.volume=1.0;
   const v=speechSynthesis.getVoices();
-  const pref=getVozPreferida();
-  const voz=(pref ? v.find(x=>x.name===pref) : null)
-         || v.find(x=>x.lang==='pt-BR')
-         || v.find(x=>x.lang.startsWith('pt'));
+  const voz=v.find(x=>x.lang==='pt-BR')||v.find(x=>x.lang.startsWith('pt'));
   if(voz)u.voice=voz;
   speechSynthesis.speak(u);
-}
-
-// ════════════════════════════════════════════════════════════
-// VOZ PREFERIDA DO TTS (escolha do usuário no Config)
-// Específica do aparelho — NÃO sincroniza via Firebase, porque cada
-// dispositivo tem um catálogo diferente de vozes pt-BR instaladas.
-// ════════════════════════════════════════════════════════════
-function getVozPreferida(){ return LS.g('fdo_tts_voz','') || ''; }
-function listarVozesPtBR(){
-  if(!window.speechSynthesis) return [];
-  const v=speechSynthesis.getVoices()||[];
-  return v.filter(x=>(x.lang||'').toLowerCase().startsWith('pt'));
-}
-function popularVozesSelect(){
-  const sel=document.getElementById('inp-tts-voz');
-  if(!sel) return;
-  const atual=getVozPreferida();
-  const vozes=listarVozesPtBR();
-  let opts='<option value="">Padrão do sistema</option>';
-  vozes.forEach(v=>{
-    const marc = (v.name===atual) ? ' selected' : '';
-    opts += `<option value="${_escHtml(v.name)}"${marc}>${_escHtml(v.name)} (${_escHtml(v.lang)})</option>`;
-  });
-  sel.innerHTML=opts;
-  // Se a voz salva não está mais disponível, mantém a referência no LS
-  // mas o select cai pra "Padrão do sistema" — o fallback de falar() cuida.
-}
-function testarVoz(){
-  // Salva a escolha atual ANTES de testar, para refletir imediatamente
-  const sel=document.getElementById('inp-tts-voz');
-  if(sel) LS.s('fdo_tts_voz', sel.value || '');
-  // Usa falarForcado pra tocar mesmo se o autofalante estiver mudo
-  falarForcado('Olá! Sou a voz selecionada para o aplicativo Folhados d\'Ouro.');
 }
 
 function mostrarAI(txt){
@@ -3871,6 +3734,71 @@ function renderHist(){
 }
 
 // ════════════════════════════════════════════════════════════
+// HISTÓRICO — Batimentos concluídos (v24.6)
+// Lista os batimentos em ordem cronológica reversa (mais recente no topo),
+// com o tempo do batimento em destaque e uma faixa de médias por receita
+// no topo (para bater o olho e detectar batimentos fora do padrão).
+// ════════════════════════════════════════════════════════════
+function abrirHistBatimentos(){ ir('hist-batimentos'); }
+function fmtMMSSseg(seg){
+  const s=Math.max(0,Math.floor(Number(seg)||0));
+  const m=Math.floor(s/60), r=s%60;
+  return String(m).padStart(2,'0')+':'+String(r).padStart(2,'0');
+}
+function renderHistBatimentos(){
+  const todos=LS.g('fdo_lotes',[]);
+  const feitos=todos
+    .filter(l=>l&&l.etapas&&l.etapas.batimento&&l.etapas.batimento.feito)
+    .map(l=>({lote:l, b:l.etapas.batimento}))
+    .sort((a,b)=>(Number(b.b.emTs)||0)-(Number(a.b.emTs)||0));
+  // Faixa de médias por receita (usa tempoSeg)
+  const medEl=document.getElementById('hbat-medias');
+  const listEl=document.getElementById('hbat-list');
+  if(!feitos.length){
+    if(medEl) medEl.innerHTML='<span class="hbat-medias-vazio">Ainda não há batimentos concluídos.</span>';
+    if(listEl) listEl.innerHTML='<div class="hbat-empty">Nenhum batimento concluído.<br><span style="font-size:.78rem">Ao concluir um batimento na tela Bater a Massa, ele aparece aqui.</span></div>';
+    return;
+  }
+  const porReceita={};
+  feitos.forEach(x=>{
+    const seg=Number(x.b.tempoSeg);
+    if(!isFinite(seg) || seg<=0) return;
+    const chave=x.lote.receita||x.lote.rotulo||'—';
+    (porReceita[chave]=porReceita[chave]||[]).push(seg);
+  });
+  const chaves=Object.keys(porReceita).sort();
+  if(chaves.length){
+    medEl.innerHTML=chaves.map(k=>{
+      const arr=porReceita[k];
+      const media=Math.round(arr.reduce((s,v)=>s+v,0)/arr.length);
+      const rotulo=(k+'').toUpperCase();
+      return `<span class="hbat-media-chip">${rotulo} média <b>${fmtMMSSseg(media)}</b></span>`;
+    }).join('');
+  }else{
+    medEl.innerHTML='<span class="hbat-medias-vazio">Sem tempos suficientes para calcular médias.</span>';
+  }
+  // Lista dos batimentos (mais recente no topo)
+  listEl.innerHTML=feitos.map(x=>{
+    const l=x.lote, b=x.b;
+    const tempoTxt=b.tempoTxt||(b.tempoSeg?fmtMMSSseg(b.tempoSeg):'—');
+    const quando=b.em||'—';
+    const op=b.op||'—';
+    const tAmb=(b.tempAmbiente!=null)?(b.tempAmbiente+'°C'):'';
+    const peso=(b.pesoTotal!=null&&isFinite(b.pesoTotal))?(formatPeso(b.pesoTotal)):'';
+    const durFase=(b.dur!=null&&isFinite(b.dur))?(b.dur+' min fase'):'';
+    const meta=[quando,'op. '+op,tAmb,peso,durFase].filter(Boolean).join(' <span class="sep">·</span> ');
+    return `<div class="hbat-item">
+      <div class="hbat-item-head">
+        <span class="hbat-item-num">Balde #${l.num}</span>
+        <span class="hbat-item-rec">${l.receitaNome||l.rotulo||'—'}</span>
+        <span class="hbat-item-tempo">⏱ ${tempoTxt}</span>
+      </div>
+      <div class="hbat-item-meta">${meta}</div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════
 // LAMINAÇÃO (Fase 1) — agrupa PARTES geladas de lotes batidos.
 // Cada lote batido gera N partes (÷ divisor). Aqui o operador seleciona
 // quantas partes de cada lote vão laminar (pode misturar dias), gera a
@@ -4082,7 +4010,7 @@ function bootApp(){ destinoBoot(); }
   // PIN padrão na primeira execução
   if(LS.g('fdo_pin',null)===null) LS.s('fdo_pin','123789');
   if(LS.g('fdo_pin_ativo',null)===null) LS.s('fdo_pin_ativo',true);
-  if(LS.g('fdo_cfg_pin',null)===null) LS.s('fdo_cfg_pin','4561'); // senha das Configurações
+  if(LS.g('fdo_cfg_pin',null)===null) LS.s('fdo_cfg_pin','456'); // senha das Configurações
   // Migra sessões antigas concluídas para o sistema de lotes (uma vez)
   migrarLotesAntigos();
   PESO_BALDE1=getTara();           // aplica a tara configurada
@@ -4090,15 +4018,7 @@ function bootApp(){ destinoBoot(); }
   if(op)document.getElementById('inp-op').value=op;
   atualizarBotoesTTS();
   speechSynthesis?.getVoices();
-  speechSynthesis?.addEventListener('voiceschanged',()=>{
-    speechSynthesis.getVoices();
-    // Se a tela Config já estiver aberta quando as vozes carregarem
-    // (típico no Android), repopula o select sem perder a escolha atual.
-    const cfg=document.getElementById('s-config');
-    if(cfg && !cfg.classList.contains('off') && typeof popularVozesSelect==='function'){
-      popularVozesSelect();
-    }
-  });
+  speechSynthesis?.addEventListener('voiceschanged',()=>speechSynthesis.getVoices());
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
   monitorarBateria();              // alerta de bateria baixa por voz
   // Restrição por localização (v22): registra reverificação ao voltar do background
