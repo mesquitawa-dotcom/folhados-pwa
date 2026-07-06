@@ -273,6 +273,25 @@
       font-family:Georgia,serif;font-weight:bold;font-size:.75rem;letter-spacing:.15rem;
       text-transform:uppercase;padding:.65rem 1.1rem;border-radius:.35rem;cursor:pointer;min-height:2.6rem}
 
+    /* ════ v24.9 — TELA PRINCIPAL compacta ════
+       Escopado em #s-start para NÃO afetar as outras telas que reusam
+       as mesmas classes (.start-top, .start-icon, .modulo-desc, etc.). */
+    #s-start .start-icon{display:none}                              /* remove o 🥐 grande */
+    #s-start .start-top{padding:.7rem 1rem .5rem}                   /* cabeçalho ~1/4 da tela */
+    #s-start .start-brand{font-size:.6rem;margin-bottom:.15rem}
+    #s-start .start-title{font-size:1.1rem;margin-bottom:.1rem}
+    #s-start .start-sub{font-size:.68rem}
+    #s-start .modulos-label{padding:0 1.2rem .4rem}
+    #s-start .modulo-desc{display:none}                             /* remove descrições dos cards */
+    #s-start .modulo-nome{margin-bottom:0}
+    #s-start .modulo{padding:.8rem 1rem}
+
+    /* ════ v24.9 — RECEITAS em uma linha só ════
+       Evita "Receita" numa linha e "1" em outra, e mantém a descrição
+       de fora a fora da tela sem tomar espaço vertical extra. */
+    #s-receitas .modulo-nome{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #s-receitas .modulo-desc{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.68rem}
+
     /* ════ PRE TEMP SCREEN (NOVA TELA) ════ */
     #s-pre-temp{padding:0}
     .pre-temp-container{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;gap:1rem;text-align:center}
@@ -714,9 +733,9 @@
     </div>
   </div>
   <div class="start-footer">
-    <button class="link-btn" data-perm="calculadora" onclick="abrirCalc('start')">🧮 Calculadora</button>
-    <button class="link-btn" data-perm="historico" onclick="ir('historico-menu')">📋 Histórico</button>
-    <button class="link-btn" onclick="entrarConfig()">Config</button>
+    <button class="link-btn" data-perm="calculadora" onclick="abrirCalc('start')">🧮 CALC</button>
+    <button class="link-btn" data-perm="historico" onclick="ir('historico-menu')">📋 HIST</button>
+    <button class="link-btn" onclick="entrarConfig()">CONFIG</button>
   </div>
 </div>
 
@@ -752,7 +771,7 @@
       <div class="modulo-icon">1️⃣</div>
       <div class="modulo-info">
         <div class="modulo-nome">Receita 1</div>
-        <div class="modulo-desc">Trigo 8 kg · Bagatelle 45% · Feuilletage 45% · Italiana 10%</div>
+        <div class="modulo-desc">Bagatelle 45% Feuilletage 45%</div>
       </div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
