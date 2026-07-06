@@ -106,7 +106,7 @@
        • Tela de Laminação refeita para celular em pé: cabeçalho enxuto,
          seleção mais prática (cartões com estado, trava de receita).
        --- base v14/v13/v12/v11/v10/v9/v8/v7 (histórico abreviado) ---
-       • Service Worker: cache fdo-v24-6.
+       • Service Worker: cache fdo-v24-7.
        ════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -823,7 +823,7 @@
   <div class="start-top">
     <div class="start-icon">🌡️</div>
     <div class="start-brand">Folhados d'Ouro</div>
-    <div class="start-title">Temperatura da Noite</div>
+    <div class="start-title">Temperatura de Fermentação</div>
     <div class="start-sub">Escolha o tempo de fermentação</div>
   </div>
   <div class="modulos-label">Define a quantidade de fermento seco</div>
@@ -1236,15 +1236,19 @@
 // (tabela mantida para conferência de lotes antigos)
 const TEMP_FERMENTO = {15:120,16:112,17:104,18:96,19:90,20:84,21:78,22:74,23:68,24:64};
 
-// Opções de fermento mostradas na tela "Temperatura da Noite".
-// Quatro opções, escolhidas pelo TEMPO de fermentação desejado:
+// Opções de fermento mostradas na tela "Temperatura de Fermentação".
+// Opções por temperatura (18/19/20 °C) e TEMPO de fermentação desejado:
 //   • mais fermento  → fermenta mais rápido (menos horas)
 //   • menos fermento → fermenta mais devagar (mais horas)
 const OPCOES_FERMENTO = [
   {temp:17, fermento:70, horas:14},
   {temp:17, fermento:64, horas:17},
-  {temp:19, fermento:58, horas:14},
-  {temp:19, fermento:48, horas:17},
+  {temp:18, fermento:58, horas:14},
+  {temp:18, fermento:48, horas:17},
+  {temp:19, fermento:50, horas:14},
+  {temp:19, fermento:40, horas:17},
+  {temp:20, fermento:46, horas:14},
+  {temp:20, fermento:36, horas:17},
 ];
 
 // Peso do balde 1 vazio (tara), para conferência na balança.
