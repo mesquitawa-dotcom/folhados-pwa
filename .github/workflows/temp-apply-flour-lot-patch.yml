@@ -1,0 +1,53 @@
+name: Temporary apply flour lot patch
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  patch-feature-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/lotes-farinha-porcionamento
+          fetch-depth: 0
+
+      - name: Apply guarded patch
+        run: python3 tools/patch_farinha_lotes.py
+
+      - name: Validate generated files
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          checks=[
+            'id="s-farinha-lotes"',
+            'function confirmarLotesFarinha()',
+            'farinhas_lotes:st.farinhasLotes',
+            "'fdo_farinha_lotes_atuais'",
+            'const farResumo=lotesFarinhaResumo(p);',
+          ]
+          missing=[x for x in checks if x not in s]
+          if missing: raise SystemExit('Missing expected markers: '+repr(missing))
+          sw=Path('sw.js').read_text(encoding='utf-8')
+          if "const CACHE='fdo-v24-10';" not in sw: raise SystemExit('Cache version was not updated')
+          print('Validation OK')
+          PY
+
+      - name: Commit generated changes to feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Track flour lots during portioning"
+          git push origin HEAD:agent/lotes-farinha-porcionamento
