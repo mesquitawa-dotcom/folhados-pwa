@@ -22,7 +22,7 @@ jobs:
       - name: Validate app and behavior
         run: |
           python3 tools/validate_fdo.py
-          python3 -c "from pathlib import Path; import json; s=Path('index.html').read_text(encoding='utf-8'); assert 'setPersistence(firebase.auth.Auth.Persistence.LOCAL)' in s; assert '!navigator.onLine&&c&&c.uid===this.uid&&c.aprovado' in s; assert 'this.uid=this.auth.currentUser.uid;this.escutar();return' in s; r=json.loads(Path('database.rules.json').read_text(encoding='utf-8'))['rules']; assert r['.read'] is False and r['.write'] is False; assert r['fdo_dispositivos']['$uid']['.write'] is False; assert r['fdo_acessos']['.read'] is False; print('Firebase security follow-up OK')"
+          python3 -c "from pathlib import Path; import json; s=Path('index.html').read_text(encoding='utf-8'); assert 'setPersistence(firebase.auth.Auth.Persistence.LOCAL)' in s; assert '!navigator.onLine&&c&&c.uid===this.uid&&c.aprovado' in s; assert 'this.uid=this.auth.currentUser.uid;this.escutar();return' in s; r=json.loads(Path('database.rules.json').read_text(encoding='utf-8'))['rules']; assert r['.read'] is False and r['.write'] is False; assert r['fdo_dispositivos'][chr(36)+'uid']['.write'] is False; assert r['fdo_acessos']['.read'] is False; print('Firebase security follow-up OK')"
           python3 -c "from pathlib import Path; import re; s=Path('index.html').read_text(encoding='utf-8'); scripts=re.findall(r'<script(?:\\s[^>]*)?>(.*?)</script>',s,re.S); Path('/tmp/fdo.js').write_text('\\n'.join(x for x in scripts if x.strip()),encoding='utf-8')"
           node --check /tmp/fdo.js
           node tools/test_sync_v25_1.js
