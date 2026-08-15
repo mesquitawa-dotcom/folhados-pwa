@@ -6,7 +6,7 @@ BAD_ETAG='"0000000000000000000000000000000000000000"'
 read_probe(){
   local label="$1" path="$2"
   local code
-  code=$(curl -sS -o /dev/null -w '%{http_code}' "$BASE/$path.json" || true)
+  code=$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' "$BASE/$path.json" || true)
   printf 'READ  %-34s %s\n' "$label" "$code"
 }
 
@@ -15,7 +15,7 @@ write_probe(){
   local code
   # if-match propositalmente incorreto: 412 = escrita autorizada, MAS NÃO EXECUTADA.
   # 401 = bloqueada por Security Rules. Nenhuma chamada abaixo usa ETag correto.
-  code=$(curl -sS -o /dev/null -w '%{http_code}' -X PUT \
+  code=$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' -X PUT \
     -H "Content-Type: application/json" \
     -H "if-match: $BAD_ETAG" \
     --data-binary "$payload" \
@@ -23,10 +23,32 @@ write_probe(){
   printf 'WRITE %-34s %s\n' "$label" "$code"
 }
 
+root_read(){
+  local code
+  code=$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' "$BASE/.json" || true)
+  printf 'READ  %-34s %s\n' 'ROOT /' "$code"
+}
+
+root_write(){
+  local code
+  code=$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' -X PUT \
+    -H "Content-Type: application/json" \
+    -H "if-match: $BAD_ETAG" \
+    --data-binary 'null' \
+    "$BASE/.json" || true)
+  printf 'WRITE %-34s %s\n' 'ROOT /' "$code"
+}
+
 echo '=== FIREBASE RTDB AUDIT — ANÔNIMO / NÃO DESTRUTIVO ==='
 echo 'Legenda WRITE: 412=autorizada mas não gravada (ETag inválido); 401=bloqueada pelas regras.'
 echo 'Legenda READ: 200=leitura anônima permitida; 401=bloqueada.'
 echo
+
+# Testes de amplitude: raiz e caminho que o app nunca usa.
+root_read
+root_write
+read_probe  'caminho aleatório'            '__fdo_audit_random_top_level__'
+write_probe 'caminho aleatório'            '__fdo_audit_random_top_level__' 'null'
 
 # Caminhos legados usados hoje / ponte de migração.
 read_probe  'fdo_lotes'                    'fdo_lotes'
