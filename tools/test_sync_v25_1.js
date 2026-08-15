@@ -3,7 +3,7 @@ const assert=require('assert');
 
 const html=fs.readFileSync('index.html','utf8');
 const ini=html.indexOf('const SYNC25={');
-const fim=html.indexOf('FB.init=()=>SYNC25.init();',ini);
+const fim=html.indexOf('\nFB.init=',ini);
 if(ini<0||fim<0) throw new Error('Bloco SYNC25 não encontrado');
 const bloco=html.slice(ini,fim)+"\nglobalThis.__SYNC25=SYNC25;";
 
@@ -22,6 +22,7 @@ globalThis.loteAtivo=l=>{if(!l)return false;const c=Number(l.cancelado&&l.cancel
 globalThis.dataCurta=ts=>{const d=new Date(ts);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})};
 globalThis.getOp=()=> 'TESTE';
 globalThis.FB={applying:false,db:null,status(){},repaint(){}};
+globalThis.DEVICE={aprovado:true};
 
 eval(bloco);
 const S=globalThis.__SYNC25;
