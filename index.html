@@ -2,7 +2,13 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — atualização v24.10
+       FOLHADOS D'OURO — atualização v25.0
+       NOVIDADES v25.0:
+       • Robustez de dados: histórico não é mais descartado após 200 registros.
+       • Exclusão de balde virou cancelamento reversível, preservando rastreabilidade.
+       • Backup administrativo em JSON e indicador simples de sincronização.
+       • Correção do tempo do porcionamento de líquidos e proteção contra
+         comandos de voz negativos como 'não está pronto'.
        NOVIDADES v24.10:
        • Rastreabilidade das farinhas: antes do porcionamento, confirma os
          lotes da Bagatelle e da Italiana 00, lembrando os últimos usados.
@@ -611,6 +617,13 @@
     .op-edit-btns .btn-main{flex:2}
     .op-edit-btns .btn-danger{flex:1;min-height:3rem}
     @keyframes geo-spin{to{transform:rotate(360deg)}}
+    .sync-pill{margin:.35rem 1rem 0;padding:.3rem .65rem;border:1px solid var(--brd);border-radius:.35rem;
+      font-size:.58rem;color:var(--mut);text-align:center;letter-spacing:.05rem;flex-shrink:0}
+    .sync-pill.ok{color:var(--grn);border-color:rgba(74,222,128,.3)}
+    .sync-pill.pending{color:var(--gold);border-color:rgba(201,151,58,.35)}
+    .sync-pill.err{color:var(--red);border-color:rgba(248,113,113,.35)}
+    .lote-card.cancelado{opacity:.62;border-color:#5a1a0e}
+    .lote-cancelado{font-size:.68rem;color:var(--red);font-weight:bold;margin-top:.35rem}
   </style>
   <!-- Firebase Realtime Database (compat, namespaced) — CDN, sem build -->
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
@@ -656,6 +669,10 @@
     <label class="cfg-mini">Longitude da fábrica<input id="inp-geo-lng" class="inp" type="text" inputmode="decimal" placeholder="-47.3940625"></label>
   </div>
   <label class="cfg-mini" style="margin-top:.1rem">Raio permitido (metros)<input id="inp-geo-raio" class="inp" type="number" min="10" placeholder="150"></label>
+  <div class="cfg-sep"></div>
+  <div class="cfg-t" style="font-size:1rem">💾 Backup</div>
+  <div class="cfg-s" style="font-size:.72rem;line-height:1.45">Exporta uma cópia dos dados de produção deste aparelho para recuperação e auditoria.</div>
+  <button class="link-btn" style="width:100%;text-align:center;margin-bottom:.4rem" onclick="exportarBackup()">Exportar backup dos dados</button>
   <button class="btn-main" onclick="salvarConfig()">Salvar e Continuar</button>
   <button class="link-btn" style="margin-top:.3rem;width:100%;text-align:center" onclick="ir('start')">← Voltar</button>
 </div>
@@ -708,6 +725,7 @@
     <div class="op-bar-nome" id="op-bar-nome">—</div>
     <button class="op-bar-trocar" onclick="trocarOperador()">Trocar</button>
   </div>
+  <div class="sync-pill" id="sync-pill">Salvo neste aparelho</div>
   <div class="modulos-label">Módulos de Produção</div>
   <div class="modulos">
     <div class="modulo ativo" data-perm="porcionamento" onclick="entrarPorcionamento()">
@@ -1513,12 +1531,19 @@ const FB_CFG={
 };
 const FB_SYNC_KEYS=['fdo_lotes','fdo_laminacoes','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais'];
 const FB={
-  db:null, applying:false, lastJson:{},
+  db:null, applying:false, lastJson:{}, syncEstado:'local',
+  status(estado,txt){
+    this.syncEstado=estado;
+    const el=document.getElementById('sync-pill'); if(!el)return;
+    el.className='sync-pill'+(estado==='ok'?' ok':estado==='pending'?' pending':estado==='err'?' err':'');
+    el.textContent=txt||(estado==='ok'?'✓ Sincronizado':estado==='pending'?'Sincronizando…':estado==='err'?'⚠ Sincronização pendente':'Salvo neste aparelho');
+  },
   init(){
-    if(typeof firebase==='undefined'||!firebase.initializeApp) return;
+    if(typeof firebase==='undefined'||!firebase.initializeApp){ this.status('local','Salvo neste aparelho · sem nuvem'); return; }
     try{
       if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
       this.db=firebase.database();
+      this.status(navigator.onLine?'pending':'local',navigator.onLine?'Sincronizando…':'Salvo neste aparelho · sem internet');
       // Escuta cada chave sincronizada. Quando muda na nuvem, aplica local
       // e re-renderiza a tela atual.
       FB_SYNC_KEYS.forEach(k=>{
@@ -1555,18 +1580,20 @@ const FB={
           try{ localStorage.setItem(k,json); }catch{}
           this.applying=false;
           this.repaint();
-        },err=>{ console.warn('[FB] listen',k,err); });
+          this.status('ok','✓ Sincronizado');
+        },err=>{ console.warn('[FB] listen',k,err); this.status('err','⚠ Salvo aqui · nuvem pendente'); });
       });
     }catch(e){ console.warn('[FB] init falhou',e); }
   },
   push(k,v){
     if(this.applying) return; // veio do listener, não devolve
     if(!FB_SYNC_KEYS.includes(k)) return; // só sincroniza chaves de produção
-    if(!this.db) return; // offline ou SDK não carregou: fica só local
+    if(!this.db){ this.status('local','Salvo neste aparelho'); return; } // offline ou SDK não carregou: fica só local
     try{
       const json=JSON.stringify(v);
       this.lastJson[k]=json;
-      this.db.ref(k).set(v).catch(e=>console.warn('[FB] set',k,e));
+      this.status('pending','Salvo aqui · sincronizando…');
+      this.db.ref(k).set(v).then(()=>this.status('ok','✓ Sincronizado')).catch(e=>{console.warn('[FB] set',k,e);this.status('err','⚠ Salvo aqui · nuvem pendente');});
     }catch(e){ console.warn('[FB] push',k,e); }
   },
   // Re-renderiza a tela visível quando dado chega da nuvem
@@ -1911,6 +1938,15 @@ function carregarConfig(){
   document.getElementById('inp-geo-raio').value=GEO.getRaio();
   // Lista de operadores (v23)
   if(typeof renderOpList==='function') renderOpList();
+}
+function exportarBackup(){
+  const chaves=['fdo_lotes','fdo_laminacoes','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run'];
+  const dados={app:'Folhados d\'Ouro — Produção',versao:'25.0',exportadoEm:new Date().toISOString(),origem:'localStorage',dados:{}};
+  chaves.forEach(k=>{ const raw=localStorage.getItem(k); if(raw!==null){ try{dados.dados[k]=JSON.parse(raw);}catch{dados.dados[k]=raw;} } });
+  const blob=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='fdo-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 function salvarConfig(){
   const k=document.getElementById('inp-key').value.trim();
@@ -2317,22 +2353,30 @@ function criarLoteSecos(){
   };
   const todos=LS.g('fdo_lotes',[]);
   todos.unshift(lote);
-  LS.s('fdo_lotes',todos.slice(0,200));
+  LS.s('fdo_lotes',todos);
   return lote;
 }
 
+function loteAtivo(l){ return !(l&&l.cancelado&&l.cancelado.emTs); }
 function apagarLote(id){
   if(!OP.pode('apagar')){
-    alert('Você não tem permissão para apagar baldes.\nPeça ao administrador.');
+    alert('Você não tem permissão para cancelar baldes.\nPeça ao administrador.');
     return;
   }
   const todos=LS.g('fdo_lotes',[]);
   const lote=todos.find(l=>l.id===id);
-  if(!lote) return;
-  const ok=confirm(`Apagar o Balde #${lote.num} e TODOS os seus processos (porcionamento, batimento e demais etapas)?\n\nEsta ação não pode ser desfeita.`);
+  if(!lote||!loteAtivo(lote)) return;
+  const ok=confirm(`Cancelar o Balde #${lote.num}?\n\nEle sai das etapas de produção, mas permanece no histórico e pode ser restaurado.`);
   if(!ok) return;
-  LS.s('fdo_lotes',todos.filter(l=>l.id!==id));
+  lote.cancelado={em:new Date().toLocaleString('pt-BR'),emTs:Date.now(),op:getOp()};
+  LS.s('fdo_lotes',todos);
   renderHist();
+}
+function restaurarLote(id){
+  if(!OP.pode('apagar')) return;
+  const todos=LS.g('fdo_lotes',[]); const lote=todos.find(l=>l.id===id); if(!lote||loteAtivo(lote))return;
+  if(!confirm(`Restaurar o Balde #${lote.num} para a produção?`))return;
+  delete lote.cancelado; LS.s('fdo_lotes',todos); renderHist();
 }
 
 // Migra sessões antigas concluídas (fdo_sess) para lotes — só uma vez
@@ -2367,6 +2411,7 @@ function migrarLotesAntigos(){
 // ════════════════════════════════════════════════════════════
 function lotesPendentesBatimento(){
   return LS.g('fdo_lotes',[]).filter(l=>{
+    if(!loteAtivo(l)) return false;
     const e=l.etapas||{};
     // Bater a Massa: basta os SECOS prontos (os líquidos já estão na etiqueta; ficam só p/ consulta)
     return secosFeito(l) && !(e.batimento && e.batimento.feito);
@@ -2395,7 +2440,7 @@ function renderBatLotes(){
 }
 // PORCIONAMENTO DE LÍQUIDOS — lista lotes com os secos prontos e líquidos pendentes
 function lotesPendentesLiquidos(){
-  return LS.g('fdo_lotes',[]).filter(l=> secosFeito(l) && !liquidosFeito(l));
+  return LS.g('fdo_lotes',[]).filter(l=> loteAtivo(l) && secosFeito(l) && !liquidosFeito(l));
 }
 function abrirLiquidosLotes(){ renderLiquidosLotes(); ir('liquidos-lotes'); }
 function renderLiquidosLotes(){
@@ -2422,6 +2467,7 @@ function renderLiquidosLotes(){
 function tempAmbienteDoDia(){
   const hoje=new Date().toDateString();
   for(const l of LS.g('fdo_lotes',[])){
+    if(!loteAtivo(l)) continue;
     const b=l.etapas&&l.etapas.batimento;
     if(b&&b.feito&&b.tempAmbiente!=null&&b.emTs&&new Date(b.emTs).toDateString()===hoje) return b.tempAmbiente;
   }
@@ -3121,6 +3167,7 @@ async function imprimirTeste(){
 // ════════════════════════════════════════════════════════════
 function lotesPendentesFermentacao(){
   return LS.g('fdo_lotes',[]).filter(l=>{
+    if(!loteAtivo(l)) return false;
     const e=l.etapas||{};
     return e.batimento && e.batimento.feito && !(e.fermentacao && e.fermentacao.feito);
   });
@@ -3149,6 +3196,7 @@ function renderFermLotes(){
 function tempFermentacaoDoDia(){
   const hoje=new Date().toDateString();
   for(const l of LS.g('fdo_lotes',[])){
+    if(!loteAtivo(l)) continue;
     const f=l.etapas&&l.etapas.fermentacao;
     if(f&&f.feito&&f.tempMin!=null&&f.emTs&&new Date(f.emTs).toDateString()===hoje) return {min:f.tempMin,max:f.tempMax};
   }
@@ -3552,6 +3600,10 @@ function responderDivisao(a,b){
   falar(msg);
 }
 
+function comandoNegativo(t){
+  const x=(t||'').toLowerCase();
+  return ['não está pronto','nao esta pronto','ainda não','ainda nao','não terminei','nao terminei','não fiz','nao fiz','não coloquei','nao coloquei','não pesei','nao pesei','não acabou','nao acabou'].some(p=>x.includes(p));
+}
 function processarComando(txt,alt){
   const todas=[txt];
   if(alt)for(let i=1;i<alt.length;i++)todas.push(alt[i].transcript.trim().toLowerCase());
@@ -3590,6 +3642,7 @@ function processarComando(txt,alt){
 
   // 3) Comandos normais
   for(const t of todas){
+    if(comandoNegativo(t) && matchCmd(t,'avancar')){ mostrarAI('Entendi: ainda não concluído.'); falar('Certo. Aguardo você concluir.'); return; }
     const som=ehComandoSom(t); if(som!==null){ aplicarComandoSom(som); return; }
     if(matchCmd(t,'avancar')){avancar();return;}
     if(matchCmd(t,'voltar')){voltarPasso();return;}
@@ -3828,6 +3881,7 @@ function finalizarSecos(){
 function concluirLiquidos(){
   const todos=LS.g('fdo_lotes',[]);
   const lote=todos.find(l=>l.id===st.liqLote);
+  const inicioSessao=st.sessionStart||Date.now();
   pararVoz();liberarWakeLock();st.sessionStart=0;st.modo='normal';
   mostrarPerguntaSecos(false);
   if(!lote){ ir('start'); return; }
@@ -3836,7 +3890,7 @@ function concluirLiquidos(){
   lote.etapas.porcionamento_liquidos={
     feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(),
     op:getOp(), concluidos:st.done.size, total:RECEITA.length,
-    dur:Math.round((Date.now()-(st.sessionStart||Date.now()))/60000)
+    dur:Math.round((Date.now()-inicioSessao)/60000)
   };
   LS.s('fdo_lotes',todos);
   st.liqLote=null;
@@ -3885,8 +3939,11 @@ function renderHist(){
       const ok=l.etapas&&l.etapas[k]&&l.etapas[k].feito;
       return `<span class="etapa-chip ${ok?'ok':'pend'}">${ok?'✓ ':''}${nomeEtapa(k)}</span>`;
     }).join('');
-    const btnDel = podeApagar ? `<button class="lote-del" onclick="apagarLote('${l.id}')" title="Apagar balde">🗑</button>` : '';
-    return `<div class="lote-card">
+    const cancelado=!loteAtivo(l);
+    const btnDel = podeApagar ? (cancelado
+      ? `<button class="lote-del" onclick="restaurarLote('${l.id}')" title="Restaurar balde">↩</button>`
+      : `<button class="lote-del" onclick="apagarLote('${l.id}')" title="Cancelar balde">🗑</button>`) : '';
+    return `<div class="lote-card ${cancelado?'cancelado':''}">
       <div class="lote-head">
         <span class="lote-num">Balde #${l.num}</span>
         <span class="lote-rec">${l.receitaNome||l.rotulo||'—'}</span>
@@ -3895,6 +3952,7 @@ function renderHist(){
         ${btnDel}
       </div>
       <div class="lote-meta">${meta}</div>
+      ${cancelado?`<div class="lote-cancelado">CANCELADO · ${l.cancelado.em||''} · ${_escHtml(l.cancelado.op||'')}</div>`:''}
       <div class="lote-etapas">${chips}</div>
     </div>`;
   }).join('');
@@ -3915,7 +3973,7 @@ function fmtMMSSseg(seg){
 function renderHistBatimentos(){
   const todos=LS.g('fdo_lotes',[]);
   const feitos=todos
-    .filter(l=>l&&l.etapas&&l.etapas.batimento&&l.etapas.batimento.feito)
+    .filter(l=>loteAtivo(l)&&l&&l.etapas&&l.etapas.batimento&&l.etapas.batimento.feito)
     .map(l=>({lote:l, b:l.etapas.batimento}))
     .sort((a,b)=>(Number(b.b.emTs)||0)-(Number(a.b.emTs)||0));
   // Faixa de médias por receita (usa tempoSeg)
@@ -3977,7 +4035,7 @@ function lotePartesDisp(l){
   if(!b||!b.feito) return 0;
   return Math.max(0,(Number(b.partes)||0)-(Number(b.partesUsadas)||0));
 }
-function lotesComPartes(){ return LS.g('fdo_lotes',[]).filter(l=>lotePartesDisp(l)>0); }
+function lotesComPartes(){ return LS.g('fdo_lotes',[]).filter(l=>loteAtivo(l)&&lotePartesDisp(l)>0); }
 function dataCurta(ts){ const d=new Date(ts); return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}); }
 // Próxima sequência do dia para a nomenclatura DD/MM · N
 function proxLamSeqDia(ts){
@@ -4106,7 +4164,7 @@ function criarLaminacao(){
     receita, receitaNome, composicao, totalPartes:total, temMassaAnterior:temAnterior, op:getOp(),
     etapas:{laminacao:{feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(), op:getOp()}}
   };
-  const lams=LS.g('fdo_laminacoes',[]); lams.unshift(lam); LS.s('fdo_laminacoes',lams.slice(0,200));
+  const lams=LS.g('fdo_laminacoes',[]); lams.unshift(lam); LS.s('fdo_laminacoes',lams);
   LS.s('fdo_lotes',todos);
   st.lamSel={};
   renderLaminacao();
@@ -4191,6 +4249,9 @@ function destinoBoot(){
 
 // Boot do app (chamado pelo callback do GEO.bootstrap após a geo passar)
 function bootApp(){ destinoBoot(); }
+
+window.addEventListener('online',()=>{ if(FB.db)FB.status('pending','Internet voltou · sincronizando…'); });
+window.addEventListener('offline',()=>FB.status('local','Salvo neste aparelho · sem internet'));
 
 (function(){
   // Sincronia multi-aparelho via Firebase Realtime Database
