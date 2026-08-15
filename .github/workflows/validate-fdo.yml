@@ -19,3 +19,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validar aplicação, PWA e receitas
         run: python3 tools/validate_fdo.py
+      - name: Testar sincronização multiaparelho v25.1
+        run: node tools/test_sync_v25_1.js

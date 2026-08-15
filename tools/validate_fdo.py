@@ -10,6 +10,29 @@ errors=[]
 
 def fail(msg): errors.append(msg)
 
+# v25.2 — Firebase Authentication + autorização do aparelho + rules as code
+for marker in ("firebase-auth-compat.js","const DEVICE={","fdo_dispositivos/","signInAnonymously","DEVICE.bootstrap(()=>GEO.bootstrap(bootApp))","dispositivo:(typeof DEVICE"):
+    if marker not in html: fail('v25.2 sem marcador: '+marker)
+for req in ('database.rules.json','firebase.json'):
+    if not (ROOT/req).exists(): fail('Arquivo Firebase ausente: '+req)
+try:
+    rules=json.loads((ROOT/'database.rules.json').read_text(encoding='utf-8'))
+    rr=rules.get('rules',{})
+    if rr.get('.read') is not False or rr.get('.write') is not False: fail('Raiz do RTDB deve negar leitura/gravação por padrão')
+    if 'fdo_dispositivos' not in rr or 'fdo_v25' not in rr: fail('Rules sem allowlist de aparelho/v25')
+    if rr.get('fdo_acessos',{}).get('.read') is not False: fail('fdo_acessos não deve ser legível pelo cliente')
+except Exception as e: fail('database.rules.json inválido: '+str(e))
+try:
+    fj=json.loads((ROOT/'firebase.json').read_text(encoding='utf-8'))
+    if fj.get('database',{}).get('rules')!='database.rules.json': fail('firebase.json não aponta para database.rules.json')
+except Exception as e: fail('firebase.json inválido: '+str(e))
+
+# v25.1 — sincronização granular/transacional
+for marker in ("fdo_v25/lotes","fdo_v25/laminacoes","fdo_sync_outbox_v25","async function proxLoteNum()","await proxLoteNum()","async function proxLamSeqDia(ts)","function lotePartesUsadas(l)","Aparelho antigo detectado · conciliando","criarLaminacaoAtomica","fdo_v25/meta/lote_seq_reset","ack(k,id,sent)"):
+    if marker not in html: fail('v25.1 sem marcador: '+marker)
+if "function proxLoteNum(){ const n=LS.g('fdo_lote_seq',0)+1" in html: fail('Numeração antiga ainda presente')
+if "versao:'25.0'" in html: fail('Backup ainda declara versão 25.0')
+
 # 1) JavaScript inline: sintaxe real via Node
 scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',html,re.S)
 inline='\n'.join(x for x in scripts if x.strip())
