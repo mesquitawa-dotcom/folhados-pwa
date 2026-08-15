@@ -1,6 +1,6 @@
 // Folhados d'Ouro — Service Worker
 // Versão do cache: incrementada a TODA entrega.
-const CACHE='fdo-v25-1';
+const CACHE='fdo-v25-2';
 const ASSETS=[
   './',
   './index.html',

@@ -2,7 +2,11 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — atualização v25.1
+       FOLHADOS D'OURO — atualização v25.2
+       NOVIDADES v25.2:
+       • Firebase Authentication identifica o aparelho sem substituir o login do padeiro.
+       • Apenas aparelhos previamente autorizados podem sincronizar dados de produção.
+       • Regras do Realtime Database passam a ser versionadas no GitHub e negam acesso por padrão.
        NOVIDADES v25.1:
        • Sincronização granular: baldes e laminações passam a registros independentes no Firebase.
        • Ponte temporária concilia aparelhos antigos sem apagar dados da estrutura nova.
@@ -632,9 +636,24 @@
   </style>
   <!-- Firebase Realtime Database (compat, namespaced) — CDN, sem build -->
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
 </head>
 <body>
+
+<div id="s-device" class="scr off">
+  <div class="geo-wrap">
+    <div class="geo-icon">🔐</div>
+    <div class="geo-title alert" id="device-title">Autorizar aparelho</div>
+    <div class="geo-msg" id="device-msg">Este aparelho ainda não está autorizado a sincronizar a produção.</div>
+    <div class="geo-dist" style="word-break:break-all">Código do aparelho<br><b id="device-code">—</b></div>
+    <div class="geo-actions">
+      <button class="btn-main" onclick="DEVICE.tentarNovamente()">Verificar autorização</button>
+      <button class="link-btn" onclick="DEVICE.copiarCodigo()">Copiar código</button>
+    </div>
+    <div class="cfg-s" style="font-size:.66rem;line-height:1.45;margin-top:.8rem">A autorização do aparelho é separada do login do padeiro. Depois de autorizado, cada operador continua entrando com seu próprio nome e PIN.</div>
+  </div>
+</div>
 
 <div id="s-config" class="scr off">
   <div class="cfg-t">🔑 Chave API Gemini</div>
@@ -674,6 +693,9 @@
     <label class="cfg-mini">Longitude da fábrica<input id="inp-geo-lng" class="inp" type="text" inputmode="decimal" placeholder="-47.3940625"></label>
   </div>
   <label class="cfg-mini" style="margin-top:.1rem">Raio permitido (metros)<input id="inp-geo-raio" class="inp" type="number" min="10" placeholder="150"></label>
+  <div class="cfg-sep"></div>
+  <div class="cfg-t" style="font-size:1rem">📱 Este aparelho</div>
+  <div class="cfg-s" id="device-info" style="font-size:.68rem;line-height:1.45;word-break:break-all">Identificação Firebase: —</div>
   <div class="cfg-sep"></div>
   <div class="cfg-t" style="font-size:1rem">💾 Backup</div>
   <div class="cfg-s" style="font-size:.72rem;line-height:1.45">Exporta uma cópia dos dados de produção deste aparelho para recuperação e auditoria.</div>
@@ -1534,6 +1556,68 @@ const FB_CFG={
   messagingSenderId:"904726497964",
   appId:"1:904726497964:web:03b4b9111ff0ff2580ed09"
 };
+// ===== Autorização do aparelho via Firebase Authentication (v25.2) ========
+// Identidade do APARELHO é separada da identidade do PADEIRO.
+// O padeiro continua escolhendo nome + PIN. O Firebase Auth apenas impede que
+// navegadores/aparelhos não cadastrados leiam ou alterem a nuvem.
+const DEVICE={
+  auth:null, uid:null, registro:null, aprovado:false, localOnly:false,
+  iniciado:false, cloudStarted:false, bootLiberado:false, bootCb:null, ref:null,
+  cache(){return LS.g('fdo_device_auth_v25',null)},
+  nome(){return (this.registro&&this.registro.nome)||('Aparelho '+String(this.uid||LS.g('fdo_device_uid_v25','')).slice(-6).toUpperCase())},
+  audit(){return {uid:this.uid||LS.g('fdo_device_uid_v25','')||'',nome:this.nome()}},
+  renderConfig(){const el=document.getElementById('device-info');if(!el)return;const u=this.uid||LS.g('fdo_device_uid_v25','')||'—';el.textContent='Firebase: '+u+' · '+(this.aprovado?'autorizado':(this.localOnly?'autorizado anteriormente · offline':'aguardando autorização'));},
+  mostrar(msg,titulo){
+    const t=document.getElementById('device-title'),m=document.getElementById('device-msg'),c=document.getElementById('device-code');
+    if(t)t.textContent=titulo||'Autorizar aparelho';if(m)m.textContent=msg||'Este aparelho ainda não está autorizado.';if(c)c.textContent=this.uid||LS.g('fdo_device_uid_v25','')||'—';
+    this.renderConfig();ir('device');
+  },
+  async copiarCodigo(){const u=this.uid||LS.g('fdo_device_uid_v25','')||'';if(!u)return;try{await navigator.clipboard.writeText(u);alert('Código do aparelho copiado.')}catch(e){alert('Código do aparelho: '+u)}},
+  async usuarioRestaurado(){
+    if(!this.auth)return null;if(this.auth.currentUser)return this.auth.currentUser;
+    return await new Promise(resolve=>{let fim=false,off=null;const done=u=>{if(fim)return;fim=true;try{off&&off()}catch{}resolve(u||null)};off=this.auth.onAuthStateChanged(u=>done(u),()=>done(null));setTimeout(()=>done(this.auth.currentUser),900)});
+  },
+  liberar(comNuvem){
+    if(comNuvem&&!this.cloudStarted){this.cloudStarted=true;SYNC25.init();}
+    if(this.bootLiberado)return;this.bootLiberado=true;const cb=this.bootCb;if(typeof cb==='function')cb();
+  },
+  cacheAprovacao(reg){this.registro=reg||null;this.aprovado=true;this.localOnly=false;LS.s('fdo_device_auth_v25',{uid:this.uid,aprovado:true,nome:(reg&&reg.nome)||'',emTs:Date.now()});this.renderConfig()},
+  aplicar(reg){
+    this.registro=reg||null;
+    if(reg&&reg.ativo===true){this.cacheAprovacao(reg);FB.status('pending','Aparelho autorizado · sincronizando…');this.liberar(true);return}
+    this.aprovado=false;this.localOnly=false;try{localStorage.removeItem('fdo_device_auth_v25')}catch{};FB.status('err','⚠ Aparelho não autorizado');
+    this.mostrar('Informe este código ao administrador. Depois que o aparelho for autorizado no Firebase, toque em “Verificar autorização”.');
+  },
+  escutar(){
+    if(!FB.db||!this.uid)return;try{this.ref&&this.ref.off&&this.ref.off()}catch{}
+    this.ref=FB.db.ref('fdo_dispositivos/'+this.uid);
+    this.ref.on('value',snap=>this.aplicar(snap.val()),err=>{console.warn('[DEVICE] autorização',err);if(!navigator.onLine){const c=this.cache();if(c&&c.uid===this.uid&&c.aprovado){this.aprovado=true;this.localOnly=true;this.registro={nome:c.nome||'',ativo:true};FB.status('local','Aparelho autorizado · offline');this.liberar(false);return}}this.mostrar('Não foi possível consultar a autorização deste aparelho. Verifique a internet e tente novamente.','Falha ao validar aparelho')});
+  },
+  async bootstrap(cb){
+    this.bootCb=cb||this.bootCb;if(this.iniciado)return;this.iniciado=true;
+    if(typeof firebase==='undefined'||!firebase.initializeApp||!firebase.auth){this.mostrar('O módulo Firebase Authentication não carregou. Recarregue o aplicativo.','Firebase Authentication indisponível');return}
+    try{
+      if(!firebase.apps.length)firebase.initializeApp(FB_CFG);FB.db=firebase.database();this.auth=firebase.auth();
+      let user=await this.usuarioRestaurado();
+      if(!user&&navigator.onLine){const cred=await this.auth.signInAnonymously();user=cred.user||this.auth.currentUser}
+      if(!user){
+        const c=this.cache();if(!navigator.onLine&&c&&c.aprovado){this.uid=c.uid||'';this.registro={nome:c.nome||'',ativo:true};this.aprovado=true;this.localOnly=true;FB.status('local','Aparelho autorizado · offline');this.liberar(false);return}
+        this.mostrar('Conecte este aparelho à internet para criar/verificar sua identidade Firebase.','Internet necessária para autorizar');return;
+      }
+      this.uid=user.uid;try{localStorage.setItem('fdo_device_uid_v25',JSON.stringify(this.uid))}catch{};this.escutar();
+    }catch(e){
+      console.warn('[DEVICE] bootstrap',e);this.iniciado=false;const c=this.cache();
+      if(!navigator.onLine&&c&&c.aprovado){this.uid=c.uid||'';this.registro={nome:c.nome||'',ativo:true};this.aprovado=true;this.localOnly=true;FB.status('local','Aparelho autorizado · offline');this.liberar(false);return}
+      const cod=String(e&&e.code||'');const msg=cod.includes('operation-not-allowed')?'Ative o método de login Anônimo no Firebase Authentication antes da publicação.':'Não foi possível autenticar este aparelho no Firebase.';this.mostrar(msg,'Configuração Firebase necessária');
+    }
+  },
+  tentarNovamente(){this.iniciado=false;this.bootstrap(this.bootCb)},
+  online(){
+    if(this.aprovado&&this.auth&&this.auth.currentUser){if(!this.cloudStarted){this.cloudStarted=true;SYNC25.init()}else FB.aoVoltarOnline();return}
+    this.iniciado=false;this.bootstrap(this.bootCb);
+  }
+};
+
 const FB_SYNC_KEYS=['fdo_lotes','fdo_laminacoes','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais'];
 const FB={
   db:null, applying:false, lastJson:{}, syncEstado:'local',
@@ -1889,6 +1973,7 @@ const GEO={
       const reg={
         t: Date.now(),
         op: op||'?',
+        dispositivo: (typeof DEVICE!=='undefined'?DEVICE.audit():null),
         status: status,
         lat: fix? fix.lat : null,
         lng: fix? fix.lng : null,
@@ -1943,10 +2028,11 @@ function carregarConfig(){
   document.getElementById('inp-geo-raio').value=GEO.getRaio();
   // Lista de operadores (v23)
   if(typeof renderOpList==='function') renderOpList();
+  if(typeof DEVICE!=='undefined') DEVICE.renderConfig();
 }
 function exportarBackup(){
   const chaves=['fdo_lotes','fdo_laminacoes','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25'];
-  const dados={app:'Folhados d\'Ouro — Produção',versao:'25.1',exportadoEm:new Date().toISOString(),origem:'localStorage',dados:{}};
+  const dados={app:'Folhados d\'Ouro — Produção',versao:'25.2',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
   chaves.forEach(k=>{ const raw=localStorage.getItem(k); if(raw!==null){ try{dados.dados[k]=JSON.parse(raw);}catch{dados.dados[k]=raw;} } });
   const blob=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
@@ -2346,6 +2432,7 @@ async function criarLoteSecos(){
   const seq=await proxLoteNum();
   const lote={
     num:seq.num, numOrigem:seq.origem, id:FB.novoId('lote'),
+    dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),
     receita:st.receita, receitaNome:r.nome, rotulo:r.rotulo,
     criado:agora.toLocaleString('pt-BR'), criadoTs:agora.getTime(),
     etapas:{ porcionamento_secos:{
@@ -4135,6 +4222,7 @@ async function criarLaminacao(){
   if(receitas.size===1){ receita=[...receitas][0]; receitaNome=(RECEITAS[receita]&&RECEITAS[receita].rotulo)||''; }
   const lam={
     id:FB.novoId('lam'), nome, seqDia, data:agora.toLocaleString('pt-BR'), dataTs:agora.getTime(),
+    dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),
     receita, receitaNome, composicao, totalPartes:total, temMassaAnterior:temAnterior, op:getOp(),
     etapas:{laminacao:{feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(), op:getOp()}}
   };
@@ -4203,7 +4291,7 @@ function monitorarBateria(){
 const SYNC25={
   COL:['fdo_lotes','fdo_laminacoes'], SCALAR:['fdo_operadores','fdo_farinha_lotes_atuais'],
   OUT:'fdo_sync_outbox_v25', itemJson:{fdo_lotes:{},fdo_laminacoes:{}}, raw:{fdo_lotes:{},fdo_laminacoes:{}}, ready:{fdo_lotes:false,fdo_laminacoes:false},
-  flushing:false, mirrorTimer:{}, mirrorJson:{},
+  flushing:false, iniciado:false, mirrorTimer:{}, mirrorJson:{},
   path(k){return k==='fdo_lotes'?'fdo_v25/lotes':'fdo_v25/laminacoes'},
   key(id){return String(id||'sem_id').replace(/[.#$\[\]\/]/g,'_')},
   clone(v){return v==null?v:JSON.parse(JSON.stringify(v))},
@@ -4271,15 +4359,16 @@ const SYNC25={
   async resetSeq(){if(!FB.db||!navigator.onLine){alert('Conecte à internet para reiniciar a numeração com segurança em todos os aparelhos.');return false}try{const token=Date.now();await FB.db.ref('fdo_v25/meta/lote_seq').transaction(()=>0,undefined,false);await FB.db.ref('fdo_v25/meta/lote_seq_reset').set(token);await FB.db.ref('fdo_lote_seq').set(0);this.local('fdo_seq_reset_ts_v25',token);this.local('fdo_lote_seq',0);return true}catch(e){alert('Não foi possível reiniciar a numeração na nuvem.');return false}},
   absorverSeq(v){const n=Number(v)||0,local=Number(LS.g('fdo_lote_seq',0))||0;if(n>local)this.local('fdo_lote_seq',n);if(FB.db&&n>0)FB.db.ref('fdo_v25/meta/lote_seq').transaction(cur=>Math.max(Number(cur)||0,n),undefined,false).catch(()=>{})},
   init(){
-    if(typeof firebase==='undefined'||!firebase.initializeApp){FB.status('local','Salvo neste aparelho · sem nuvem');return}try{if(!firebase.apps.length)firebase.initializeApp(FB_CFG);FB.db=firebase.database();FB.status(navigator.onLine?'pending':'local',navigator.onLine?'Sincronizando…':'Salvo neste aparelho · sem internet');
+    if(this.iniciado)return;if(typeof DEVICE!=='undefined'&&!DEVICE.aprovado){FB.status('err','⚠ Aparelho não autorizado');return}this.iniciado=true;
+    if(typeof firebase==='undefined'||!firebase.initializeApp){this.iniciado=false;FB.status('local','Salvo neste aparelho · sem nuvem');return}try{if(!firebase.apps.length)firebase.initializeApp(FB_CFG);FB.db=firebase.database();FB.status(navigator.onLine?'pending':'local',navigator.onLine?'Sincronizando…':'Salvo neste aparelho · sem internet');
       this.COL.forEach(k=>{FB.db.ref(this.path(k)).on('value',snap=>this.apply(k,snap.val()),e=>{console.warn('[FB25] granular',k,e);FB.status('err','⚠ Nuvem v25 indisponível')});FB.db.ref(k).on('value',snap=>this.legacy(k,snap.val()),e=>console.warn('[FB25] legacy',k,e))});
       this.SCALAR.forEach(k=>FB.db.ref(k).on('value',snap=>{const v=snap.val();if(v==null){const l=localStorage.getItem(k);if(l!==null)try{FB.db.ref(k).set(JSON.parse(l))}catch(e){};return}FB.applying=true;this.local(k,v);FB.applying=false;FB.repaint()},e=>console.warn('[FB25] scalar listen',k,e)));
       FB.db.ref('fdo_lote_seq').on('value',snap=>this.absorverSeq(snap.val()));FB.db.ref('fdo_v25/meta/lote_seq').on('value',snap=>{const n=Number(snap.val())||0;if(n>(Number(LS.g('fdo_lote_seq',0))||0))this.local('fdo_lote_seq',n)});FB.db.ref('fdo_v25/meta/lote_seq_reset').on('value',snap=>{const t=Number(snap.val())||0,seen=Number(LS.g('fdo_seq_reset_ts_v25',0))||0;if(t>seen){this.local('fdo_seq_reset_ts_v25',t);this.local('fdo_lote_seq',0)}});FB.db.ref('fdo_v25/meta/schema').transaction(cur=>Math.max(Number(cur)||0,1),undefined,false).catch(()=>{});this.flush();
-    }catch(e){console.warn('[FB25] init',e);FB.status('err','⚠ Firebase indisponível')}
+    }catch(e){this.iniciado=false;console.warn('[FB25] init',e);FB.status('err','⚠ Firebase indisponível')}
   },
   online(){if(!FB.db)return;FB.status('pending','Internet voltou · sincronizando…');this.flush();this.COL.forEach(k=>this.mirror(k))}
 };
-FB.init=()=>SYNC25.init();
+FB.init=()=>DEVICE.bootstrap(()=>SYNC25.init());
 FB.push=(k,v)=>SYNC25.push(k,v);
 FB.novoId=p=>SYNC25.novoId(p);
 FB.proxLoteNum=()=>SYNC25.proxLoteNum();
@@ -4318,12 +4407,12 @@ function destinoBoot(){
 // Boot do app (chamado pelo callback do GEO.bootstrap após a geo passar)
 function bootApp(){ destinoBoot(); }
 
-window.addEventListener('online',()=>FB.aoVoltarOnline());
+window.addEventListener('online',()=>DEVICE.online());
 window.addEventListener('offline',()=>FB.status('local','Salvo neste aparelho · sem internet'));
 
 (function(){
-  // Sincronia multi-aparelho via Firebase Realtime Database
-  FB.init();
+  // A sincronização Firebase só inicia depois da autorização do aparelho (v25.2).
+  // O login do padeiro continua separado, por nome + PIN.
   // PIN padrão na primeira execução
   if(LS.g('fdo_pin',null)===null) LS.s('fdo_pin','123789');
   if(LS.g('fdo_pin_ativo',null)===null) LS.s('fdo_pin_ativo',true);
@@ -4353,7 +4442,7 @@ window.addEventListener('offline',()=>FB.status('local','Salvo neste aparelho ·
   // Verifica localização ANTES de mostrar a interface. Se passar (ou estiver
   // desativado, ou se houver operador autorizado logado, ou for primeira
   // config sem chave Gemini), executa o bootApp que escolhe Login/Start/Config.
-  GEO.bootstrap(bootApp);
+  DEVICE.bootstrap(()=>GEO.bootstrap(bootApp));
 })();
 </script>
 </body>
