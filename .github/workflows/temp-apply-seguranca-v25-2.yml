@@ -27,13 +27,14 @@ jobs:
           node --check /tmp/fdo.js
           node tools/test_sync_v25_1.js
           git diff --check
-      - name: Install Java 21 for Firebase Emulator
+      - name: Validate RTDB rules in Firebase Emulator with Java 21
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y openjdk-21-jre-headless
+          export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+          export PATH="$JAVA_HOME/bin:$PATH"
           java -version
-      - name: Validate RTDB rules in Firebase Emulator
-        run: npx --yes firebase-tools@15.25.1 emulators:exec --only database --project demo-fdo "echo FIREBASE_RULES_EMULATOR_OK"
+          npx --yes firebase-tools@15.25.1 emulators:exec --only database --project demo-fdo "echo FIREBASE_RULES_EMULATOR_OK"
       - name: Commit final candidate
         run: |
           git config user.name "github-actions[bot]"
