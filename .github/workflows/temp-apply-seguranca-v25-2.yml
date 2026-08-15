@@ -1,0 +1,53 @@
+name: Temporary apply Firebase security v25.2
+
+on:
+  push:
+    branches:
+      - agent/seguranca-firebase-v25-2
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/seguranca-firebase-v25-2
+          fetch-depth: 0
+      - name: Apply v25.2 security patch
+        run: python3 tools/patch_seguranca_v25_2.py
+      - name: Validate candidate
+        run: |
+          python3 tools/validate_fdo.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,re
+          s=Path('index.html').read_text(encoding='utf-8')
+          assert "atualização v25.2" in s
+          assert 'firebase-auth-compat.js' in s
+          assert 'signInAnonymously' in s
+          assert 'const DEVICE={' in s
+          assert 'DEVICE.bootstrap(()=>GEO.bootstrap(bootApp))' in s
+          assert "const CACHE='fdo-v25-2';" in Path('sw.js').read_text(encoding='utf-8')
+          rules=json.loads(Path('database.rules.json').read_text(encoding='utf-8'))['rules']
+          assert rules['.read'] is False and rules['.write'] is False
+          assert rules['fdo_dispositivos']['$uid']['.write'] is False
+          assert rules['fdo_acessos']['.read'] is False
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S)
+          Path('/tmp/fdo.js').write_text('\n'.join(x for x in scripts if x.strip()),encoding='utf-8')
+          print('Firebase security structural OK')
+          PY
+          node --check /tmp/fdo.js
+          node tools/test_sync_v25_1.js
+          git diff --check
+      - name: Commit candidate
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js tools/validate_fdo.py database.rules.json firebase.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Implementar autenticação de aparelho e rules v25.2"
+          git push origin HEAD:agent/seguranca-firebase-v25-2
