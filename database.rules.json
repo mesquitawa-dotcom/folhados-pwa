@@ -1,0 +1,42 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "fdo_dispositivos": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": false
+      }
+    },
+
+    "fdo_lotes": {
+      ".read": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true",
+      ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+    },
+    "fdo_laminacoes": {
+      ".read": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true",
+      ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+    },
+    "fdo_lote_seq": {
+      ".read": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true",
+      ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+    },
+    "fdo_operadores": {
+      ".read": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true",
+      ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+    },
+    "fdo_farinha_lotes_atuais": {
+      ".read": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true",
+      ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+    },
+    "fdo_acessos": {
+      ".read": false,
+      ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+    },
+    "fdo_v25": {
+      ".read": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true",
+      ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+    }
+  }
+}

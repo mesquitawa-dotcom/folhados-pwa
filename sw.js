@@ -1,6 +1,6 @@
 // Folhados d'Ouro — Service Worker
 // Versão do cache: incrementada a TODA entrega.
-const CACHE='fdo-v24-10';
+const CACHE='fdo-v25-2';
 const ASSETS=[
   './',
   './index.html',
@@ -11,7 +11,7 @@ const ASSETS=[
 
 self.addEventListener('install',e=>{
   e.waitUntil(
-    caches.open(CACHE).then(c=>c.addAll(ASSETS)).catch(()=>{})
+    caches.open(CACHE).then(c=>c.addAll(ASSETS))
   );
   self.skipWaiting();
 });
