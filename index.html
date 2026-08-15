@@ -1578,7 +1578,7 @@ const DEVICE={
     return await new Promise(resolve=>{let fim=false,off=null;const done=u=>{if(fim)return;fim=true;try{off&&off()}catch{}resolve(u||null)};off=this.auth.onAuthStateChanged(u=>done(u),()=>done(null));setTimeout(()=>done(this.auth.currentUser),900)});
   },
   liberar(comNuvem){
-    if(comNuvem&&!this.cloudStarted){this.cloudStarted=true;SYNC25.init();}
+    if(comNuvem){if(!this.cloudStarted){this.cloudStarted=true;SYNC25.init();}else if(SYNC25.iniciado)FB.aoVoltarOnline();}
     if(this.bootLiberado)return;this.bootLiberado=true;const cb=this.bootCb;if(typeof cb==='function')cb();
   },
   cacheAprovacao(reg){this.registro=reg||null;this.aprovado=true;this.localOnly=false;LS.s('fdo_device_auth_v25',{uid:this.uid,aprovado:true,nome:(reg&&reg.nome)||'',emTs:Date.now()});this.renderConfig()},
@@ -1598,13 +1598,16 @@ const DEVICE={
     if(typeof firebase==='undefined'||!firebase.initializeApp||!firebase.auth){this.mostrar('O módulo Firebase Authentication não carregou. Recarregue o aplicativo.','Firebase Authentication indisponível');return}
     try{
       if(!firebase.apps.length)firebase.initializeApp(FB_CFG);FB.db=firebase.database();this.auth=firebase.auth();
+      try{await this.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)}catch(e){}
       let user=await this.usuarioRestaurado();
       if(!user&&navigator.onLine){const cred=await this.auth.signInAnonymously();user=cred.user||this.auth.currentUser}
       if(!user){
         const c=this.cache();if(!navigator.onLine&&c&&c.aprovado){this.uid=c.uid||'';this.registro={nome:c.nome||'',ativo:true};this.aprovado=true;this.localOnly=true;FB.status('local','Aparelho autorizado · offline');this.liberar(false);return}
         this.mostrar('Conecte este aparelho à internet para criar/verificar sua identidade Firebase.','Internet necessária para autorizar');return;
       }
-      this.uid=user.uid;try{localStorage.setItem('fdo_device_uid_v25',JSON.stringify(this.uid))}catch{};this.escutar();
+      this.uid=user.uid;try{localStorage.setItem('fdo_device_uid_v25',JSON.stringify(this.uid))}catch{}
+      const c=this.cache();if(!navigator.onLine&&c&&c.uid===this.uid&&c.aprovado){this.registro={nome:c.nome||'',ativo:true};this.aprovado=true;this.localOnly=true;FB.status('local','Aparelho autorizado · offline');this.liberar(false);return}
+      this.escutar();
     }catch(e){
       console.warn('[DEVICE] bootstrap',e);this.iniciado=false;const c=this.cache();
       if(!navigator.onLine&&c&&c.aprovado){this.uid=c.uid||'';this.registro={nome:c.nome||'',ativo:true};this.aprovado=true;this.localOnly=true;FB.status('local','Aparelho autorizado · offline');this.liberar(false);return}
@@ -1613,7 +1616,8 @@ const DEVICE={
   },
   tentarNovamente(){this.iniciado=false;this.bootstrap(this.bootCb)},
   online(){
-    if(this.aprovado&&this.auth&&this.auth.currentUser){if(!this.cloudStarted){this.cloudStarted=true;SYNC25.init()}else FB.aoVoltarOnline();return}
+    this.localOnly=false;
+    if(this.auth&&this.auth.currentUser){this.uid=this.auth.currentUser.uid;this.escutar();return}
     this.iniciado=false;this.bootstrap(this.bootCb);
   }
 };
