@@ -6,8 +6,7 @@
     "fdo_dispositivos": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid && !data.exists() && newData.child('uid').val() === auth.uid && newData.child('ativo').val() === false",
-        ".validate": "newData.hasChildren(['uid','ativo','criadoTs']) && newData.child('uid').isString() && newData.child('uid').val() === auth.uid && newData.child('ativo').isBoolean() && newData.child('criadoTs').isNumber()"
+        ".write": false
       }
     },
 
