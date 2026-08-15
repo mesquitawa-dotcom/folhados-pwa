@@ -1,0 +1,45 @@
+name: Temporary apply sync v25.1
+
+on:
+  push:
+    branches:
+      - agent/sync-transacional-v25-1
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/sync-transacional-v25-1
+          fetch-depth: 0
+      - name: Apply migration patch
+        run: python3 tools/patch_sync_v25_1.py
+      - name: Validate
+        run: |
+          python3 tools/validate_fdo.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S)
+          Path('/tmp/fdo.js').write_text('\n'.join(x for x in scripts if x.strip()),encoding='utf-8')
+          assert "const CACHE='fdo-v25-1';" in Path('sw.js').read_text(encoding='utf-8')
+          assert 'fdo_v25/lotes' in s and 'fdo_v25/laminacoes' in s
+          assert 'fdo_sync_outbox_v25' in s
+          print('Sync v25.1 structural OK')
+          PY
+          node --check /tmp/fdo.js
+          git diff --check
+      - name: Commit application changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js tools/validate_fdo.py
+          git diff --cached --quiet && exit 0
+          git commit -m "Implementar sincronização transacional v25.1"
+          git push origin HEAD:agent/sync-transacional-v25-1
