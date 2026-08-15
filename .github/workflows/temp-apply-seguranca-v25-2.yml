@@ -1,4 +1,4 @@
-name: Temporary apply Firebase security v25.2
+name: Temporary finalize Firebase security v25.2
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  patch:
+  finalize:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
@@ -17,31 +17,55 @@ jobs:
         with:
           ref: agent/seguranca-firebase-v25-2
           fetch-depth: 0
-      - name: Fix patch helper and apply v25.2 security
+      - name: Harden offline and reconnect authorization
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('tools/patch_seguranca_v25_2.py')
+          p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          old="except Exception as e: fail('firebase.json inválido: '+str(e))\\n\"\n"
-          new="except Exception as e: fail('firebase.json inválido: '+str(e))\\n\"\"\"\n"
-          if old not in s:
-              raise SystemExit('fechamento inválido do helper não encontrado')
-          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          def once(old,new,label):
+              global s
+              n=s.count(old)
+              if n!=1: raise SystemExit(f'{label}: esperado 1, encontrei {n}')
+              s=s.replace(old,new,1)
+          once("""  liberar(comNuvem){
+    if(comNuvem&&!this.cloudStarted){this.cloudStarted=true;SYNC25.init();}
+    if(this.bootLiberado)return;this.bootLiberado=true;const cb=this.bootCb;if(typeof cb==='function')cb();
+  },""",
+          """  liberar(comNuvem){
+    if(comNuvem){if(!this.cloudStarted){this.cloudStarted=true;SYNC25.init();}else if(SYNC25.iniciado)FB.aoVoltarOnline();}
+    if(this.bootLiberado)return;this.bootLiberado=true;const cb=this.bootCb;if(typeof cb==='function')cb();
+  },""",'liberar')
+          once("""      if(!firebase.apps.length)firebase.initializeApp(FB_CFG);FB.db=firebase.database();this.auth=firebase.auth();
+      let user=await this.usuarioRestaurado();""",
+          """      if(!firebase.apps.length)firebase.initializeApp(FB_CFG);FB.db=firebase.database();this.auth=firebase.auth();
+      try{await this.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)}catch(e){}
+      let user=await this.usuarioRestaurado();""",'persistência auth')
+          once("""      this.uid=user.uid;try{localStorage.setItem('fdo_device_uid_v25',JSON.stringify(this.uid))}catch{};this.escutar();""",
+          """      this.uid=user.uid;try{localStorage.setItem('fdo_device_uid_v25',JSON.stringify(this.uid))}catch{}
+      const c=this.cache();if(!navigator.onLine&&c&&c.uid===this.uid&&c.aprovado){this.registro={nome:c.nome||'',ativo:true};this.aprovado=true;this.localOnly=true;FB.status('local','Aparelho autorizado · offline');this.liberar(false);return}
+      this.escutar();""",'boot offline aprovado')
+          once("""  online(){
+    if(this.aprovado&&this.auth&&this.auth.currentUser){if(!this.cloudStarted){this.cloudStarted=true;SYNC25.init()}else FB.aoVoltarOnline();return}
+    this.iniciado=false;this.bootstrap(this.bootCb);
+  }""",
+          """  online(){
+    this.localOnly=false;
+    if(this.auth&&this.auth.currentUser){this.uid=this.auth.currentUser.uid;this.escutar();return}
+    this.iniciado=false;this.bootstrap(this.bootCb);
+  }""",'revalidar ao reconectar')
+          p.write_text(s,encoding='utf-8')
           PY
-          python3 tools/patch_seguranca_v25_2.py
-      - name: Validate candidate
+      - name: Validate app and behavior
         run: |
           python3 tools/validate_fdo.py
           python3 - <<'PY'
           from pathlib import Path
           import json,re
           s=Path('index.html').read_text(encoding='utf-8')
-          assert "atualização v25.2" in s
-          assert 'firebase-auth-compat.js' in s
-          assert 'signInAnonymously' in s
-          assert 'const DEVICE={' in s
-          assert 'DEVICE.bootstrap(()=>GEO.bootstrap(bootApp))' in s
+          assert 'setPersistence(firebase.auth.Auth.Persistence.LOCAL)' in s
+          assert "!navigator.onLine&&c&&c.uid===this.uid&&c.aprovado" in s
+          assert "this.uid=this.auth.currentUser.uid;this.escutar();return" in s
           assert "const CACHE='fdo-v25-2';" in Path('sw.js').read_text(encoding='utf-8')
           rules=json.loads(Path('database.rules.json').read_text(encoding='utf-8'))['rules']
           assert rules['.read'] is False and rules['.write'] is False
@@ -49,16 +73,19 @@ jobs:
           assert rules['fdo_acessos']['.read'] is False
           scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S)
           Path('/tmp/fdo.js').write_text('\n'.join(x for x in scripts if x.strip()),encoding='utf-8')
-          print('Firebase security structural OK')
+          print('Firebase security follow-up OK')
           PY
           node --check /tmp/fdo.js
           node tools/test_sync_v25_1.js
           git diff --check
-      - name: Commit candidate
+      - name: Validate RTDB rules in Firebase Emulator
+        run: |
+          npx --yes firebase-tools@15.25.1 emulators:exec --only database --project demo-fdo "echo FIREBASE_RULES_EMULATOR_OK"
+      - name: Commit final candidate
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html sw.js tools/validate_fdo.py database.rules.json firebase.json
+          git add index.html
           git diff --cached --quiet && exit 0
-          git commit -m "Implementar autenticação de aparelho e rules v25.2"
+          git commit -m "Revalidar aparelho ao reconectar e preservar offline v25.2"
           git push origin HEAD:agent/seguranca-firebase-v25-2
