@@ -1945,8 +1945,8 @@ function carregarConfig(){
   if(typeof renderOpList==='function') renderOpList();
 }
 function exportarBackup(){
-  const chaves=['fdo_lotes','fdo_laminacoes','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run'];
-  const dados={app:'Folhados d\'Ouro — Produção',versao:'25.0',exportadoEm:new Date().toISOString(),origem:'localStorage',dados:{}};
+  const chaves=['fdo_lotes','fdo_laminacoes','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25'];
+  const dados={app:'Folhados d\'Ouro — Produção',versao:'25.1',exportadoEm:new Date().toISOString(),origem:'localStorage',dados:{}};
   chaves.forEach(k=>{ const raw=localStorage.getItem(k); if(raw!==null){ try{dados.dados[k]=JSON.parse(raw);}catch{dados.dados[k]=raw;} } });
   const blob=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
@@ -4138,7 +4138,10 @@ async function criarLaminacao(){
     receita, receitaNome, composicao, totalPartes:total, temMassaAnterior:temAnterior, op:getOp(),
     etapas:{laminacao:{feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(), op:getOp()}}
   };
-  const lams=LS.g('fdo_laminacoes',[]); lams.unshift(lam); LS.s('fdo_laminacoes',lams);
+  const capacidades={};composicao.forEach(c=>{const l=todos.find(x=>x.id===c.loteId),b=l&&l.etapas&&l.etapas.batimento;capacidades[c.loteId]=Number(b&&b.partes)||0});
+  const reserva=await FB.criarLaminacaoAtomica(lam,capacidades);
+  if(!reserva.ok){st.lamSel={};renderLaminacao();alert(reserva.motivo||'As partes mudaram em outro aparelho. Revise a seleção.');falar('As partes mudaram em outro aparelho. Revise a seleção.');return;}
+  const lams=LS.g('fdo_laminacoes',[]).filter(x=>x.id!==lam.id); lams.unshift(lam); LS.s('fdo_laminacoes',lams);
   LS.s('fdo_lotes',todos);
   st.lamSel={};
   renderLaminacao();
@@ -4225,7 +4228,7 @@ const SYNC25={
   out(){return LS.g(this.OUT,{fdo_lotes:{},fdo_laminacoes:{}})||{fdo_lotes:{},fdo_laminacoes:{}}},
   saveOut(o){this.local(this.OUT,o)},
   queue(k,item){if(!item||!item.id)return;const o=this.out();o[k]=o[k]||{};const id=this.key(item.id);o[k][id]=this.merge(k,o[k][id],item);this.saveOut(o)},
-  drop(k,id){const o=this.out();if(o[k])delete o[k][id];this.saveOut(o)},
+  ack(k,id,sent){const o=this.out(),cur=o[k]&&o[k][id];if(cur&&JSON.stringify(cur)===JSON.stringify(sent))delete o[k][id];this.saveOut(o)},
   pending(){const o=this.out();return this.COL.some(k=>Object.keys(o[k]||{}).length)},
   push(k,v){
     if(FB.applying)return;
@@ -4237,25 +4240,41 @@ const SYNC25={
   async flush(){
     if(this.flushing||!FB.db||!navigator.onLine)return;const o=this.out(),jobs=[];this.COL.forEach(k=>Object.entries(o[k]||{}).forEach(([id,x])=>jobs.push([k,id,x])));if(!jobs.length){FB.status('ok','✓ Sincronizado');return}
     this.flushing=true;FB.status('pending','Salvo aqui · sincronizando…');let ok=true;
-    for(const [k,id,x] of jobs){try{const r=await FB.db.ref(this.path(k)+'/'+id).transaction(cur=>this.merge(k,cur,x),undefined,false);this.itemJson[k][id]=JSON.stringify(r.snapshot.val());this.drop(k,id)}catch(e){ok=false;console.warn('[FB25] item',k,id,e)}}
-    this.flushing=false;FB.status(ok&&!this.pending()?'ok':'err',ok&&!this.pending()?'✓ Sincronizado':'⚠ Salvo aqui · nuvem pendente');
+    for(const [k,id,x] of jobs){try{const r=await FB.db.ref(this.path(k)+'/'+id).transaction(cur=>this.merge(k,cur,x),undefined,false);this.itemJson[k][id]=JSON.stringify(r.snapshot.val());this.ack(k,id,x)}catch(e){ok=false;console.warn('[FB25] item',k,id,e)}}
+    this.flushing=false;
+    if(this.pending()&&navigator.onLine){FB.status('pending','Salvo aqui · sincronizando…');setTimeout(()=>this.flush(),0);return}
+    FB.status(ok?'ok':'err',ok?'✓ Sincronizado':'⚠ Salvo aqui · nuvem pendente');
   },
   apply(k,v){
     const m=(v&&typeof v==='object')?this.clone(v):{};this.raw[k]=this.clone(m);const local=this.map(LS.g(k,[]));if(!this.ready[k])Object.entries(local).forEach(([id,x])=>{m[id]=this.merge(k,m[id],x);if(!v||!v[id])this.queue(k,x)});const o=this.out();Object.entries(o[k]||{}).forEach(([id,x])=>m[id]=this.merge(k,m[id],x));
     FB.applying=true;this.local(k,this.arr(k,m));FB.applying=false;this.itemJson[k]={};Object.entries(m).forEach(([id,x])=>this.itemJson[k][id]=JSON.stringify(x));this.ready[k]=true;FB.repaint();this.mirror(k);this.flush();
   },
-  legacy(k,v){if(!Array.isArray(v))return;const json=JSON.stringify(v);if(this.mirrorJson[k]===json)return;v.forEach(x=>{if(!x||!x.id)return;const id=this.key(x.id),r=this.raw[k]&&this.raw[k][id];if(r&&r._deleted)return;this.queue(k,this.merge(k,r,x))});if(this.ready[k])FB.status('pending','Aparelho antigo detectado · conciliando…');this.flush()},
-  mirror(k){if(!FB.db||!navigator.onLine)return;clearTimeout(this.mirrorTimer[k]);this.mirrorTimer[k]=setTimeout(async()=>{const canon=this.map(LS.g(k,[])),raw=this.raw[k]||{};try{const r=await FB.db.ref(k).transaction(cur=>{const atual=this.map(Array.isArray(cur)?cur:[]),u={...canon};Object.entries(atual).forEach(([id,x])=>{if(raw[id]&&raw[id]._deleted)return;u[id]=this.merge(k,u[id],x)});return this.arr(k,u)},undefined,false);this.mirrorJson[k]=JSON.stringify(r.snapshot.val()||[])}catch(e){console.warn('[FB25] bridge',k,e)}},450)},
+  legacy(k,v){if(!Array.isArray(v))return;const json=JSON.stringify(v);if(this.mirrorJson[k]===json)return;let reassert=false;v.forEach(x=>{if(!x||!x.id)return;const id=this.key(x.id),r=this.raw[k]&&this.raw[k][id];if(r&&r._deleted){reassert=true;return}this.queue(k,this.merge(k,r,x))});if(this.ready[k])FB.status('pending','Aparelho antigo detectado · conciliando…');if(reassert)this.mirror(k);this.flush()},
+  mirror(k){if(!FB.db||!navigator.onLine)return;clearTimeout(this.mirrorTimer[k]);this.mirrorTimer[k]=setTimeout(async()=>{const canon=this.map(LS.g(k,[])),raw=this.raw[k]||{};try{const r=await FB.db.ref(k).transaction(cur=>{const atual=this.map(Array.isArray(cur)?cur:[]),u={...canon};Object.entries(atual).forEach(([id,x])=>{if(raw[id]&&raw[id]._deleted)return;u[id]=this.merge(k,u[id],x)});let arr=this.arr(k,u);if(k==='fdo_lotes'&&typeof loteAtivo==='function')arr=arr.filter(l=>loteAtivo(l));return arr},undefined,false);this.mirrorJson[k]=JSON.stringify(r.snapshot.val()||[])}catch(e){console.warn('[FB25] bridge',k,e)}},450)},
   async remove(k,id0){const id=this.key(id0),t={id:id0,_deleted:true,deletedTs:Date.now(),op:typeof getOp==='function'?getOp():''};this.queue(k,t);this.raw[k][id]=t;await this.flush()},
   async proxLoteNum(){const local=Number(LS.g('fdo_lote_seq',0))||0;if(!FB.db||!navigator.onLine){const n=local+1;this.local('fdo_lote_seq',n);FB.status('err','⚠ Número criado offline · sincronizar depois');return {num:n,origem:'offline'}}try{const r=await FB.db.ref('fdo_v25/meta/lote_seq').transaction(cur=>Math.max(Number(cur)||0,local)+1,undefined,false),n=Number(r.snapshot.val())||local+1;this.local('fdo_lote_seq',n);FB.db.ref('fdo_lote_seq').transaction(cur=>Math.max(Number(cur)||0,n),undefined,false).catch(()=>{});return {num:n,origem:'transacao'}}catch(e){const n=local+1;this.local('fdo_lote_seq',n);FB.status('err','⚠ Numeração local · nuvem pendente');return {num:n,origem:'offline'}}},
   async proxLamSeq(ts){const d=new Date(ts),key=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'),local=LS.g('fdo_laminacoes',[]).filter(x=>dataCurta(x.dataTs)===dataCurta(ts)).length;if(!FB.db||!navigator.onLine)return local+1;try{const r=await FB.db.ref('fdo_v25/meta/lam_seq/'+key).transaction(cur=>Math.max(Number(cur)||0,local)+1,undefined,false);return Number(r.snapshot.val())||local+1}catch(e){return local+1}},
-  async resetSeq(){if(!FB.db||!navigator.onLine){alert('Conecte à internet para reiniciar a numeração com segurança em todos os aparelhos.');return false}try{await FB.db.ref('fdo_v25/meta/lote_seq').transaction(()=>0,undefined,false);await FB.db.ref('fdo_lote_seq').set(0);this.local('fdo_lote_seq',0);return true}catch(e){alert('Não foi possível reiniciar a numeração na nuvem.');return false}},
+  async criarLaminacaoAtomica(lam,capacidades){
+    if(!FB.db||!navigator.onLine)return {ok:true,offline:true};
+    const id=this.key(lam.id);let conflito='';
+    try{
+      const r=await FB.db.ref(this.path('fdo_laminacoes')).transaction(cur=>{
+        conflito='';const m=(cur&&typeof cur==='object')?this.clone(cur):{},usados={};
+        Object.values(m).forEach(x=>{if(!x||x._deleted||!Array.isArray(x.composicao))return;x.composicao.forEach(c=>{if(!c||!c.loteId)return;usados[c.loteId]=(usados[c.loteId]||0)+(Number(c.partes)||0)})});
+        for(const c of (lam.composicao||[])){const cap=Number(capacidades[c.loteId])||0,ja=Number(usados[c.loteId])||0,q=Number(c.partes)||0;if(q<=0||ja+q>cap){conflito='Balde #'+(c.loteNum||'')+' já teve partes usadas em outro aparelho.';return}}
+        m[id]=this.merge('fdo_laminacoes',m[id],lam);return m;
+      },undefined,false);
+      if(!r.committed)return {ok:false,motivo:conflito||'As partes selecionadas mudaram em outro aparelho.'};
+      const salvo=r.snapshot.child(id).val();if(salvo)this.itemJson.fdo_laminacoes[id]=JSON.stringify(salvo);return {ok:true,offline:false};
+    }catch(e){console.warn('[FB25] lam atomic',e);return {ok:false,motivo:'Não foi possível confirmar as partes na nuvem.'}}
+  },
+  async resetSeq(){if(!FB.db||!navigator.onLine){alert('Conecte à internet para reiniciar a numeração com segurança em todos os aparelhos.');return false}try{const token=Date.now();await FB.db.ref('fdo_v25/meta/lote_seq').transaction(()=>0,undefined,false);await FB.db.ref('fdo_v25/meta/lote_seq_reset').set(token);await FB.db.ref('fdo_lote_seq').set(0);this.local('fdo_seq_reset_ts_v25',token);this.local('fdo_lote_seq',0);return true}catch(e){alert('Não foi possível reiniciar a numeração na nuvem.');return false}},
   absorverSeq(v){const n=Number(v)||0,local=Number(LS.g('fdo_lote_seq',0))||0;if(n>local)this.local('fdo_lote_seq',n);if(FB.db&&n>0)FB.db.ref('fdo_v25/meta/lote_seq').transaction(cur=>Math.max(Number(cur)||0,n),undefined,false).catch(()=>{})},
   init(){
     if(typeof firebase==='undefined'||!firebase.initializeApp){FB.status('local','Salvo neste aparelho · sem nuvem');return}try{if(!firebase.apps.length)firebase.initializeApp(FB_CFG);FB.db=firebase.database();FB.status(navigator.onLine?'pending':'local',navigator.onLine?'Sincronizando…':'Salvo neste aparelho · sem internet');
       this.COL.forEach(k=>{FB.db.ref(this.path(k)).on('value',snap=>this.apply(k,snap.val()),e=>{console.warn('[FB25] granular',k,e);FB.status('err','⚠ Nuvem v25 indisponível')});FB.db.ref(k).on('value',snap=>this.legacy(k,snap.val()),e=>console.warn('[FB25] legacy',k,e))});
       this.SCALAR.forEach(k=>FB.db.ref(k).on('value',snap=>{const v=snap.val();if(v==null){const l=localStorage.getItem(k);if(l!==null)try{FB.db.ref(k).set(JSON.parse(l))}catch(e){};return}FB.applying=true;this.local(k,v);FB.applying=false;FB.repaint()},e=>console.warn('[FB25] scalar listen',k,e)));
-      FB.db.ref('fdo_lote_seq').on('value',snap=>this.absorverSeq(snap.val()));FB.db.ref('fdo_v25/meta/lote_seq').on('value',snap=>{const n=Number(snap.val())||0;if(n>(Number(LS.g('fdo_lote_seq',0))||0))this.local('fdo_lote_seq',n)});FB.db.ref('fdo_v25/meta/schema').transaction(cur=>Math.max(Number(cur)||0,1),undefined,false).catch(()=>{});this.flush();
+      FB.db.ref('fdo_lote_seq').on('value',snap=>this.absorverSeq(snap.val()));FB.db.ref('fdo_v25/meta/lote_seq').on('value',snap=>{const n=Number(snap.val())||0;if(n>(Number(LS.g('fdo_lote_seq',0))||0))this.local('fdo_lote_seq',n)});FB.db.ref('fdo_v25/meta/lote_seq_reset').on('value',snap=>{const t=Number(snap.val())||0,seen=Number(LS.g('fdo_seq_reset_ts_v25',0))||0;if(t>seen){this.local('fdo_seq_reset_ts_v25',t);this.local('fdo_lote_seq',0)}});FB.db.ref('fdo_v25/meta/schema').transaction(cur=>Math.max(Number(cur)||0,1),undefined,false).catch(()=>{});this.flush();
     }catch(e){console.warn('[FB25] init',e);FB.status('err','⚠ Firebase indisponível')}
   },
   online(){if(!FB.db)return;FB.status('pending','Internet voltou · sincronizando…');this.flush();this.COL.forEach(k=>this.mirror(k))}
@@ -4265,6 +4284,7 @@ FB.push=(k,v)=>SYNC25.push(k,v);
 FB.novoId=p=>SYNC25.novoId(p);
 FB.proxLoteNum=()=>SYNC25.proxLoteNum();
 FB.proxLamSeqDia=ts=>SYNC25.proxLamSeq(ts);
+FB.criarLaminacaoAtomica=(lam,capacidades)=>SYNC25.criarLaminacaoAtomica(lam,capacidades);
 FB.reiniciarSeq=()=>SYNC25.resetSeq();
 FB.removerRegistro=(k,id)=>SYNC25.remove(k,id);
 FB.aoVoltarOnline=()=>SYNC25.online();

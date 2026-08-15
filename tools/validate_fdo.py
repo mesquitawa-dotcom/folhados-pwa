@@ -8,12 +8,13 @@ sw=(ROOT/'sw.js').read_text(encoding='utf-8')
 
 errors=[]
 
+def fail(msg): errors.append(msg)
+
 # v25.1 — sincronização granular/transacional
-for marker in ("fdo_v25/lotes","fdo_v25/laminacoes","fdo_sync_outbox_v25","async function proxLoteNum()","await proxLoteNum()","async function proxLamSeqDia(ts)","function lotePartesUsadas(l)","Aparelho antigo detectado · conciliando"):
+for marker in ("fdo_v25/lotes","fdo_v25/laminacoes","fdo_sync_outbox_v25","async function proxLoteNum()","await proxLoteNum()","async function proxLamSeqDia(ts)","function lotePartesUsadas(l)","Aparelho antigo detectado · conciliando","criarLaminacaoAtomica","fdo_v25/meta/lote_seq_reset","ack(k,id,sent)"):
     if marker not in html: fail('v25.1 sem marcador: '+marker)
 if "function proxLoteNum(){ const n=LS.g('fdo_lote_seq',0)+1" in html: fail('Numeração antiga ainda presente')
-
-def fail(msg): errors.append(msg)
+if "versao:'25.0'" in html: fail('Backup ainda declara versão 25.0')
 
 # 1) JavaScript inline: sintaxe real via Node
 scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',html,re.S)
