@@ -1,0 +1,17 @@
+name: Temporary audit Firebase rules
+
+on:
+  push:
+    branches:
+      - agent/auditoria-firebase-rules
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Auditar permissões anônimas do Realtime Database
+        run: bash tools/audit_firebase_rules.sh
