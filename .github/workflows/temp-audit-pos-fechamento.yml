@@ -1,0 +1,41 @@
+name: Temporary audit Firebase after rules close
+
+on:
+  push:
+    branches:
+      - agent/auditoria-firebase-pos-fechamento
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify unauthenticated RTDB access is denied
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://producaofolhadosdouro-b6fb5-default-rtdb.firebaseio.com'
+          check_read() {
+            local path="$1"
+            code=$(curl -sS -o /tmp/body -w '%{http_code}' "$BASE/$path.json")
+            echo "READ $path => $code"
+            test "$code" = "401" || test "$code" = "403"
+          }
+          check_write() {
+            local path="$1"
+            code=$(curl -sS -o /tmp/body -w '%{http_code}' -X PUT \
+              -H 'Content-Type: application/json' \
+              -H 'If-Match: "fdo-audit-etag-that-will-never-match"' \
+              --data 'true' "$BASE/$path.json")
+            echo "WRITE $path => $code"
+            test "$code" = "401" || test "$code" = "403"
+          }
+          check_read ''
+          check_read 'fdo_operadores'
+          check_read 'fdo_v25'
+          check_read 'fdo_dispositivos'
+          check_read 'auditoria_caminho_aleatorio_nao_existe'
+          check_write 'auditoria_caminho_aleatorio_nao_existe'
+          echo 'FIREBASE_PUBLIC_ACCESS_CLOSED_OK'
