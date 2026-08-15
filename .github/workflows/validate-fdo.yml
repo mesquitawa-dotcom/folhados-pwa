@@ -1,0 +1,21 @@
+name: Validar Folhados d'Ouro PWA
+
+on:
+  push:
+    branches:
+      - main
+      - 'agent/**'
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar aplicação, PWA e receitas
+        run: python3 tools/validate_fdo.py
