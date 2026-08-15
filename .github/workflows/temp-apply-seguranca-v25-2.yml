@@ -17,8 +17,19 @@ jobs:
         with:
           ref: agent/seguranca-firebase-v25-2
           fetch-depth: 0
-      - name: Apply v25.2 security patch
-        run: python3 tools/patch_seguranca_v25_2.py
+      - name: Fix patch helper and apply v25.2 security
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('tools/patch_seguranca_v25_2.py')
+          s=p.read_text(encoding='utf-8')
+          old="except Exception as e: fail('firebase.json inválido: '+str(e))\\n\"\n"
+          new="except Exception as e: fail('firebase.json inválido: '+str(e))\\n\"\"\"\n"
+          if old not in s:
+              raise SystemExit('fechamento inválido do helper não encontrado')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          PY
+          python3 tools/patch_seguranca_v25_2.py
       - name: Validate candidate
         run: |
           python3 tools/validate_fdo.py
