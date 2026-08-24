@@ -23,3 +23,5 @@ jobs:
         run: node tools/test_sync_v25_1.js
       - name: Testar Receita Teste v25.3
         run: node tools/test_receita_teste_v25_3.js
+      - name: Testar compatibilidade da Receita Teste v25.3
+        run: node tools/test_compat_teste_v25_3.js
