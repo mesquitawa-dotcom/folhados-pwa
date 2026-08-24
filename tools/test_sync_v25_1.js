@@ -76,7 +76,17 @@ FB.db={ref:path=>new Ref(path)};
   assert(S.merge('fdo_laminacoes',tomb,old)._deleted===true,'tombstone dependeu da ordem do merge');
 }
 
-// 4) Laminação online: duas operações não podem consumir as mesmas partes.
+// 4) Receita Teste: observações acrescentadas em momentos/aparelhos distintos não podem ser perdidas.
+{
+  const a={id:'lt',criadoTs:1,teste:{id:'t1',criadoTs:1,atualizadoTs:100,observacoes:[{id:'o1',emTs:100,texto:'primeira'}]}};
+  const b={id:'lt',criadoTs:1,teste:{id:'t1',criadoTs:1,atualizadoTs:200,observacoes:[{id:'o2',emTs:200,texto:'segunda'}]}};
+  const m=S.merge('fdo_lotes',a,b);
+  assert(m.teste&&m.teste.observacoes.length===2,'merge perdeu observação da Receita Teste');
+  assert(m.teste.observacoes[0].id==='o1'&&m.teste.observacoes[1].id==='o2','ordem das observações da Receita Teste ficou incorreta');
+  assert(S.ts(m)===200,'timestamp da observação do teste não entrou no relógio de sincronização');
+}
+
+// 5) Laminação online: duas operações não podem consumir as mesmas partes.
 (async()=>{
   dbStore.fdo_v25={laminacoes:{},meta:{lote_seq:10}};
   const cap={L1:4};
@@ -92,7 +102,7 @@ FB.db={ref:path=>new Ref(path)};
   const r3=await S.criarLaminacaoAtomica(lam2,cap);
   assert(r3.ok,'tombstone deveria liberar as partes');
 
-  // 5) Contador online: transações consecutivas têm números únicos.
+  // 6) Contador online: transações consecutivas têm números únicos.
   mem.set('fdo_lote_seq','10');
   dbStore.fdo_v25.meta.lote_seq=10;
   const n1=await S.proxLoteNum();
@@ -100,5 +110,5 @@ FB.db={ref:path=>new Ref(path)};
   assert(n1.num===11&&n2.num===12,'contador transacional não foi sequencial');
   assert(n1.origem==='transacao'&&n2.origem==='transacao','contador online caiu para modo offline');
 
-  console.log('TESTES SYNC v25.1 OK');
+  console.log('TESTES SYNC v25.1/v25.3 OK');
 })().catch(e=>{console.error(e);process.exit(1)});
