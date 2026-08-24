@@ -15,7 +15,7 @@ for marker in (
     'Receita Teste','id="s-teste-base"','id="s-teste-edit"',
     'receitaSnapshot=clonarReceita','function receitaDoLote(lote)',
     'function adicionarObsTeste(id)','function loteReceitaChave(l)',
-    'function testeLinhasEtiqueta(lote,pi)','TESTE · BALDE #',
+    'function testeLinhasEtiqueta(lote,pi)',"(lote.teste?'TESTE · ':'')+'BALDE #'",
     "if(x.lote&&x.lote.teste)return"
 ):
     if marker not in html: fail('v25.3 sem marcador: '+marker)
