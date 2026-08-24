@@ -2,7 +2,11 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — atualização v25.2
+       FOLHADOS D'OURO — atualização v25.3
+       NOVIDADES v25.3:
+       • Receita Teste: parte de qualquer R1–R5 e permite alterar pesos sem modificar as receitas padrão.
+       • Cada balde de teste guarda a fotografia completa da receita executada, diferenças e observações.
+       • Balde, etiquetas, histórico e laminação preservam a identificação TESTE; observações podem ser acrescentadas depois.
        NOVIDADES v25.2:
        • Firebase Authentication identifica o aparelho sem substituir o login do padeiro.
        • Apenas aparelhos previamente autorizados podem sincronizar dados de produção.
@@ -313,7 +317,30 @@
        de fora a fora da tela sem tomar espaço vertical extra. */
     #s-receitas .modulo-nome{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     #s-receitas .modulo-desc{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.68rem}
-
+    /* ════ v25.3 — RECEITA TESTE ════ */
+    #s-teste-base .modulo-nome{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #s-teste-edit{padding:0}
+    .badge-teste{background:rgba(248,113,113,.12);color:#f5b8a8;border:1px solid #5a1a0e}
+    .teste-body{flex:1;overflow-y:auto;padding:.2rem 1rem 1rem;display:flex;flex-direction:column;gap:.7rem}
+    .teste-card{background:var(--bg3);border:1px solid var(--brd);border-radius:.55rem;padding:.85rem}
+    .teste-card-title{font-size:.8rem;color:var(--gold);font-weight:bold;letter-spacing:.08rem;text-transform:uppercase;margin-bottom:.55rem}
+    .teste-grid{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}
+    .teste-field{display:flex;flex-direction:column;gap:.22rem;min-width:0}
+    .teste-field.full{grid-column:1/-1}
+    .teste-label{font-size:.66rem;color:var(--mut);line-height:1.25}
+    .teste-inp{background:var(--bg2);border:.1rem solid var(--brd);color:var(--text);font-family:Georgia,serif;font-size:1rem;padding:.7rem .65rem;border-radius:.4rem;width:100%;outline:none;min-height:2.7rem}
+    .teste-inp:focus{border-color:var(--gold)}
+    textarea.teste-inp{min-height:5rem;resize:vertical;font-size:.85rem;line-height:1.4}
+    .teste-note{font-size:.68rem;color:var(--mut);line-height:1.45}
+    .teste-resumo{background:rgba(201,151,58,.08);border:1px solid rgba(201,151,58,.28);border-left:.25rem solid var(--gold);border-radius:.45rem;padding:.75rem .8rem}
+    .teste-total{font-size:1.05rem;color:var(--gl);font-weight:bold;margin-bottom:.4rem}
+    .teste-diffs{font-size:.7rem;color:var(--text);line-height:1.5}
+    .teste-diffs b{color:var(--gold)}
+    .teste-hist{margin-top:.6rem;padding:.65rem .7rem;background:rgba(248,113,113,.06);border:1px solid #4a1a12;border-left:.22rem solid var(--red);border-radius:.35rem}
+    .teste-hist-title{font-size:.72rem;font-weight:bold;color:#f5b8a8;letter-spacing:.08rem;margin-bottom:.35rem}
+    .teste-hist-row{font-size:.68rem;color:var(--text);line-height:1.45;margin-top:.3rem}
+    .teste-hist-row b{color:var(--gold)}
+    .teste-obs-btn{margin-top:.55rem;background:transparent;border:1px solid #5a3008;color:var(--gold);font-family:Georgia,serif;font-size:.65rem;font-weight:bold;padding:.5rem .65rem;border-radius:.3rem;cursor:pointer;min-height:2.2rem}
     /* ════ v24.10 — LOTES DAS FARINHAS ════ */
     #s-farinha-lotes{padding:0}
     .far-lotes-body{flex:1;overflow-y:auto;padding:.2rem 1rem 1rem;display:flex;flex-direction:column;gap:.65rem}
@@ -869,12 +896,90 @@
       </div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
+    <div class="modulo ativo" onclick="abrirTesteBase()">
+      <div class="modulo-icon">🧪</div>
+      <div class="modulo-info">
+        <div class="modulo-nome">Receita Teste</div>
+        <div class="modulo-desc">Copie uma R1–R5, altere somente o necessário e guarde exatamente o que foi feito</div>
+      </div>
+      <div class="modulo-badge badge-teste">Teste</div>
+    </div>
   </div>
   <div class="start-footer">
     <button class="link-btn" onclick="ir('porc-menu')">← Voltar</button>
   </div>
 </div>
 
+<!-- ═══ RECEITA TESTE — base + edição do lote experimental (v25.3) ═══ -->
+<div id="s-teste-base" class="scr off">
+  <div class="start-top">
+    <div class="start-icon">🧪</div>
+    <div class="start-brand">Folhados d'Ouro</div>
+    <div class="start-title">Receita Teste</div>
+    <div class="start-sub">Qual receita será a base?</div>
+  </div>
+  <div class="modulos-label">A receita original não será alterada</div>
+  <div class="modulos">
+    <div class="modulo ativo" onclick="abrirTesteEditor('r1')"><div class="modulo-icon">1️⃣</div><div class="modulo-info"><div class="modulo-nome">Receita 1</div><div class="modulo-desc">Usar R1 como ponto de partida</div></div></div>
+    <div class="modulo ativo" onclick="abrirTesteEditor('r2')"><div class="modulo-icon">2️⃣</div><div class="modulo-info"><div class="modulo-nome">Receita 2 - MASSA 3 KG</div><div class="modulo-desc">Usar R2 como ponto de partida</div></div></div>
+    <div class="modulo ativo" onclick="abrirTesteEditor('r3')"><div class="modulo-icon">3️⃣</div><div class="modulo-info"><div class="modulo-nome">Receita 3 - PADRÃO</div><div class="modulo-desc">Usar R3 como ponto de partida</div></div><div class="modulo-badge badge-ativo">Padrão</div></div>
+    <div class="modulo ativo" onclick="abrirTesteEditor('r4')"><div class="modulo-icon">4️⃣</div><div class="modulo-info"><div class="modulo-nome">Massa 3 kg sem manteiga</div><div class="modulo-desc">Usar R4 como ponto de partida</div></div></div>
+    <div class="modulo ativo" onclick="abrirTesteEditor('r5')"><div class="modulo-icon">5️⃣</div><div class="modulo-info"><div class="modulo-nome">1 kg sem laminar</div><div class="modulo-desc">Usar R5 como ponto de partida</div></div></div>
+  </div>
+  <div class="start-footer"><button class="link-btn" onclick="ir('receitas')">← Voltar</button></div>
+</div>
+<div id="s-teste-edit" class="scr off">
+  <div class="start-top" style="padding-bottom:.55rem">
+    <div class="start-brand">Folhados d'Ouro · 🧪 Teste</div>
+    <div class="start-title" id="teste-edit-title">Receita Teste</div>
+    <div class="start-sub">Altere somente o que será diferente neste lote</div>
+  </div>
+  <div class="teste-body">
+    <div class="teste-card">
+      <div class="teste-card-title">Farinhas · gramas</div>
+      <div class="teste-grid">
+        <label class="teste-field"><span class="teste-label">Bagatelle</span><input id="teste-bag" class="teste-inp" type="number" inputmode="numeric" min="0" step="1" oninput="atualizarResumoTeste()"></label>
+        <label class="teste-field"><span class="teste-label">Italiana 00</span><input id="teste-ita" class="teste-inp" type="number" inputmode="numeric" min="0" step="1" oninput="atualizarResumoTeste()"></label>
+        <label class="teste-field full"><span class="teste-label">Feuilletage</span><input id="teste-feu" class="teste-inp" type="number" inputmode="numeric" min="0" step="1" oninput="atualizarResumoTeste()"></label>
+      </div>
+    </div>
+    <div class="teste-card">
+      <div class="teste-card-title">Secos · gramas</div>
+      <div class="teste-grid">
+        <label class="teste-field"><span class="teste-label">Fermento seco</span><input id="teste-fermento" class="teste-inp" type="number" inputmode="numeric" min="0" step="1" oninput="testeFermentoMudou()"></label>
+        <label class="teste-field"><span class="teste-label">Açúcar</span><input id="teste-acucar" class="teste-inp" type="number" inputmode="numeric" min="0" step="1" oninput="atualizarResumoTeste()"></label>
+        <label class="teste-field"><span class="teste-label">Sal refinado</span><input id="teste-sal" class="teste-inp" type="number" inputmode="numeric" min="0" step="1" oninput="atualizarResumoTeste()"></label>
+        <label class="teste-field"><span class="teste-label">Manteiga</span><input id="teste-manteiga" class="teste-inp" type="number" inputmode="numeric" min="0" step="1" oninput="atualizarResumoTeste()"></label>
+      </div>
+    </div>
+    <div class="teste-card">
+      <div class="teste-card-title">Líquidos e massas · gramas</div>
+      <div class="teste-grid">
+        <label class="teste-field"><span class="teste-label">Água / gelo</span><input id="teste-agua" class="teste-inp" type="number" inputmode="numeric" min="0" step="1" oninput="atualizarResumoTeste()"></label>
+        <label class="teste-field"><span class="teste-label">Leite em pó</span><input id="teste-leite" class="teste-inp" type="number" inputmode="numeric" min="0" step="1" oninput="atualizarResumoTeste()"></label>
+        <label class="teste-field"><span class="teste-label">Aproveita / massa laminada</span><input id="teste-aprov" class="teste-inp" type="number" inputmode="numeric" min="0" step="1" oninput="atualizarResumoTeste()"></label>
+        <label class="teste-field"><span class="teste-label">Massa sem laminar</span><input id="teste-sem-laminar" class="teste-inp" type="number" inputmode="numeric" min="0" step="1" oninput="atualizarResumoTeste()"></label>
+      </div>
+    </div>
+    <div class="teste-card">
+      <div class="teste-card-title">Fermentação do teste</div>
+      <div class="teste-grid">
+        <label class="teste-field"><span class="teste-label">Temperatura °C</span><input id="teste-temp" class="teste-inp" type="number" inputmode="decimal" step="0.1" oninput="atualizarResumoTeste()" placeholder="ex.: 20"></label>
+        <label class="teste-field"><span class="teste-label">Horas</span><input id="teste-horas" class="teste-inp" type="number" inputmode="decimal" min="0.1" step="0.1" oninput="atualizarResumoTeste()" placeholder="ex.: 14"></label>
+      </div>
+      <div class="teste-note" style="margin-top:.5rem">Ao informar um fermento que já existe nas opções normais, temperatura e horas são preenchidas automaticamente. Confira visualmente antes de iniciar.</div>
+    </div>
+    <div class="teste-card">
+      <div class="teste-card-title">Observações do teste</div>
+      <textarea id="teste-obs" class="teste-inp" maxlength="1200" placeholder="Ex.: sem massa de aproveitamento; ajuste de hidratação; objetivo deste teste..."></textarea>
+      <div class="teste-note" style="margin-top:.45rem">Depois do resultado final, novas observações poderão ser acrescentadas pelo Histórico. Os pesos executados não poderão ser alterados.</div>
+    </div>
+    <div class="teste-resumo" id="teste-resumo"><div class="teste-total">Preencha o teste</div></div>
+    <div class="teste-note" style="text-align:center">As receitas R1–R5 permanecem intactas. O sistema salvará uma fotografia independente deste teste.</div>
+    <button class="btn-main" onclick="salvarReceitaTeste()">✓ Confirmar e iniciar teste</button>
+  </div>
+  <div class="start-footer"><button class="link-btn" onclick="ir('teste-base')">← Trocar base</button></div>
+</div>
 <!-- ═══ LOTES DAS FARINHAS — confirmação rápida antes dos secos (v24.10) ═══ -->
 <div id="s-farinha-lotes" class="scr off">
   <div class="start-top">
@@ -908,7 +1013,7 @@
     <div class="far-lotes-note">Normalmente basta conferir os dois números e tocar no botão. Só altere quando abrir farinha de outro lote.</div>
   </div>
   <div class="start-footer">
-    <button class="link-btn" onclick="ir('receitas')">← Trocar receita</button>
+    <button class="link-btn" onclick="voltarLotesFarinha()">← Trocar receita</button>
   </div>
 </div>
 
@@ -1471,6 +1576,12 @@ const RECEITAS = {
 
 // Receita ativa (apontador para o array de passos da FASE atual: secos OU líquidos).
 let RECEITA = RECEITAS.r1.passosSecos;
+function clonarReceita(v){ return v==null?v:JSON.parse(JSON.stringify(v)); }
+function receitaAtualObj(){ return (st.receita==='teste'&&st.testeReceita)?st.testeReceita:(RECEITAS[st.receita]||RECEITAS.r1); }
+function receitaDoLote(lote){
+  if(lote&&lote.receitaSnapshot&&Array.isArray(lote.receitaSnapshot.passos)) return lote.receitaSnapshot;
+  return RECEITAS[lote&&lote.receita]||null;
+}
 
 // Coordenadas padrão da fábrica (substitua se necessário)
 const LAT_FABRICA = -20.53;
@@ -1493,7 +1604,7 @@ function totalGeral(){return RECEITA.reduce((s,p)=>s+(p.g||0),0);}
 // Contexto do Gemini montado dinamicamente (reflete fermento/temperatura atuais)
 function montarPassos(){return RECEITA.map(p=>`[${p.grupo}] ${p.nome}: ${p.qty}. ${p.det}`).join('\n');}
 function montarSystem(){
-  const r=RECEITAS[st.receita]||RECEITAS.r1;
+  const r=receitaAtualObj();
   return `Você é o assistente da padaria Folhados d'Ouro, dedicado EXCLUSIVAMENTE ao Porcionamento da ${r.nome} (${r.farinhas}).
 
 Temperatura prevista para a noite: ${st.temp||'?'} graus (define a quantidade de fermento seco).
@@ -1527,6 +1638,7 @@ const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0,temp:n
   pinBuf:'',pinAlvo:null,pinTipo:'producao',batLote:null,liqLote:null,batTemp:20,batStart:0,batRodando:false,batRecPeso:null,
   ultimoLoteId:null,calcRet:'start',calcAberta:false,etqLote:null,etqRet:'start',
   fermLote:null,fermStart:0,fermMin:24,fermMax:28,lamSel:{},farinhasLotes:null,
+  testeBase:null,testeReceita:null,testeMeta:null,
   loginOpId:null,loginFiltro:'',criandoLote:false,criandoLam:false};
 // Desbloqueio por sessão do app: o PIN é pedido só 1x por abertura (rápido p/ produção)
 let sessaoDesbloqueada=false;
@@ -2036,7 +2148,7 @@ function carregarConfig(){
 }
 function exportarBackup(){
   const chaves=['fdo_lotes','fdo_laminacoes','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25'];
-  const dados={app:'Folhados d\'Ouro — Produção',versao:'25.2',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
+  const dados={app:'Folhados d\'Ouro — Produção',versao:'25.3',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
   chaves.forEach(k=>{ const raw=localStorage.getItem(k); if(raw!==null){ try{dados.dados[k]=JSON.parse(raw);}catch{dados.dados[k]=raw;} } });
   const blob=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
@@ -2427,11 +2539,12 @@ function porcInfo(l){ const e=(l&&l.etapas)||{}; return e.porcionamento_secos||e
 async function proxLoteNum(){ return FB.proxLoteNum(); }
 
 // Total geral da receita inteira (secos + líquidos), independente da fase atual
-function totalReceitaFull(rid){ const r=RECEITAS[rid]||RECEITAS[st.receita]||RECEITAS.r1; return (r.passos||[]).reduce((s,p)=>s+(p.g||0),0); }
+function totalReceitaFull(rid){ const r=(rid==='teste'&&st.testeReceita)?st.testeReceita:(RECEITAS[rid]||receitaAtualObj()); return (r.passos||[]).reduce((s,p)=>s+(p.g||0),0); }
 
 // PORCIONAMENTO DE SECOS concluído → cria um novo LOTE numerado (com etiqueta)
 async function criarLoteSecos(){
-  const r=RECEITAS[st.receita]||RECEITAS.r1;
+  const r=receitaAtualObj();
+  const ehTeste=st.receita==='teste'&&!!st.testeReceita&&!!st.testeMeta;
   const agora=new Date();
   const seq=await proxLoteNum();
   const lote={
@@ -2447,6 +2560,7 @@ async function criarLoteSecos(){
       dur:Math.round((Date.now()-st.sessionStart)/60000)
     }}
   };
+  if(ehTeste){ lote.receitaSnapshot=clonarReceita(st.testeReceita); lote.teste=clonarReceita(st.testeMeta); }
   const todos=LS.g('fdo_lotes',[]);todos.unshift(lote);LS.s('fdo_lotes',todos);return lote;
 }
 
@@ -2572,20 +2686,20 @@ function loteFermentoG(lote){
   if(ps.fermento_g!=null) return ps.fermento_g;
   const t=ps.temp;
   if(t!=null && TEMP_FERMENTO[t]!=null) return TEMP_FERMENTO[t];
-  const r=RECEITAS[lote.receita];
+  const r=receitaDoLote(lote);
   if(r){ const f=(r.passos||[]).find(p=>p.cat==='FERMENTO'); if(f) return f.g; }
   return null;
 }
 // Sal e manteiga (g) deste lote, a partir da receita (pesados no balde de secos, sem misturar; entram no batimento)
 function loteSalManteiga(lote){
-  const r=RECEITAS[lote.receita]; if(!r) return {sal:null,manteiga:null};
+  const r=receitaDoLote(lote); if(!r) return {sal:null,manteiga:null};
   let sal=null,manteiga=null;
   (r.passos||[]).forEach(p=>{ if(p.cat==='SAL')sal=p.g; else if(p.cat==='GORDURA')manteiga=p.g; });
   return {sal,manteiga};
 }
 // Pesos esperados a partir da receita do lote
 function pesoBalde1Lote(lote){
-  const r=RECEITAS[lote.receita]; if(!r) return null;
+  const r=receitaDoLote(lote); if(!r) return null;
   const ferm=loteFermentoG(lote);
   let s=0;
   r.passos.forEach(p=>{ if((p.grupo||'').startsWith('BALDE 1')){
@@ -2595,7 +2709,7 @@ function pesoBalde1Lote(lote){
   return s;
 }
 function pesoBalde2Lote(lote){
-  const r=RECEITAS[lote.receita]; if(!r) return null;
+  const r=receitaDoLote(lote); if(!r) return null;
   let s=0; r.passos.forEach(p=>{ if((p.grupo||'').startsWith('BALDE 2')) s+=p.g; });
   return s;
 }
@@ -2983,7 +3097,7 @@ function loteEtqDados(lote){
 }
 // Líquidos do balde 2 (água/gelo e leite) a partir da receita do lote
 function loteLiquidos(lote){
-  const r=RECEITAS[lote.receita]; if(!r) return null;
+  const r=receitaDoLote(lote); if(!r) return null;
   let agua=null, leite=null;
   r.passos.forEach(p=>{ if(p.grupo==='BALDE 2 · LÍQUIDOS'){ if(/gua/i.test(p.nome))agua=p.g; else if(/leite/i.test(p.nome))leite=p.g; } });
   if(agua==null&&leite==null) return null;
@@ -2991,11 +3105,27 @@ function loteLiquidos(lote){
 }
 // Massa laminada e (quando > 0) massa sem laminar, lidas da receita do balde
 function loteMassas(lote){
-  const r=RECEITAS[lote.receita]; if(!r) return null;
+  const r=receitaDoLote(lote); if(!r) return null;
   let laminada=null, semLaminar=null;
   r.passos.forEach(p=>{ if(p.nome==='Massa laminada')laminada=p.g; else if(p.nome==='Massa sem laminar')semLaminar=p.g; });
   if(laminada==null && semLaminar==null) return null;
   return { laminada, semLaminar };
+}
+function testeTokenEtiqueta(a){
+  const ab={bag:'Bag',feu:'Feu',ita:'Ita',fermento:'Ferm',acucar:'Aç',sal:'Sal',manteiga:'Mant',agua:'Água',leite:'Leite',aprov:'Aprov',semLaminar:'SemLam',temp:'Temp',horas:'Horas'};
+  const nome=ab[a&&a.k]||(a&&a.nome)||'Alt', v=a&&a.para;
+  if(a&&a.unidade==='g') return nome+' '+v+'g';
+  if(a&&a.unidade==='°C') return nome+' '+v+'°C';
+  if(a&&a.unidade==='h') return nome+' '+v+'h';
+  return nome+' '+v;
+}
+function testeLinhasEtiqueta(lote,pi){
+  const a=(lote&&lote.teste&&Array.isArray(lote.teste.alteracoes))?lote.teste.alteracoes:[];
+  const toks=a.map(testeTokenEtiqueta), linhas=[], lim=Math.min(toks.length,10);
+  for(let i=0;i<lim;i+=2) linhas.push(toks.slice(i,i+2).join(' · '));
+  if(toks.length>10) linhas.push('+'+(toks.length-10)+' alterações no histórico');
+  if(pi&&pi.temp!=null&&pi.fermento_horas!=null) linhas.push(pi.temp+'ºC · '+pi.fermento_horas+'h · fermento '+pi.fermento_g+'g');
+  return linhas;
 }
 function desenharEtiqueta(lote){
   const c=document.createElement('canvas'); c.width=ETQ_W; c.height=ETQ_H;
@@ -3006,29 +3136,33 @@ function desenharEtiqueta(lote){
   const d=loteEtqDados(lote); const liq=loteLiquidos(lote); const mas=loteMassas(lote);
   const pi=porcInfo(lote);
   x.textAlign='center';
-  x.font='bold 56px Arial, sans-serif'; x.fillText('BALDE #'+d.num, ETQ_W/2, 66);
+  x.font=lote.teste?'bold 40px Arial, sans-serif':'bold 56px Arial, sans-serif'; x.fillText((lote.teste?'TESTE · ':'')+'BALDE #'+d.num, ETQ_W/2, 66);
   x.font='24px Arial, sans-serif';
-  let rec=d.receita; if(rec.length>34) rec=rec.slice(0,34);
+  let rec=lote.teste?('Base '+(lote.teste.baseRotulo||lote.teste.baseReceita||d.receita)):d.receita; if(rec.length>34) rec=rec.slice(0,34);
   x.fillText(rec, ETQ_W/2, 100);
   x.font='bold 26px Arial, sans-serif';
   x.fillText(d.data+'    '+d.hora, ETQ_W/2, 132);
   // divisória
   x.lineWidth=2; x.beginPath(); x.moveTo(40,150); x.lineTo(ETQ_W-40,150); x.stroke();
-  // valores: líquidos (balde 2) + massas (laminada / sem laminar)
+  // valores normais; no TESTE, a etiqueta prioriza exatamente o que mudou.
   const linhas=[];
-  if(liq){
-    if(liq.agua!=null)  linhas.push('Água/gelo:  '+formatPeso(liq.agua));
-    if(liq.leite!=null) linhas.push('Leite em pó:  '+formatPeso(liq.leite));
+  if(lote.teste){
+    linhas.push(...testeLinhasEtiqueta(lote,pi));
+  }else{
+    if(liq){
+      if(liq.agua!=null)  linhas.push('Água/gelo:  '+formatPeso(liq.agua));
+      if(liq.leite!=null) linhas.push('Leite em pó:  '+formatPeso(liq.leite));
+    }
+    if(mas){
+      if(mas.laminada!=null)                        linhas.push('Massa laminada:  '+formatPeso(mas.laminada));
+      if(mas.semLaminar!=null && mas.semLaminar>0)  linhas.push('Massa sem laminar:  '+formatPeso(mas.semLaminar));
+    }
+    if(pi.temp!=null && pi.fermento_horas!=null) linhas.push(pi.temp+'ºC  '+pi.fermento_horas+' horas fermentação');
   }
-  if(mas){
-    if(mas.laminada!=null)                        linhas.push('Massa laminada:  '+formatPeso(mas.laminada));
-    if(mas.semLaminar!=null && mas.semLaminar>0)  linhas.push('Massa sem laminar:  '+formatPeso(mas.semLaminar));
-  }
-  if(pi.temp!=null && pi.fermento_horas!=null) linhas.push(pi.temp+'ºC  '+pi.fermento_horas+' horas fermentação');
   if(linhas.length){
-    x.textAlign='left'; x.font='24px Arial, sans-serif';
-    let yy=188;
-    linhas.forEach(t=>{ x.fillText(t, 40, yy); yy+=33; });
+    x.textAlign='left'; x.font=lote.teste?'19px Arial, sans-serif':'24px Arial, sans-serif';
+    let yy=188, passo=lote.teste?27:33;
+    linhas.forEach(t=>{ x.fillText(t, 40, yy); yy+=passo; });
     x.textAlign='center';
   } else {
     x.font='22px Arial, sans-serif'; x.fillText('(conforme a receita)', ETQ_W/2, 250);
@@ -3050,7 +3184,7 @@ function desenharEtiquetaMassas(lote){
   const dataCurta = (d.data||'').replace(/\/(\d{2})(\d{2})$/,'/$2');
   const tem=(pi.temp!=null && pi.fermento_horas!=null);
   const info = tem ? (dataCurta+'  -  '+pi.temp+'°C  '+pi.fermento_horas+' horas') : dataCurta;
-  let rec=d.receita; if(rec.length>30) rec=rec.slice(0,30);
+  let rec=lote.teste?('TESTE · '+(lote.teste.baseRotulo||lote.teste.baseReceita||d.receita)):d.receita; if(rec.length>30) rec=rec.slice(0,30);
   const fh=ETQ_H/4;             // 100 px por faixa
   const maxW=ETQ_W-24;          // margem lateral pra não tocar a borda
   // Ajusta a fonte até caber: começa grande, reduz até a largura caber.
@@ -3327,8 +3461,78 @@ async function reiniciarNumeracaoLotes(){
   if(await FB.reiniciarSeq())alert('Numeração reiniciada. O próximo balde será o #1 em todos os aparelhos atualizados.');
 }
 
-// Escolhe qual receita rodar (r1, r2 ou r3), ajusta o cabeçalho e vai para a previsão de temperatura
+// ════════════════════════════════════════════════════════════
+// RECEITA TESTE v25.3 — cópia independente de R1–R5, sem alterar padrões.
+// Pesos críticos são digitados manualmente e confirmados visualmente.
+// ════════════════════════════════════════════════════════════
+const TESTE_CAMPOS=[
+  {k:'bag',id:'teste-bag',nome:'Bagatelle',passo:'Bagatelle'},
+  {k:'feu',id:'teste-feu',nome:'Feuilletage',passo:'Feuilletage'},
+  {k:'ita',id:'teste-ita',nome:'Italiana 00',passo:'Italiana 00'},
+  {k:'fermento',id:'teste-fermento',nome:'Fermento seco',passo:'Fermento seco'},
+  {k:'acucar',id:'teste-acucar',nome:'Açúcar',passo:'Açúcar'},
+  {k:'sal',id:'teste-sal',nome:'Sal refinado',passo:'Sal refinado'},
+  {k:'manteiga',id:'teste-manteiga',nome:'Manteiga',passo:'Manteiga'},
+  {k:'agua',id:'teste-agua',nome:'Água / gelo',passo:'Água com gelo'},
+  {k:'leite',id:'teste-leite',nome:'Leite em pó',passo:'Leite em pó'},
+  {k:'aprov',id:'teste-aprov',nome:'Aproveita / massa laminada',passo:'Massa laminada'},
+  {k:'semLaminar',id:'teste-sem-laminar',nome:'Massa sem laminar',passo:'Massa sem laminar'},
+];
+function testeValorPasso(r,nome){ const p=(r&&r.passos||[]).find(x=>x.nome===nome); return p?Number(p.g)||0:0; }
+function testeValoresBase(rid){ const r=RECEITAS[rid]||RECEITAS.r3,v={};TESTE_CAMPOS.forEach(c=>v[c.k]=testeValorPasso(r,c.passo));return v; }
+function limparTesteAtivo(){ st.testeBase=null;st.testeReceita=null;st.testeMeta=null; }
+function abrirTesteBase(){ limparTesteAtivo();st.farinhasLotes=null;ir('teste-base'); }
+function testeNumero(id){ const el=document.getElementById(id),s=String(el&&el.value!=null?el.value:'').trim().replace(',','.');if(!s)return null;const n=Number(s);return isFinite(n)?n:null; }
+function testeLerValores(){ const v={};TESTE_CAMPOS.forEach(c=>v[c.k]=testeNumero(c.id));return v; }
+function abrirTesteEditor(rid){
+  const r=RECEITAS[rid];if(!r)return;
+  limparTesteAtivo();st.testeBase=rid;st.farinhasLotes=null;
+  const v=testeValoresBase(rid);TESTE_CAMPOS.forEach(c=>{const el=document.getElementById(c.id);if(el)el.value=v[c.k];});
+  const temp=document.getElementById('teste-temp'),horas=document.getElementById('teste-horas');
+  if(r.fermentoFixo!=null){temp.value=17;horas.value=r.fermentoHoras!=null?r.fermentoHoras:'';}else{temp.value='';horas.value='';}
+  document.getElementById('teste-obs').value='';document.getElementById('teste-edit-title').textContent='TESTE · base '+r.rotulo;
+  atualizarResumoTeste();ir('teste-edit');
+}
+function testeFermentoMudou(){
+  const f=testeNumero('teste-fermento'),o=OPCOES_FERMENTO.find(x=>Number(x.fermento)===Number(f));
+  if(o){document.getElementById('teste-temp').value=o.temp;document.getElementById('teste-horas').value=o.horas;}
+  atualizarResumoTeste();
+}
+function testeFermentoBase(rid,temp,horas){
+  const r=RECEITAS[rid];if(!r)return null;if(r.fermentoFixo!=null)return Number(r.fermentoFixo);
+  const o=OPCOES_FERMENTO.find(x=>Number(x.temp)===Number(temp)&&Number(x.horas)===Number(horas));return o?Number(o.fermento):null;
+}
+function testeAlteracoes(rid,v,temp,horas){
+  const r=RECEITAS[rid]||RECEITAS.r3,base=testeValoresBase(rid),out=[];
+  TESTE_CAMPOS.forEach(c=>{let de=base[c.k];if(c.k==='fermento')de=testeFermentoBase(rid,temp,horas);const para=v[c.k];if(de==null||Number(de)!==Number(para))out.push({k:c.k,nome:c.nome,de:de==null?null:Number(de),para:Number(para),unidade:'g'});});
+  if(r.fermentoFixo!=null){if(Number(temp)!==17)out.push({k:'temp',nome:'Temperatura',de:17,para:Number(temp),unidade:'°C'});if(r.fermentoHoras!=null&&Number(horas)!==Number(r.fermentoHoras))out.push({k:'horas',nome:'Fermentação',de:Number(r.fermentoHoras),para:Number(horas),unidade:'h'});}
+  return out;
+}
+function testeFmtAlt(a){const u=a.unidade||'';if(a.de==null)return '<b>'+_escHtml(a.nome)+':</b> definido no teste: '+String(a.para)+u;return '<b>'+_escHtml(a.nome)+':</b> '+String(a.de)+u+' → '+String(a.para)+u;}
+function atualizarResumoTeste(){
+  const rid=st.testeBase,r=RECEITAS[rid],box=document.getElementById('teste-resumo');if(!r||!box)return;
+  const v=testeLerValores(),faltam=TESTE_CAMPOS.filter(c=>v[c.k]==null),temp=testeNumero('teste-temp'),horas=testeNumero('teste-horas');
+  if(faltam.length){box.innerHTML='<div class="teste-total">Preencha todos os pesos</div><div class="teste-diffs">Falta: '+faltam.map(x=>_escHtml(x.nome)).join(', ')+'</div>';return;}
+  const total=Object.values(v).reduce((s,n)=>s+(Number(n)||0),0),alts=(temp!=null&&horas!=null)?testeAlteracoes(rid,v,temp,horas):[],dif=alts.length?alts.map(testeFmtAlt).join('<br>'):'Nenhuma alteração de peso identificada ainda.',fer=(temp==null||horas==null)?'<br><span style="color:var(--red)">Defina temperatura e horas da fermentação.</span>':'';
+  box.innerHTML='<div class="teste-total">Total do teste: '+formatPeso(total)+'</div><div class="teste-diffs"><b>Alterações em relação à '+_escHtml(r.rotulo)+':</b><br>'+dif+fer+'</div>';
+}
+function salvarReceitaTeste(){
+  const rid=st.testeBase,base=RECEITAS[rid];if(!base){ir('teste-base');return;}
+  const v=testeLerValores();for(const c of TESTE_CAMPOS){const n=v[c.k];if(n==null||n<0||!Number.isInteger(n)){alert('Confira '+c.nome+'. Use gramas inteiras, sem valor negativo.');document.getElementById(c.id).focus();return;}}
+  const temp=testeNumero('teste-temp'),horas=testeNumero('teste-horas');if(temp==null||temp<=0){alert('Informe a temperatura da fermentação deste teste.');document.getElementById('teste-temp').focus();return;}if(horas==null||horas<=0){alert('Informe quantas horas de fermentação serão usadas neste teste.');document.getElementById('teste-horas').focus();return;}
+  const farTxt='Bagatelle '+v.bag+' g, Feuilletage '+v.feu+' g, Italiana 00 '+v.ita+' g';
+  const r=montarReceita({nome:'TESTE · '+base.rotulo,rotulo:'TESTE · '+base.rotulo,farinhas:farTxt,fermentoFixo:v.fermento,fermentoHoras:horas,teste:true,baseReceita:rid},v.bag,v.feu,v.ita,{agua:v.agua,acucar:v.acucar,leite:v.leite,sal:v.sal,manteiga:v.manteiga,aprov:v.aprov,semLaminar:v.semLaminar,fermento:v.fermento});
+  r.passosLiquidos=r.passosLiquidos.filter(p=>!(p.nome==='Massa laminada'&&Number(p.g)===0));r.passosLiquidos.forEach((p,i)=>p.id=i+1);
+  const agora=new Date(),obsTxt=String(document.getElementById('teste-obs').value||'').trim().slice(0,1200),observacoes=obsTxt?[{id:FB.novoId('obs'),em:agora.toLocaleString('pt-BR'),emTs:agora.getTime(),op:getOp(),texto:obsTxt}]:[];
+  st.testeReceita=r;st.testeMeta={id:FB.novoId('teste'),baseReceita:rid,baseNome:base.nome,baseRotulo:base.rotulo,criadoEm:agora.toLocaleString('pt-BR'),criadoTs:agora.getTime(),atualizadoTs:agora.getTime(),criadoPor:getOp(),valores:clonarReceita(v),fermentacao:{temp:Number(temp),fermento_g:v.fermento,horas:Number(horas)},alteracoes:testeAlteracoes(rid,v,temp,horas),observacoes};
+  st.receita='teste';st.temp=Number(temp);st.fermento=v.fermento;st.fermentoHoras=Number(horas);st.subModulo='secos';st.farinhasLotes=null;RECEITA=r.passosSecos;
+  const h=document.getElementById('hdr-rec');if(h)h.textContent='Secos · TESTE · '+base.rotulo;abrirLotesFarinha();
+}
+function voltarLotesFarinha(){if(st.receita==='teste'&&st.testeReceita)ir('teste-edit');else ir('receitas');}
+
+// Escolhe qual receita rodar (R1–R5), ajusta o cabeçalho e segue para os lotes de farinha.
 function iniciarReceita(rid){
+  limparTesteAtivo();
   st.receita = RECEITAS[rid] ? rid : 'r1';
   st.subModulo='secos';
   st.farinhasLotes=null; // nova seleção de receita = nova confirmação dos lotes
@@ -3376,7 +3580,7 @@ function abrirLotesFarinha(){
   document.getElementById('far-lote-bag-extra').value=bagExtra;
   document.getElementById('far-lote-ita-extra').value=itaExtra;
   farMostrarExtra('bag',!!bagExtra); farMostrarExtra('ita',!!itaExtra);
-  const r=RECEITAS[st.receita]||RECEITAS.r1;
+  const r=receitaAtualObj();
   const sub=document.getElementById('far-lotes-rec'); if(sub)sub.textContent=r.nome+' · confirme antes de pesar';
   const btn=document.getElementById('far-lotes-confirm-btn');
   if(btn)btn.textContent=(bagPrincipal&&itaPrincipal)?'✓ MESMOS LOTES — COMEÇAR':'✓ CONFIRMAR LOTES E COMEÇAR';
@@ -3400,7 +3604,8 @@ function confirmarLotesFarinha(){
     atualizadoTs:Date.now(),
     op:getOp()
   });
-  buscarPrevisaoMadrugada();
+  if(st.receita==='teste'&&st.testeReceita) iniciarSecos();
+  else buscarPrevisaoMadrugada();
 }
 function lotesFarinhaResumo(p){
   const f=p&&p.farinhas_lotes; if(!f)return '';
@@ -3471,7 +3676,7 @@ async function buscarPrevisaoMadrugada() {
 // Tela de seleção: mostra as opções de fermento (por temperatura e tempo de fermentação).
 // Receitas com fermento fixo (R4/R5) pulam a escolha — o fermento já está definido na receita.
 function escolherTemp(){
-  const r=RECEITAS[st.receita]||RECEITAS.r1;
+  const r=receitaAtualObj();
   if(r.fermentoFixo!=null){
     st.temp=17;
     st.fermento=r.fermentoFixo;
@@ -3507,8 +3712,9 @@ function setTemp(t){
 function iniciarSecos(){
   if(!getKey()){ir('config');return;}
   st.subModulo='secos';
-  RECEITA = RECEITAS[st.receita].passosSecos;
-  const h=document.getElementById('hdr-rec'); if(h) h.textContent='Secos · '+RECEITAS[st.receita].rotulo;
+  const r=receitaAtualObj();
+  RECEITA = r.passosSecos;
+  const h=document.getElementById('hdr-rec'); if(h) h.textContent='Secos · '+r.rotulo;
   st.step=0;
   st.done=new Set();
   st.modo='normal';
@@ -3529,10 +3735,11 @@ function iniciarLiquidos(id){
   const lote=LS.g('fdo_lotes',[]).find(l=>l.id===id);
   if(!lote){ abrirLiquidosLotes(); return; }
   st.liqLote=id;
-  st.receita = RECEITAS[lote.receita] ? lote.receita : 'r1';
+  const snap=receitaDoLote(lote);
+  if(lote.teste&&snap){st.receita='teste';st.testeReceita=clonarReceita(snap);st.testeMeta=clonarReceita(lote.teste);st.testeBase=lote.teste.baseReceita||null;}else{limparTesteAtivo();st.receita=RECEITAS[lote.receita]?lote.receita:'r1';}
   st.subModulo='liquidos';
-  const p=porcInfo(lote); st.temp=(p&&p.temp!=null)?p.temp:st.temp;
-  RECEITA = RECEITAS[st.receita].passosLiquidos;
+  const p=porcInfo(lote);st.temp=(p&&p.temp!=null)?p.temp:st.temp;st.fermento=p&&p.fermento_g!=null?p.fermento_g:st.fermento;st.fermentoHoras=p&&p.fermento_horas!=null?p.fermento_horas:st.fermentoHoras;
+  const r=snap||RECEITAS[st.receita]||RECEITAS.r1;RECEITA=r.passosLiquidos;
   const h=document.getElementById('hdr-rec'); if(h) h.textContent='Líquidos · Balde #'+lote.num;
   st.step=0;
   st.done=new Set();
@@ -3804,7 +4011,7 @@ function irPasso(n){st.step=Math.max(0,Math.min(n,RECEITA.length-1));atualizarUI
 function voltarPasso(){
   if(st.step===0){
     pararVoz(); liberarWakeLock();
-    st.sessionStart=0; st.modo='normal'; st.baldeSecos=1; st.liqLote=null;
+    st.sessionStart=0; st.modo='normal'; st.baldeSecos=1; st.liqLote=null; limparTesteAtivo();
     mostrarPerguntaSecos(false);
     ir('start');
     return;
@@ -3978,9 +4185,26 @@ function concluirLiquidos(){
 }
 
 function concluir(){ if(st.subModulo==='liquidos') concluirLiquidos(); else finalizarSecos(); } // compat
-function encerrar(){salvarSessao(false);pararVoz();liberarWakeLock();st.sessionStart=0;st.modo='normal';st.baldeSecos=1;st.liqLote=null;mostrarPerguntaSecos(false);ir('start');}
+function encerrar(){salvarSessao(false);pararVoz();liberarWakeLock();st.sessionStart=0;st.modo='normal';st.baldeSecos=1;st.liqLote=null;limparTesteAtivo();mostrarPerguntaSecos(false);ir('start');}
 function pararVoz(){if(st.rec){st.rec.onend=null;try{st.rec.stop();}catch(e){}st.rec=null;}speechSynthesis?.cancel();}
-function salvarSessao(ok){const all=LS.g('fdo_sess',[]);all.unshift({data:new Date().toLocaleString('pt-BR'),modulo:'Porcionamento '+(RECEITAS[st.receita]?RECEITAS[st.receita].rotulo:'R1')+' · '+(st.subModulo==='liquidos'?'Líquidos':'Secos'),op:getOp(),temp:st.temp,baldes_secos:st.baldeSecos||1,total_g:totalReceitaFull(st.receita),concluidos:st.done.size,total:RECEITA.length,dur:Math.round((Date.now()-st.sessionStart)/60000),ok});LS.s('fdo_sess',all.slice(0,60));}
+function salvarSessao(ok){const all=LS.g('fdo_sess',[]),r=receitaAtualObj();all.unshift({data:new Date().toLocaleString('pt-BR'),modulo:'Porcionamento '+(r?r.rotulo:'R1')+' · '+(st.subModulo==='liquidos'?'Líquidos':'Secos'),op:getOp(),temp:st.temp,baldes_secos:st.baldeSecos||1,total_g:totalReceitaFull(st.receita),concluidos:st.done.size,total:RECEITA.length,dur:Math.round((Date.now()-st.sessionStart)/60000),ok});LS.s('fdo_sess',all.slice(0,60));}
+function testeAltHistorico(t){
+  const a=t&&Array.isArray(t.alteracoes)?t.alteracoes:[];if(!a.length)return 'Sem alteração em relação à base.';
+  return a.map(x=>{const u=x.unidade||'';return x.de==null?'<b>'+_escHtml(x.nome||'Alteração')+':</b> definido no teste: '+String(x.para)+u:'<b>'+_escHtml(x.nome||'Alteração')+':</b> '+String(x.de)+u+' → '+String(x.para)+u;}).join('<br>');
+}
+function testeObsHistorico(t){
+  const a=t&&Array.isArray(t.observacoes)?t.observacoes:[];if(!a.length)return '<span style="color:var(--mut)">Nenhuma observação registrada.</span>';
+  return a.map(o=>'<div style="margin-top:.2rem">'+_escHtml(o.em||'')+(o.op?' · '+_escHtml(o.op):'')+' — '+_escHtml(o.texto||'')+'</div>').join('');
+}
+function renderTesteHistorico(l){
+  const t=l&&l.teste;if(!t)return '';
+  return `<div class="teste-hist"><div class="teste-hist-title">🧪 TESTE · BASE ${_escHtml(t.baseRotulo||t.baseReceita||'—')}</div><div class="teste-hist-row"><b>Alterações executadas</b><br>${testeAltHistorico(t)}</div><div class="teste-hist-row"><b>Observações</b>${testeObsHistorico(t)}</div><button class="teste-obs-btn" onclick="adicionarObsTeste('${l.id}')">+ Acrescentar observação</button></div>`;
+}
+function adicionarObsTeste(id){
+  const todos=LS.g('fdo_lotes',[]),l=todos.find(x=>x.id===id);if(!l||!l.teste)return;
+  const txt=String(prompt('Nova observação sobre o resultado deste teste:')||'').trim().slice(0,1200);if(!txt)return;
+  const agora=new Date();l.teste.observacoes=Array.isArray(l.teste.observacoes)?l.teste.observacoes:[];l.teste.observacoes.push({id:FB.novoId('obs'),em:agora.toLocaleString('pt-BR'),emTs:agora.getTime(),op:getOp(),texto:txt});l.teste.atualizadoTs=agora.getTime();LS.s('fdo_lotes',todos);renderHist();
+}
 function renderHist(){
   const todos=LS.g('fdo_lotes',[]);
   const el=document.getElementById('hist-list');
@@ -4014,6 +4238,7 @@ function renderHist(){
     const btnDel = podeApagar ? (cancelado
       ? `<button class="lote-del" onclick="restaurarLote('${l.id}')" title="Restaurar balde">↩</button>`
       : `<button class="lote-del" onclick="apagarLote('${l.id}')" title="Cancelar balde">🗑</button>`) : '';
+    const testeHtml=renderTesteHistorico(l);
     return `<div class="lote-card ${cancelado?'cancelado':''}">
       <div class="lote-head">
         <span class="lote-num">Balde #${l.num}</span>
@@ -4024,6 +4249,7 @@ function renderHist(){
       </div>
       <div class="lote-meta">${meta}</div>
       ${cancelado?`<div class="lote-cancelado">CANCELADO · ${l.cancelado.em||''} · ${_escHtml(l.cancelado.op||'')}</div>`:''}
+      ${testeHtml}
       <div class="lote-etapas">${chips}</div>
     </div>`;
   }).join('');
@@ -4057,6 +4283,7 @@ function renderHistBatimentos(){
   }
   const porReceita={};
   feitos.forEach(x=>{
+    if(x.lote&&x.lote.teste)return;
     const seg=Number(x.b.tempoSeg);
     if(!isFinite(seg) || seg<=0) return;
     const chave=x.lote.receita||x.lote.rotulo||'—';
@@ -4124,8 +4351,9 @@ function lamDiaMassa(l){
 function lamFermChave(l){ const p=lamPorc(l); return [p.temp,p.fermento_g,p.fermento_horas].map(v=>v==null?'':v).join('|'); }
 // Descrição curta da fermentação p/ o card (ex.: "19°C·17h").
 function lamFermDesc(l){ const p=lamPorc(l); const a=[]; if(p.temp!=null)a.push(p.temp+'°C'); if(p.fermento_horas!=null)a.push(p.fermento_horas+'h'); return a.join('·'); }
-// Chave de compatibilidade completa do balde.
-function lamChave(l){ return l?((l.receita||'')+'§'+lamDiaMassa(l)+'§'+lamFermChave(l)):null; }
+// Chave de compatibilidade completa do balde. Testes usam o ID do teste para não misturar experiências diferentes.
+function loteReceitaChave(l){return l&&l.teste&&l.teste.id?('teste:'+l.teste.id):((l&&l.receita)||'');}
+function lamChave(l){return l?(loteReceitaChave(l)+'§'+lamDiaMassa(l)+'§'+lamFermChave(l)):null;}
 // "Trava" = chave do 1º balde já selecionado. Só entram baldes com a mesma chave.
 function lamLock(){
   const sel=st.lamSel||{};
@@ -4213,8 +4441,8 @@ async function criarLaminacao(){
     const dia=lamDiaMassa(l);
     if(dia!==hoje) temAnterior=true;
     chaves.add(lamChave(l));
-    receitas.add(l.receita);
-    composicao.push({loteId:id, loteNum:l.num, dataLote:dia, partes:q, receita:l.receita});
+    receitas.add(loteReceitaChave(l));
+    composicao.push({loteId:id,loteNum:l.num,dataLote:dia,partes:q,receita:l.receita,receitaChave:loteReceitaChave(l),testeId:l.teste&&l.teste.id||null});
     l.etapas=l.etapas||{};if(!l.etapas.laminacao || !l.etapas.laminacao.feito){l.etapas.laminacao={feito:true,em:new Date().toLocaleString('pt-BR'),emTs:Date.now(),op:getOp()};}
   });
   if(!composicao.length){ falar('Nenhuma parte válida selecionada.'); return; }
@@ -4222,12 +4450,12 @@ async function criarLaminacao(){
   const agora=new Date();
   const seqDia=await proxLamSeqDia(agora.getTime());
   const nome=dataCurta(agora.getTime())+' · '+seqDia;
-  let receitaNome='Misto', receita='misto';
-  if(receitas.size===1){ receita=[...receitas][0]; receitaNome=(RECEITAS[receita]&&RECEITAS[receita].rotulo)||''; }
+  let receitaNome='Misto',receita='misto',testeId=null;
+  if(receitas.size===1){const primeiro=todos.find(x=>x.id===composicao[0].loteId);receita=(primeiro&&primeiro.receita)||'misto';receitaNome=(primeiro&&(primeiro.receitaNome||primeiro.rotulo))||((RECEITAS[receita]&&RECEITAS[receita].rotulo)||'');testeId=primeiro&&primeiro.teste&&primeiro.teste.id||null;}
   const lam={
     id:FB.novoId('lam'), nome, seqDia, data:agora.toLocaleString('pt-BR'), dataTs:agora.getTime(),
     dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),
-    receita, receitaNome, composicao, totalPartes:total, temMassaAnterior:temAnterior, op:getOp(),
+    receita, receitaNome, testeId, composicao, totalPartes:total, temMassaAnterior:temAnterior, op:getOp(),
     etapas:{laminacao:{feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(), op:getOp()}}
   };
   const capacidades={};composicao.forEach(c=>{const l=todos.find(x=>x.id===c.loteId),b=l&&l.etapas&&l.etapas.batimento;capacidades[c.loteId]=Number(b&&b.partes)||0});
@@ -4303,7 +4531,7 @@ const SYNC25={
   novoId(prefix){let u='';try{if(crypto&&crypto.randomUUID)u=crypto.randomUUID()}catch(e){}if(!u)u=Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);return prefix+'_'+u},
   map(arr){const o={};(Array.isArray(arr)?arr:[]).forEach(x=>{if(x&&x.id)o[this.key(x.id)]=this.clone(x)});return o},
   arr(k,m){return Object.values(m||{}).filter(x=>x&&x.id&&!x._deleted).map(x=>this.clone(x)).sort((a,b)=>{const ta=Number(k==='fdo_lotes'?a.criadoTs:a.dataTs)||0,tb=Number(k==='fdo_lotes'?b.criadoTs:b.dataTs)||0;return tb-ta})},
-  ts(x){if(!x)return 0;let m=Math.max(Number(x.criadoTs)||0,Number(x.dataTs)||0,Number(x.deletedTs)||0,Number(x.cancelado&&x.cancelado.emTs)||0,Number(x.restaurado&&x.restaurado.emTs)||0);Object.values(x.etapas||{}).forEach(v=>m=Math.max(m,Number(v&&v.emTs)||0));return m},
+  ts(x){if(!x)return 0;let m=Math.max(Number(x.criadoTs)||0,Number(x.dataTs)||0,Number(x.deletedTs)||0,Number(x.cancelado&&x.cancelado.emTs)||0,Number(x.restaurado&&x.restaurado.emTs)||0);Object.values(x.etapas||{}).forEach(v=>m=Math.max(m,Number(v&&v.emTs)||0));const t=x.teste||null;if(t){m=Math.max(m,Number(t.criadoTs)||0,Number(t.atualizadoTs)||0);(t.observacoes||[]).forEach(v=>m=Math.max(m,Number(v&&v.emTs)||0));}return m},
   etapa(a,b){if(!a)return this.clone(b);if(!b)return this.clone(a);return (Number(b.emTs)||0)>=(Number(a.emTs)||0)?{...this.clone(a),...this.clone(b)}:{...this.clone(b),...this.clone(a)}},
   merge(k,a,b){
     if(!a)return this.clone(b); if(!b)return this.clone(a);
@@ -4315,6 +4543,7 @@ const SYNC25={
     const ea=a.etapas||{}, eb=b.etapas||{}, e={};new Set([...Object.keys(ea),...Object.keys(eb)]).forEach(x=>e[x]=this.etapa(ea[x],eb[x]));if(Object.keys(e).length)base.etapas=e;
     const ca=a.cancelado,cb=b.cancelado;if(ca||cb)base.cancelado=(Number(cb&&cb.emTs)||0)>=(Number(ca&&ca.emTs)||0)?this.clone(cb||ca):this.clone(ca);
     const ra=a.restaurado,rb=b.restaurado;if(ra||rb)base.restaurado=(Number(rb&&rb.emTs)||0)>=(Number(ra&&ra.emTs)||0)?this.clone(rb||ra):this.clone(ra);
+    const ta=a.teste,tb=b.teste;if(ta||tb){const novo=this.ts(b)>=this.ts(a)?this.clone(tb||ta):this.clone(ta||tb),obs=[],seen=new Set();[...((ta&&ta.observacoes)||[]),...((tb&&tb.observacoes)||[])].forEach(o=>{if(!o)return;const k=o.id||((o.emTs||'')+'|'+(o.texto||''));if(seen.has(k))return;seen.add(k);obs.push(this.clone(o));});obs.sort((x,y)=>(Number(x.emTs)||0)-(Number(y.emTs)||0));base.teste={...(novo||{}),observacoes:obs,atualizadoTs:Math.max(Number(ta&&ta.atualizadoTs)||0,Number(tb&&tb.atualizadoTs)||0,...obs.map(o=>Number(o.emTs)||0))};}
     return base;
   },
   out(){return LS.g(this.OUT,{fdo_lotes:{},fdo_laminacoes:{}})||{fdo_lotes:{},fdo_laminacoes:{}}},
