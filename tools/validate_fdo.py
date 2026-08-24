@@ -10,6 +10,16 @@ errors=[]
 
 def fail(msg): errors.append(msg)
 
+# v25.3 — Receita Teste rastreável, sem alterar R1–R5
+for marker in (
+    'Receita Teste','id="s-teste-base"','id="s-teste-edit"',
+    'receitaSnapshot=clonarReceita','function receitaDoLote(lote)',
+    'function adicionarObsTeste(id)','function loteReceitaChave(l)',
+    'function testeLinhasEtiqueta(lote,pi)',"(lote.teste?'TESTE · ':'')+'BALDE #'",
+    "if(x.lote&&x.lote.teste)return"
+):
+    if marker not in html: fail('v25.3 sem marcador: '+marker)
+
 # v25.2 — Firebase Authentication + autorização do aparelho + rules as code
 for marker in ("firebase-auth-compat.js","const DEVICE={","fdo_dispositivos/","signInAnonymously","DEVICE.bootstrap(()=>GEO.bootstrap(bootApp))","dispositivo:(typeof DEVICE"):
     if marker not in html: fail('v25.2 sem marcador: '+marker)
@@ -73,30 +83,44 @@ else:
 vm=re.search(r"atualização v(\d+)\.(\d+)",html)
 cm=re.search(r"const CACHE=['\"]([^'\"]+)['\"]",sw)
 if vm and cm:
-    expected=f'fdo-v{vm.group(1)}-{vm.group(2)}'
-    if cm.group(1)!=expected: fail(f'Cache {cm.group(1)} não corresponde à versão {expected}')
+    expected_cache=f'fdo-v{vm.group(1)}-{vm.group(2)}'
+    if cm.group(1)!=expected_cache: fail(f'Cache {cm.group(1)} não corresponde à versão {expected_cache}')
 else: fail('Não foi possível identificar versão/cache')
 
-# 6) Totais das receitas: avalia o próprio código da aplicação, sem duplicar fórmulas.
+# 6) Totais: avalia o próprio código da aplicação. As 5 receitas padrão são invariantes.
+#    Também simula exatamente a Receita Teste fornecida para a v25.3.
 start=inline.find('const TEMP_FERMENTO')
 end=inline.find('const st=')
 if start<0 or end<0 or end<=start:
     fail('Não foi possível isolar o bloco de receitas')
 else:
-    recipe_js=inline[start:end]+"\nconsole.log(JSON.stringify(Object.fromEntries(Object.entries(RECEITAS).map(([k,r])=>[k,(r.passos||[]).reduce((s,p)=>s+(p.g||0),0)]))));\n"
+    recipe_js=inline[start:end]+"""
+const __padrao=Object.fromEntries(Object.entries(RECEITAS).map(([k,r])=>[k,(r.passos||[]).reduce((s,p)=>s+(p.g||0),0)]));
+const __teste=montarReceita(
+  {nome:'TESTE · R3',rotulo:'TESTE · R3',farinhas:'referência v25.3',fermentoFixo:46,fermentoHoras:14},
+  4113,0,5027,
+  {agua:4110,acucar:1030,leite:204,sal:204,manteiga:714,aprov:0,semLaminar:0,fermento:46}
+);
+const __testeTotal=(__teste.passos||[]).reduce((s,p)=>s+(p.g||0),0);
+console.log(JSON.stringify({padrao:__padrao,teste:__testeTotal}));
+"""
     with tempfile.NamedTemporaryFile('w',suffix='.js',delete=False,encoding='utf-8') as f:
         f.write(recipe_js); rfile=f.name
     rr=subprocess.run(['node',rfile],capture_output=True,text=True)
     if rr.returncode:
         fail('Falha ao calcular receitas: '+rr.stderr.strip())
     else:
-        try: totals=json.loads(rr.stdout.strip().splitlines()[-1])
-        except Exception: totals={}; fail('Saída inválida no cálculo das receitas')
-        expected={'r1':15464,'r2':15690,'r3':15544,'r4':15564,'r5':15714}
-        if totals!=expected: fail(f'Totais das receitas alterados: esperado {expected}, obtido {totals}')
+        try: calc=json.loads(rr.stdout.strip().splitlines()[-1])
+        except Exception: calc={}; fail('Saída inválida no cálculo das receitas')
+        expected_totals={'r1':15464,'r2':15690,'r3':15544,'r4':15564,'r5':15714}
+        if calc.get('padrao')!=expected_totals:
+            fail(f"Totais das receitas padrão alterados: esperado {expected_totals}, obtido {calc.get('padrao')}")
+        if calc.get('teste')!=15448:
+            fail(f"Receita Teste de referência deveria totalizar 15448 g, obtido {calc.get('teste')}")
 
 if errors:
     print('\n'.join('ERRO: '+e for e in errors))
     raise SystemExit(1)
 print('VALIDAÇÃO FDO OK')
-print('Receitas: R1=15464 R2=15690 R3=15544 R4=15564 R5=15714 g')
+print('Receitas padrão: R1=15464 R2=15690 R3=15544 R4=15564 R5=15714 g')
+print('Receita Teste de referência v25.3: 15448 g')
