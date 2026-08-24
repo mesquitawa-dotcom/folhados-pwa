@@ -1,0 +1,54 @@
+name: Aplicar Receita Teste v25.3 c
+
+on:
+  push:
+    branches:
+      - agent/receita-teste-porcionamento
+    paths:
+      - tools/run_receita_teste_v25_3c.py
+      - .github/workflows/apply-receita-teste-v25-3c.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/receita-teste-porcionamento
+          fetch-depth: 0
+      - name: Configurar Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Aplicar e validar
+        shell: bash
+        run: |
+          set +e
+          python3 tools/run_receita_teste_v25_3c.py > /tmp/apply.log 2>&1
+          code=$?
+          cat /tmp/apply.log
+          if [ "$code" -ne 0 ]; then
+            cp /tmp/apply.log tools/APPLY_RECEITA_TESTE_ERRO.txt
+            git add tools/APPLY_RECEITA_TESTE_ERRO.txt
+            git commit -m "Atualizar diagnóstico do aplicador v25.3" || true
+            git push origin HEAD:agent/receita-teste-porcionamento || true
+            exit "$code"
+          fi
+          python3 tools/validate_fdo.py
+          code=$?
+          if [ "$code" -ne 0 ]; then exit "$code"; fi
+          node tools/test_sync_v25_1.js
+          code=$?
+          if [ "$code" -ne 0 ]; then exit "$code"; fi
+          git diff --check
+      - name: Gravar candidata limpa
+        run: |
+          rm -f tools/APPLY_RECEITA_TESTE_ERRO.txt
+          git rm -f tools/apply_receita_teste_v25_3.py tools/apply_receita_teste_v25_3b.py tools/run_receita_teste_v25_3c.py
+          git rm -f .github/workflows/apply-receita-teste-v25-3.yml .github/workflows/apply-receita-teste-v25-3b.yml .github/workflows/apply-receita-teste-v25-3c.yml
+          git add -A index.html sw.js tools .github/workflows
+          git commit -m "Adicionar Receita Teste rastreável v25.3"
+          git push origin HEAD:agent/receita-teste-porcionamento
