@@ -3489,7 +3489,7 @@ function abrirTesteEditor(rid){
   limparTesteAtivo();st.testeBase=rid;st.farinhasLotes=null;
   const v=testeValoresBase(rid);TESTE_CAMPOS.forEach(c=>{const el=document.getElementById(c.id);if(el)el.value=v[c.k];});
   const temp=document.getElementById('teste-temp'),horas=document.getElementById('teste-horas');
-  if(r.fermentoFixo!=null){temp.value=17;horas.value=r.fermentoHoras!=null?r.fermentoHoras:'';}else{temp.value='';horas.value='';}
+  if(r.fermentoFixo!=null){temp.value=17;horas.value=r.fermentoHoras!=null?r.fermentoHoras:'';}else{document.getElementById('teste-fermento').value='';temp.value='';horas.value='';}
   document.getElementById('teste-obs').value='';document.getElementById('teste-edit-title').textContent='TESTE · base '+r.rotulo;
   atualizarResumoTeste();ir('teste-edit');
 }
