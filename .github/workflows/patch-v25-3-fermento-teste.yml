@@ -1,0 +1,36 @@
+name: Ajustar fermento Receita Teste v25.3
+
+on:
+  push:
+    branches:
+      - agent/receita-teste-porcionamento
+    paths:
+      - tools/patch_v25_3_fermento_teste.py
+      - .github/workflows/patch-v25-3-fermento-teste.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/receita-teste-porcionamento
+          fetch-depth: 0
+      - name: Aplicar ajuste e validar
+        run: |
+          python3 tools/patch_v25_3_fermento_teste.py
+          python3 tools/validate_fdo.py
+          node tools/test_sync_v25_1.js
+          node tools/test_receita_teste_v25_3.js
+          git diff --check
+      - name: Gravar e limpar temporários
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm tools/patch_v25_3_fermento_teste.py .github/workflows/patch-v25-3-fermento-teste.yml
+          git add index.html
+          git commit -m "Evitar fermento padrão enganoso em Receita Teste v25.3"
+          git push origin HEAD:agent/receita-teste-porcionamento
