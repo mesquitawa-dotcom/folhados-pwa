@@ -18,6 +18,18 @@ jobs:
           ref: agent/estoque-receita-completa-v26
       - name: Aplicar alteração cirúrgica v26.0
         run: python3 tools/apply_v26_0.py
+      - name: Normalizar marcador do validador temporário
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('tools/validate_fdo.py')
+          s=p.read_text(encoding='utf-8')
+          antigo="'abrirReceitaCompleta('r1')'"
+          novo='"abrirReceitaCompleta(\'r1\')"'
+          if antigo not in s:
+              raise SystemExit('Marcador temporário não encontrado')
+          p.write_text(s.replace(antigo,novo,1),encoding='utf-8')
+          PY
       - name: Validar aplicação, PWA e receitas
         run: python3 tools/validate_fdo.py
       - name: Testar sincronização multiaparelho v25.1/v25.3
