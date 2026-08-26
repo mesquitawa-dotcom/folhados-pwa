@@ -26,6 +26,10 @@ ok(html.includes('function estoqueHojeISO()'),'data local da conferência semana
 ok(html.includes("else if(typeof ESTOQUE_SYNC!=='undefined')"),'início offline do estoque ausente');
 ok(html.includes('grid-template-columns:minmax(0,1fr) 5.6rem'),'layout móvel da conferência não protegido');
 ok(html.includes("estoqueDataISO(cont.data)||estoqueDataCurta(cont.emTs)"),'data selecionada da conferência não é exibida');
+ok(html.includes('Math.min(atual,local)'),'marco de início não preserva o primeiro aparelho atualizado');
+ok(html.includes("gerencia=OP.pode('estoque_entrada')"),'visão gerencial do estoque não está separada');
+ok(html.includes('id="estoque-btn-mov"'),'botão de movimentações sem controle de visibilidade');
+ok(html.includes('A comparação e as movimentações ficam disponíveis somente para a gerência.'),'acesso direto às movimentações não está protegido');
 const am=html.match(/const ESTOQUE_ITENS=(\[.*?\]);\nconst ESTOQUE_POR_PASSO/s);ok(am,'catálogo de estoque não encontrado');
 const itens=vm.runInNewContext(am[1]);
 ok(itens.filter(x=>x.grupo==='insumo').length===8,'esperados 8 insumos controlados');
