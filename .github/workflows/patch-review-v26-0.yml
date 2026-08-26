@@ -1,0 +1,43 @@
+name: Revisar robustez do estoque v26.0
+
+on:
+  push:
+    branches:
+      - agent/estoque-receita-completa-v26
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/estoque-receita-completa-v26
+      - name: Aplicar revisão de robustez
+        run: python3 tools/patch_review_v26_0.py
+      - name: Validar aplicação, PWA e receitas
+        run: python3 tools/validate_fdo.py
+      - name: Testar sincronização multiaparelho v25.1/v25.3
+        run: node tools/test_sync_v25_1.js
+      - name: Testar Receita Teste v25.3
+        run: node tools/test_receita_teste_v25_3.js
+      - name: Testar compatibilidade da Receita Teste v25.3
+        run: node tools/test_compat_teste_v25_3.js
+      - name: Testar estoque e consulta de receita v26.0
+        run: node tools/test_estoque_v26_0.js
+      - name: Preservar o workflow temporário fora do commit do robô
+        run: git checkout HEAD -- .github/workflows/patch-review-v26-0.yml
+      - name: Commitar revisão validada
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração para commit"
+          else
+            git commit -m "fix: robustez da sincronização e conferência do estoque v26.0"
+            git push origin HEAD:agent/estoque-receita-completa-v26
+          fi
