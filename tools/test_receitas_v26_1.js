@@ -1,0 +1,53 @@
+const fs=require('fs');
+const assert=require('assert');
+const html=fs.readFileSync('index.html','utf8');
+const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(m=>m[1]).join('\n');
+function has(x,msg){assert(html.includes(x),msg)}
+has('atualização v26.1','cabeçalho v26.1');
+has("fdo_receitas_definitivas",'persistência das receitas definitivas');
+has("fdo_receitas_auditoria",'auditoria das receitas');
+has("fdo_v25/receitas_definitivas",'sync granular de receitas');
+has("fdo_v25/receitas_auditoria",'sync granular da auditoria');
+has('id="s-receita-edit"','editor de receita');
+has('id="s-receitas-arquivadas"','arquivo de receitas');
+has('id="s-receita-auditoria"','tela de auditoria');
+has("motivo.length<8",'motivo escrito obrigatório');
+has("lote.receitaSnapshot=clonarReceita(r)",'snapshot em todo novo balde');
+has('function congelarSnapshotsReceitasLegadas()','congelamento de históricos antigos');
+has("origem:'base v26.0 para preservação futura'",'origem explícita do snapshot legado');
+has("st.receitaExecucao=clonarReceita(RECEITAS[st.receita])",'sessão usa cópia própria da receita');
+has("st.receitaExecucao.passos.find(p=>p.cat==='FERMENTO')",'fermento escolhido precisa entrar no snapshot completo da execução');
+has("function aprovarTesteComoReceita(loteId)",'promoção de teste');
+assert(/receitaRegistrarAudit\('criada_de_teste'/.test(html),'auditoria da promoção de teste');
+assert(/receitaRegistrarAudit\('editada'/.test(html),'auditoria da edição');
+assert(/receitaRegistrarAudit\('arquivada'/.test(html),'auditoria do arquivamento');
+assert(/receitaRegistrarAudit\('restaurada'/.test(html),'auditoria da restauração');
+assert(!/delete\s+RECEITAS\[rid\]/.test(html),'arquivamento não pode apagar definição da receita');
+assert(html.includes("arr=arr.filter(l=>loteAtivo(l)&&receitaCompativelLegado(l))"),'bridge legado deve excluir receitas novas');
+
+const ini=scripts.indexOf('const TEMP_FERMENTO');
+const fim=scripts.indexOf('const st=',ini);
+assert(ini>=0&&fim>ini,'bloco de receitas não encontrado');
+const bloco=scripts.slice(ini,fim);
+const program=`
+const __store={};
+const LS={g:(k,d)=>Object.prototype.hasOwnProperty.call(__store,k)?__store[k]:d};
+${bloco}
+const __orig=RECEITAS_ORIGINAIS.r3.passos.reduce((s,p)=>s+(p.g||0),0);
+const __edit=montarReceita({nome:'R3 editada',rotulo:'R3',farinhas:'editada'},3601,0,4400,{agua:3600});
+__store.fdo_receitas_definitivas=[{id:'r3',numero:3,ativo:true,receita:__edit},{id:'rec_demo',numero:6,ativo:true,receita:montarReceita({nome:'Receita 6',rotulo:'R6',farinhas:'teste',fermentoFixo:46,fermentoHoras:14,fermentoTemp:20},4113,0,5027,{agua:4110,acucar:1030,leite:204,sal:204,manteiga:714,aprov:0,semLaminar:0,fermento:46})}];
+aplicarReceitasDefinitivas();
+const __snap={passos:[{nome:'snapshot',g:123}]};
+console.log(JSON.stringify({orig:__orig,r3:RECEITAS.r3.passos.reduce((s,p)=>s+(p.g||0),0),r6:!!RECEITAS.rec_demo,snap:receitaDoLote({receita:'r3',receitaSnapshot:__snap})===__snap,ativas:receitasOrdenadas().filter(x=>x.ativo).map(x=>x.numero)}));
+`;
+const {execFileSync}=require('child_process');
+const os=require('os'),path=require('path');
+const tmp=path.join(os.tmpdir(),'fdo-rec-v261-'+Date.now()+'.js');fs.writeFileSync(tmp,program);
+const out=execFileSync(process.execPath,[tmp],{encoding:'utf8'}).trim().split(/\r?\n/).pop();
+const r=JSON.parse(out);
+assert.strictEqual(r.orig,15544,'R3 original de código deve permanecer 15544 g');
+assert.strictEqual(r.r3,15545,'override deve ser aplicado sem alterar original');
+assert.strictEqual(r.r6,true,'receita definitiva dinâmica deve entrar no catálogo');
+assert.strictEqual(r.snap,true,'histórico deve priorizar snapshot');
+assert(r.ativas.includes(6),'R6 ativa deve aparecer na lista');
+console.log('TESTE RECEITAS v26.1 OK · promoção, edição versionada, arquivamento e snapshots protegidos');

@@ -10,16 +10,24 @@ errors=[]
 
 def fail(msg): errors.append(msg)
 
-# v26.0 — consulta da receita completa + estoque separado da conferência física
+# v26.1 — receitas definitivas versionadas, auditáveis e arquiváveis
 for marker in (
-    'atualização v26.0','id="s-receita-completa"',"abrirReceitaCompleta('r1')",
+    'atualização v26.1','id="receitas-list"','id="s-receita-completa"','id="s-receita-edit"',
+    'id="s-receitas-arquivadas"','id="s-receita-auditoria"','fdo_receitas_definitivas','fdo_receitas_auditoria',
+    'fdo_v25/receitas_definitivas','fdo_v25/receitas_auditoria','function aprovarTesteComoReceita(loteId)',
+    'function congelarSnapshotsReceitasLegadas()','lote.receitaSnapshot=clonarReceita(r)',
+    "{k:'receita_editar'","versao:'26.1'"
+):
+    if marker not in html: fail('v26.1 sem marcador: '+marker)
+
+# v26.0 — consulta da receita completa + estoque separado da conferência física permanece
+for marker in (
     'id="receita-full-obs"','id="s-estoque"','data-perm="estoque"',
     'fdo_v25/estoque/movimentos','fdo_v25/estoque/contagens',
     "'saida_receita_'+lote.id",'function garantirPermissoesV260()',
-    "n==='wagner'","n==='maycon'","versao:'26.0'"
+    "n==='wagner'","n==='maycon'",'function renderReceitasPorcionamento()'
 ):
-    if marker not in html: fail('v26.0 sem marcador: '+marker)
-if html.count("abrirReceitaCompleta('r") < 5: fail('v26.0 sem consulta nas cinco receitas padrão')
+    if marker not in html: fail('v26.0 sem marcador preservado: '+marker)
 
 # v25.3 — Receita Teste rastreável, sem alterar R1–R5
 for marker in (
@@ -132,6 +140,6 @@ console.log(JSON.stringify({padrao:__padrao,teste:__testeTotal}));
 if errors:
     print('\n'.join('ERRO: '+e for e in errors))
     raise SystemExit(1)
-print('VALIDAÇÃO FDO v26.0 OK')
+print('VALIDAÇÃO FDO v26.1 OK')
 print('Receitas padrão: R1=15464 R2=15690 R3=15544 R4=15564 R5=15714 g')
 print('Receita Teste de referência v25.3: 15448 g')

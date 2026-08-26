@@ -27,3 +27,5 @@ jobs:
         run: node tools/test_compat_teste_v25_3.js
       - name: Testar estoque e consulta de receita v26.0
         run: node tools/test_estoque_v26_0.js
+      - name: Testar receitas definitivas v26.1
+        run: node tools/test_receitas_v26_1.js
