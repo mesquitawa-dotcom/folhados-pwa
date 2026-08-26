@@ -10,6 +10,17 @@ errors=[]
 
 def fail(msg): errors.append(msg)
 
+# v26.0 — consulta da receita completa + estoque separado da conferência física
+for marker in (
+    'atualização v26.0','id="s-receita-completa"',"abrirReceitaCompleta('r1')",
+    'id="receita-full-obs"','id="s-estoque"','data-perm="estoque"',
+    'fdo_v25/estoque/movimentos','fdo_v25/estoque/contagens',
+    "'saida_receita_'+lote.id",'function garantirPermissoesV260()',
+    "n==='wagner'","n==='maycon'","versao:'26.0'"
+):
+    if marker not in html: fail('v26.0 sem marcador: '+marker)
+if html.count("abrirReceitaCompleta('r") < 5: fail('v26.0 sem consulta nas cinco receitas padrão')
+
 # v25.3 — Receita Teste rastreável, sem alterar R1–R5
 for marker in (
     'Receita Teste','id="s-teste-base"','id="s-teste-edit"',
@@ -41,7 +52,7 @@ except Exception as e: fail('firebase.json inválido: '+str(e))
 for marker in ("fdo_v25/lotes","fdo_v25/laminacoes","fdo_sync_outbox_v25","async function proxLoteNum()","await proxLoteNum()","async function proxLamSeqDia(ts)","function lotePartesUsadas(l)","Aparelho antigo detectado · conciliando","criarLaminacaoAtomica","fdo_v25/meta/lote_seq_reset","ack(k,id,sent)"):
     if marker not in html: fail('v25.1 sem marcador: '+marker)
 if "function proxLoteNum(){ const n=LS.g('fdo_lote_seq',0)+1" in html: fail('Numeração antiga ainda presente')
-if "versao:'25.0'" in html: fail('Backup ainda declara versão 25.0')
+if "versao:'25.0'" in html or "versao:'25.3'" in html: fail('Backup declara versão antiga')
 
 # 1) JavaScript inline: sintaxe real via Node
 scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',html,re.S)
@@ -121,6 +132,6 @@ console.log(JSON.stringify({padrao:__padrao,teste:__testeTotal}));
 if errors:
     print('\n'.join('ERRO: '+e for e in errors))
     raise SystemExit(1)
-print('VALIDAÇÃO FDO OK')
+print('VALIDAÇÃO FDO v26.0 OK')
 print('Receitas padrão: R1=15464 R2=15690 R3=15544 R4=15564 R5=15714 g')
 print('Receita Teste de referência v25.3: 15448 g')

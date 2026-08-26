@@ -2,7 +2,12 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — atualização v25.3
+       FOLHADOS D'OURO — atualização v26.0
+       NOVIDADES v26.0:
+       • Consulta da receita completa na própria seleção do porcionamento, com Observações ao final.
+       • Estoque simples: entradas, baixas automáticas por balde e saldo calculado dos insumos.
+       • Conferência física semanal independente para insumos e caixas, permitindo comparar previsto × encontrado.
+       • Farinhas controladas por marca, sem usar o lote da rastreabilidade como dimensão do estoque.
        NOVIDADES v25.3:
        • Receita Teste: parte de qualquer R1–R5 e permite alterar pesos sem modificar as receitas padrão.
        • Cada balde de teste guarda a fotografia completa da receita executada, diferenças e observações.
@@ -660,6 +665,37 @@
     .sync-pill.err{color:var(--red);border-color:rgba(248,113,113,.35)}
     .lote-card.cancelado{opacity:.62;border-color:#5a1a0e}
     .lote-cancelado{font-size:.68rem;color:var(--red);font-weight:bold;margin-top:.35rem}
+
+    /* ════ RECEITA COMPLETA + ESTOQUE (v26.0) ════ */
+    .receita-ver{flex-shrink:0;border:1px solid rgba(201,151,58,.55);background:rgba(201,151,58,.12);color:var(--gl);border-radius:.42rem;padding:.5rem .62rem;font-family:Georgia,serif;font-size:.68rem;font-weight:bold;line-height:1.15;cursor:pointer}
+    .receita-ver:active{transform:scale(.96);opacity:.8}
+    .rec-full-scroll,.est-scroll{flex:1;overflow-y:auto;padding:.8rem 1rem 1.2rem}
+    .rec-full-hero{background:linear-gradient(135deg,rgba(201,151,58,.18),rgba(42,30,8,.58));border:1px solid var(--brd);border-radius:.65rem;padding:1rem;margin-bottom:.8rem}
+    .rec-full-title{font-size:1.3rem;color:var(--gl);font-weight:bold;line-height:1.2}
+    .rec-full-total{font-size:.76rem;color:var(--gold);margin-top:.35rem;line-height:1.4}
+    .rec-full-grupo{font-size:.63rem;letter-spacing:.17rem;text-transform:uppercase;color:var(--gold);margin:1rem 0 .35rem;padding-bottom:.3rem;border-bottom:1px solid rgba(201,151,58,.25)}
+    .rec-full-item{display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;padding:.48rem .15rem;border-bottom:1px solid rgba(201,151,58,.1)}
+    .rec-full-item span{color:var(--gl);font-size:.88rem}.rec-full-item b{color:var(--text);font-size:.9rem;text-align:right}
+    .rec-full-fer{display:grid;grid-template-columns:1fr 1fr;gap:.32rem;background:var(--bg3);border:1px solid var(--brd);border-radius:.48rem;padding:.7rem;margin-top:.7rem}
+    .rec-full-fer b{grid-column:1/-1;color:var(--gold);font-size:.74rem}.rec-full-fer span{font-size:.68rem;color:var(--mut);line-height:1.35}
+    .rec-full-obs{margin-top:1rem;background:var(--bg3);border:1px solid var(--brd);border-radius:.6rem;padding:.8rem}
+    .rec-full-obs-title{color:var(--gold);font-size:.82rem;font-weight:bold;margin-bottom:.45rem}
+    .rec-full-obs textarea{min-height:6.5rem;resize:vertical}.rec-full-obs textarea[readonly]{opacity:.85}
+    .rec-full-obs-meta{font-size:.64rem;color:var(--mut);line-height:1.35;margin:.35rem 0 .55rem}
+    .est-note{background:rgba(201,151,58,.08);border:1px solid rgba(201,151,58,.3);border-radius:.55rem;padding:.7rem .8rem;font-size:.72rem;color:var(--gl);line-height:1.45;margin-bottom:.75rem}
+    .est-last{font-size:.68rem;color:var(--mut);line-height:1.4;margin:.2rem 0 .75rem}
+    .est-sec{font-size:.65rem;letter-spacing:.16rem;text-transform:uppercase;color:var(--gold);margin:1rem 0 .45rem}
+    .est-item{background:var(--bg3);border:1px solid var(--brd);border-radius:.48rem;padding:.66rem .72rem;margin-bottom:.48rem}
+    .est-item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.7rem}.est-item-top b{color:var(--gl);font-size:.82rem;line-height:1.3}.est-sistema{color:var(--text);font-size:.76rem;font-weight:bold;text-align:right;white-space:nowrap}
+    .est-item-sub{font-size:.66rem;color:var(--mut);line-height:1.45;margin-top:.3rem}
+    .est-actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.85rem}.est-actions .btn-main,.est-actions .btn-sec{width:100%;font-size:.78rem;padding:.72rem .4rem}
+    .est-form{display:flex;flex-direction:column;gap:.8rem}.est-form-card{background:var(--bg3);border:1px solid var(--brd);border-radius:.55rem;padding:.85rem}
+    .est-label{display:block;font-size:.68rem;color:var(--gold);text-transform:uppercase;letter-spacing:.09rem;margin-bottom:.35rem}.est-help{font-size:.67rem;color:var(--mut);line-height:1.45;margin-top:.35rem}
+    .est-cont-field{display:grid;grid-template-columns:minmax(0,1fr) 7rem 3.8rem;align-items:center;gap:.5rem;background:var(--bg3);border:1px solid var(--brd);border-radius:.48rem;padding:.55rem .65rem;margin-bottom:.45rem}
+    .est-cont-field span{font-size:.76rem;color:var(--gl);line-height:1.25}.est-cont-field input{text-align:right;padding:.5rem;font-size:.88rem}.est-cont-field small{font-size:.62rem;color:var(--mut);min-width:1.5rem}
+    .est-mov{background:var(--bg3);border:1px solid var(--brd);border-radius:.52rem;padding:.72rem .78rem;margin-bottom:.55rem}.est-mov-title{color:var(--gold);font-size:.82rem;font-weight:bold}.est-mov-meta{font-size:.63rem;color:var(--mut);line-height:1.4;margin:.22rem 0 .4rem}.est-mov-itens{font-size:.72rem;color:var(--text);line-height:1.55}.est-mov-itens b{color:var(--gl)}.est-mov-obs{font-size:.67rem;color:var(--mut);font-style:italic;margin-top:.35rem}.est-vazio{text-align:center;color:var(--mut);padding:2rem .6rem;font-size:.82rem}
+    @media(max-width:430px){.rec-full-fer{grid-template-columns:1fr}.rec-full-fer b{grid-column:1}.est-cont-field{grid-template-columns:minmax(0,1fr) 5.6rem}.est-cont-field small{grid-column:2;text-align:right}.est-actions{grid-template-columns:1fr}}
+
   </style>
   <!-- Firebase Realtime Database (compat, namespaced) — CDN, sem build -->
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
@@ -800,6 +836,11 @@
       <div class="modulo-info"><div class="modulo-nome">Laminação</div><div class="modulo-desc">Agrupa as partes batidas e forma o lote</div></div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
+    <div class="modulo ativo" data-perm="estoque" onclick="entrarEstoque()">
+      <div class="modulo-icon">📦</div>
+      <div class="modulo-info"><div class="modulo-nome">Estoque</div><div class="modulo-desc">Entradas, consumo das receitas e conferência semanal</div></div>
+      <div class="modulo-badge badge-ativo">Ativo</div>
+    </div>
     <div class="modulo inativo">
       <div class="modulo-icon">✂️</div>
       <div class="modulo-info"><div class="modulo-nome">Modelagem</div><div class="modulo-desc">Corte, enrolamento e pesagem</div></div>
@@ -862,7 +903,7 @@
         <div class="modulo-nome">Receita 1</div>
         <div class="modulo-desc">Bagatelle 45% Feuilletage 45%</div>
       </div>
-      <div class="modulo-badge badge-ativo">Ativo</div>
+      <button class="receita-ver" onclick="event.stopPropagation();abrirReceitaCompleta('r1')">📋 Receita</button>
     </div>
     <div class="modulo ativo" onclick="iniciarReceita('r2')">
       <div class="modulo-icon">2️⃣</div>
@@ -870,7 +911,7 @@
         <div class="modulo-nome">Receita 2 - MASSA 3 KG</div>
         <div class="modulo-desc">Massa de 3 kg · Bagatelle 3500 g · Italiana 4270 g · sem Feuilletage</div>
       </div>
-      <div class="modulo-badge badge-ativo">Ativo</div>
+      <button class="receita-ver" onclick="event.stopPropagation();abrirReceitaCompleta('r2')">📋 Receita</button>
     </div>
     <div class="modulo ativo" onclick="iniciarReceita('r3')">
       <div class="modulo-icon">3️⃣</div>
@@ -878,7 +919,7 @@
         <div class="modulo-nome">Receita 3 - PADRÃO</div>
         <div class="modulo-desc">Bagatelle 3600 g · Italiana 4400 g · sem Feuilletage</div>
       </div>
-      <div class="modulo-badge badge-ativo">Ativo</div>
+      <button class="receita-ver" onclick="event.stopPropagation();abrirReceitaCompleta('r3')">📋 Receita</button>
     </div>
     <div class="modulo ativo" onclick="iniciarReceita('r4')">
       <div class="modulo-icon">4️⃣</div>
@@ -886,7 +927,7 @@
         <div class="modulo-nome">Massa 3 kg sem manteiga</div>
         <div class="modulo-desc">Sem manteiga · Bagatelle 3500 g · Italiana 4270 g · massa laminada 3 kg · fermento 70 g / 14 h</div>
       </div>
-      <div class="modulo-badge badge-ativo">Ativo</div>
+      <button class="receita-ver" onclick="event.stopPropagation();abrirReceitaCompleta('r4')">📋 Receita</button>
     </div>
     <div class="modulo ativo" onclick="iniciarReceita('r5')">
       <div class="modulo-icon">5️⃣</div>
@@ -894,7 +935,7 @@
         <div class="modulo-nome">1 kg sem laminar</div>
         <div class="modulo-desc">Laminada 2,5 kg + sem laminar 1 kg · Bagatelle 3370 g · Italiana 4118 g · fermento 64 g / 17 h</div>
       </div>
-      <div class="modulo-badge badge-ativo">Ativo</div>
+      <button class="receita-ver" onclick="event.stopPropagation();abrirReceitaCompleta('r5')">📋 Receita</button>
     </div>
     <div class="modulo ativo" onclick="abrirTesteBase()">
       <div class="modulo-icon">🧪</div>
@@ -908,6 +949,97 @@
   <div class="start-footer">
     <button class="link-btn" onclick="ir('porc-menu')">← Voltar</button>
   </div>
+</div>
+
+
+<!-- ═══ RECEITA COMPLETA — consulta rápida no porcionamento (v26.0) ═══ -->
+<div id="s-receita-completa" class="scr off">
+  <div class="hdr">
+    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Receita completa</div></div>
+    <button class="link-btn" onclick="ir('receitas')">← Voltar</button>
+  </div>
+  <div class="rec-full-scroll">
+    <div class="rec-full-hero">
+      <div class="rec-full-title" id="receita-full-title">Receita</div>
+      <div class="rec-full-total" id="receita-full-total"></div>
+    </div>
+    <div id="receita-full-lista"></div>
+    <div class="rec-full-obs">
+      <div class="rec-full-obs-title">Observações</div>
+      <textarea id="receita-full-obs" class="inp" maxlength="1200" placeholder="Observações da gerência para esta receita"></textarea>
+      <div class="rec-full-obs-meta" id="receita-full-obs-meta"></div>
+      <button class="btn-main" id="receita-full-salvar" onclick="salvarObservacaoReceita()">✓ Salvar observações</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CONTROLE DE ESTOQUE (v26.0) ═══ -->
+<div id="s-estoque" class="scr off">
+  <div class="hdr">
+    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Controle de Estoque</div></div>
+    <button class="link-btn" onclick="ir('start')">← Início</button>
+  </div>
+  <div class="est-scroll">
+    <div class="est-note" id="estoque-nota"><b>Saldo calculado</b> = entradas recebidas − insumos das receitas. A conferência física semanal fica separada e nunca altera esse cálculo.</div>
+    <div class="est-last" id="estoque-ultima"></div>
+    <div class="est-sec">Insumos · sistema × conferência</div>
+    <div id="estoque-insumos"></div>
+    <div class="est-sec">Caixas · somente conferência física</div>
+    <div id="estoque-embalagens"></div>
+    <div class="est-actions">
+      <button class="btn-main" id="estoque-btn-entrada" onclick="abrirEstoqueEntrada()">＋ Entrada recebida</button>
+      <button class="btn-main" id="estoque-btn-contagem" onclick="abrirEstoqueContagem()">✓ Conferência semanal</button>
+      <button class="btn-sec" id="estoque-btn-mov" onclick="abrirEstoqueMovimentos()">📋 Movimentações</button>
+      <button class="btn-sec" onclick="renderEstoque()">↻ Atualizar</button>
+    </div>
+  </div>
+</div>
+
+<div id="s-estoque-entrada" class="scr off">
+  <div class="hdr">
+    <div><div class="hdr-brand">Folhados d'Ouro · Estoque</div><div class="hdr-title">Entrada recebida</div></div>
+    <button class="link-btn" onclick="ir('estoque')">← Voltar</button>
+  </div>
+  <div class="est-scroll est-form">
+    <div class="est-form-card">
+      <label class="est-label" for="estoque-entrada-item">Insumo</label>
+      <select id="estoque-entrada-item" class="inp"></select>
+    </div>
+    <div class="est-form-card">
+      <label class="est-label" for="estoque-entrada-qtd">Quantidade recebida · kg</label>
+      <input id="estoque-entrada-qtd" class="inp" type="text" inputmode="decimal" placeholder="Ex.: 100">
+      <div class="est-help">Digite 100 para 100 kg. Para 500 g, digite 0,5.</div>
+    </div>
+    <div class="est-form-card">
+      <label class="est-label" for="estoque-entrada-obs">Observação opcional</label>
+      <input id="estoque-entrada-obs" class="inp" type="text" maxlength="160" placeholder="Ex.: estoque inicial">
+      <div class="est-help">Não é necessário informar fornecedor.</div>
+    </div>
+    <button class="btn-main" onclick="salvarEstoqueEntrada()">✓ Registrar entrada</button>
+  </div>
+</div>
+
+<div id="s-estoque-contagem" class="scr off">
+  <div class="hdr">
+    <div><div class="hdr-brand">Folhados d'Ouro · Estoque</div><div class="hdr-title">Conferência semanal</div></div>
+    <button class="link-btn" onclick="ir('estoque')">← Voltar</button>
+  </div>
+  <div class="est-scroll">
+    <div class="est-note">Preencha a quantidade física de <b>todos os itens</b>. Esta conferência fica independente das entradas e saídas calculadas.</div>
+    <label class="est-label" for="estoque-cont-data">Data da conferência</label>
+    <input id="estoque-cont-data" class="inp" type="date" onchange="estoqueAtualizarDiaContagem()">
+    <div class="est-last" id="estoque-cont-dia"></div>
+    <div id="estoque-cont-campos"></div>
+    <button class="btn-main" onclick="salvarEstoqueContagem()">✓ Salvar conferência completa</button>
+  </div>
+</div>
+
+<div id="s-estoque-mov" class="scr off">
+  <div class="hdr">
+    <div><div class="hdr-brand">Folhados d'Ouro · Estoque</div><div class="hdr-title">Movimentações</div></div>
+    <button class="link-btn" onclick="ir('estoque')">← Voltar</button>
+  </div>
+  <div class="est-scroll" id="estoque-mov-lista"></div>
 </div>
 
 <!-- ═══ RECEITA TESTE — base + edição do lote experimental (v25.3) ═══ -->
@@ -1634,6 +1766,228 @@ const CMD = {
 };
 function matchCmd(txt,g){return CMD[g].some(p=>txt.includes(p));}
 
+// ════════════════════════════════════════════════════════════
+// v26.0 — RECEITA COMPLETA + CONTROLE DE ESTOQUE
+// ════════════════════════════════════════════════════════════
+const ESTOQUE_ITENS=[
+  {id:'farinha_bagatelle',nome:'Farinha Bagatelle',passo:'Bagatelle',grupo:'insumo',unidade:'g'},
+  {id:'farinha_feuilletage',nome:'Farinha Feuilletage',passo:'Feuilletage',grupo:'insumo',unidade:'g'},
+  {id:'farinha_italiana00',nome:'Farinha Italiana 00',passo:'Italiana 00',grupo:'insumo',unidade:'g'},
+  {id:'fermento_seco',nome:'Fermento seco',passo:'Fermento seco',grupo:'insumo',unidade:'g'},
+  {id:'acucar',nome:'Açúcar',passo:'Açúcar',grupo:'insumo',unidade:'g'},
+  {id:'sal_refinado',nome:'Sal refinado',passo:'Sal refinado',grupo:'insumo',unidade:'g'},
+  {id:'manteiga',nome:'Manteiga',passo:'Manteiga',grupo:'insumo',unidade:'g'},
+  {id:'leite_po',nome:'Leite em pó',passo:'Leite em pó',grupo:'insumo',unidade:'g'},
+  {id:'caixa_grande',nome:'Caixas Grandes',grupo:'embalagem',unidade:'un'},
+  {id:'caixa_aberta',nome:'Caixas Abertas',grupo:'embalagem',unidade:'un'},
+  {id:'caixa_mini',nome:'Caixas de Mini',grupo:'embalagem',unidade:'un'}
+];
+const ESTOQUE_POR_PASSO={};ESTOQUE_ITENS.forEach(x=>{if(x.passo)ESTOQUE_POR_PASSO[x.passo]=x.id;});
+function estoqueItem(id){return ESTOQUE_ITENS.find(x=>x.id===id)||null;}
+function estoqueInsumos(){return ESTOQUE_ITENS.filter(x=>x.grupo==='insumo');}
+function estoqueEmbalagens(){return ESTOQUE_ITENS.filter(x=>x.grupo==='embalagem');}
+function estoqueNumero(v){
+  const s=String(v==null?'':v).trim().replace(/\s/g,'').replace(',','.');
+  if(!s)return null;const n=Number(s);return isFinite(n)?n:null;
+}
+function estoqueFmt(id,v){
+  const it=estoqueItem(id),n=Number(v)||0;
+  if(it&&it.unidade==='un')return Math.round(n)+' un';
+  const kg=n/1000;
+  return kg.toLocaleString('pt-BR',{minimumFractionDigits:kg%1?3:0,maximumFractionDigits:3})+' kg';
+}
+function estoqueCorDif(v){return Math.abs(Number(v)||0)<1?'var(--grn)':((Number(v)||0)<0?'var(--red)':'var(--gold)');}
+function estoqueMovimentos(){return LS.g('fdo_estoque_movimentos',[]);}
+function estoqueContagens(){return LS.g('fdo_estoque_contagens',[]);}
+function receitaObservacoes(){return LS.g('fdo_receitas_observacoes',[]);}
+function receitaObsRegistro(rid){return receitaObservacoes().find(x=>x.id===rid)||null;}
+function estoqueTemMovimento(id){return estoqueMovimentos().some(x=>x&&x.id===id);}
+
+const ESTOQUE_SYNC={
+  defs:{
+    movimentos:{local:'fdo_estoque_movimentos',path:'fdo_v25/estoque/movimentos'},
+    contagens:{local:'fdo_estoque_contagens',path:'fdo_v25/estoque/contagens'},
+    observacoes:{local:'fdo_receitas_observacoes',path:'fdo_v25/receitas_observacoes'}
+  },
+  OUT:'fdo_estoque_outbox_v26',iniciado:false,flushing:false,ready:{},inicioTs:0,refs:{},
+  clone(v){return v==null?v:JSON.parse(JSON.stringify(v));},
+  key(id){return String(id||'sem_id').replace(/[.#$\[\]\/]/g,'_');},
+  ts(x){return Math.max(Number(x&&x.atualizadoTs)||0,Number(x&&x.emTs)||0,Number(x&&x.criadoTs)||0);},
+  list(nome){const d=this.defs[nome];return d?LS.g(d.local,[]):[];},
+  save(nome,arr){const d=this.defs[nome];if(!d)return;try{localStorage.setItem(d.local,JSON.stringify(arr))}catch{}},
+  upsert(arr,reg){
+    const out=Array.isArray(arr)?arr.slice():[],i=out.findIndex(x=>x&&x.id===reg.id);
+    if(i<0)out.push(this.clone(reg));else if(this.ts(reg)>=this.ts(out[i]))out[i]={...this.clone(out[i]),...this.clone(reg)};
+    return out.sort((a,b)=>this.ts(b)-this.ts(a));
+  },
+  out(){const base={movimentos:{},contagens:{},observacoes:{}};const x=LS.g(this.OUT,base)||base;Object.keys(base).forEach(k=>x[k]=x[k]||{});return x;},
+  saveOut(x){try{localStorage.setItem(this.OUT,JSON.stringify(x))}catch{}},
+  queue(nome,reg){const o=this.out(),id=this.key(reg.id),at=o[nome]&&o[nome][id];if(!at||this.ts(reg)>=this.ts(at))o[nome][id]=this.clone(reg);this.saveOut(o);},
+  pending(){const o=this.out();return Object.values(o).some(m=>Object.keys(m||{}).length);},
+  localPush(nome,reg){const arr=this.upsert(this.list(nome),reg);this.save(nome,arr);this.queue(nome,reg);FB.repaint();this.flush();},
+  apply(nome,val){
+    const rem=Object.values((val&&typeof val==='object')?val:{}).filter(x=>x&&x.id),loc=this.list(nome);let arr=rem.slice();
+    loc.forEach(x=>{arr=this.upsert(arr,x);if(!rem.some(r=>r.id===x.id))this.queue(nome,x);});
+    this.save(nome,arr);this.ready[nome]=true;FB.repaint();this.flush();
+    if(nome==='movimentos')estoqueReconciliarSaidasLotes();
+  },
+  async flush(){
+    if(this.flushing||!FB.db||!navigator.onLine)return;const o=this.out(),jobs=[];
+    Object.keys(this.defs).forEach(nome=>Object.entries(o[nome]||{}).forEach(([id,reg])=>jobs.push([nome,id,reg])));
+    if(!jobs.length)return;this.flushing=true;FB.status('pending','Estoque salvo · sincronizando…');let ok=true;
+    for(const [nome,id,reg] of jobs){
+      try{
+        await FB.db.ref(this.defs[nome].path+'/'+id).transaction(cur=>!cur||this.ts(reg)>=this.ts(cur)?reg:cur,undefined,false);
+        const agora=this.out(),cur=agora[nome]&&agora[nome][id];if(cur&&JSON.stringify(cur)===JSON.stringify(reg))delete agora[nome][id];this.saveOut(agora);
+      }catch(e){ok=false;console.warn('[ESTOQUE] sync',nome,id,e);}
+    }
+    this.flushing=false;
+    if(this.pending()&&navigator.onLine){
+      if(!ok)FB.status('err','⚠ Estoque salvo aqui · nuvem pendente');
+      setTimeout(()=>this.flush(),ok?150:5000);return;
+    }
+    FB.status(ok?'ok':'err',ok?'✓ Sincronizado':'⚠ Estoque salvo aqui · nuvem pendente');
+  },
+  async garantirInicio(){
+    const local=Number(LS.g('fdo_estoque_inicio_ts_v26',0))||Date.now();
+    if(!FB.db||!navigator.onLine){this.inicioTs=local;try{localStorage.setItem('fdo_estoque_inicio_ts_v26',JSON.stringify(local))}catch{};return;}
+    try{
+      const r=await FB.db.ref('fdo_v25/estoque/meta/inicioTs').transaction(cur=>{
+        const atual=Number(cur)||0;return atual>0?Math.min(atual,local):local;
+      },undefined,false);
+      this.inicioTs=Number(r.snapshot.val())||local;try{localStorage.setItem('fdo_estoque_inicio_ts_v26',JSON.stringify(this.inicioTs))}catch{};
+      estoqueReconciliarSaidasLotes();
+    }catch(e){this.inicioTs=local;}
+  },
+  init(){
+    if(this.iniciado||!FB.db)return;this.iniciado=true;
+    Object.entries(this.defs).forEach(([nome,d])=>{
+      const ref=FB.db.ref(d.path);this.refs[nome]=ref;
+      ref.on('value',snap=>this.apply(nome,snap.val()),e=>{console.warn('[ESTOQUE] listen',nome,e);FB.status('err','⚠ Estoque salvo aqui · nuvem pendente');});
+    });
+    this.garantirInicio();this.flush();
+  },
+  online(){if(!this.iniciado)this.init();else{this.garantirInicio();this.flush();}}
+};
+
+function estoqueConsumoLote(lote){
+  const r=receitaDoLote(lote);if(!r||!Array.isArray(r.passos))return null;
+  const itens={};
+  r.passos.forEach(p=>{
+    const id=ESTOQUE_POR_PASSO[p.nome];if(!id)return;
+    let g=Number(p.g)||0;if(p.cat==='FERMENTO'){const real=loteFermentoG(lote);if(real!=null)g=Number(real)||0;}
+    if(g>0)itens[id]=(itens[id]||0)-g;
+  });
+  return Object.keys(itens).length?itens:null;
+}
+function registrarSaidaEstoqueLote(lote){
+  if(!lote||!lote.id)return false;const id='saida_receita_'+lote.id;if(estoqueTemMovimento(id))return false;
+  const itens=estoqueConsumoLote(lote);if(!itens)return false;
+  const ts=Number(lote.criadoTs)||Date.now(),reg={id,tipo:'saida_receita',em:lote.criado||new Date(ts).toLocaleString('pt-BR'),emTs:ts,op:(porcInfo(lote).op||getOp()),loteId:lote.id,loteNum:lote.num,receita:lote.receita,receitaNome:lote.receitaNome||lote.rotulo||'',itens,dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null)};
+  ESTOQUE_SYNC.localPush('movimentos',reg);return true;
+}
+let estoqueReconciliando=false;
+function estoqueReconciliarSaidasLotes(){
+  if(estoqueReconciliando)return 0;
+  const inicio=Number(ESTOQUE_SYNC.inicioTs||LS.g('fdo_estoque_inicio_ts_v26',0))||0;if(!inicio)return 0;
+  estoqueReconciliando=true;
+  try{
+    let n=0;LS.g('fdo_lotes',[]).forEach(l=>{if(l&&Number(l.criadoTs)>=inicio&&registrarSaidaEstoqueLote(l))n++;});return n;
+  }finally{estoqueReconciliando=false;}
+}
+function estoqueSaldos(){
+  const s={};estoqueInsumos().forEach(x=>s[x.id]=0);
+  estoqueMovimentos().forEach(m=>Object.entries((m&&m.itens)||{}).forEach(([id,v])=>{if(id in s)s[id]+=Number(v)||0;}));return s;
+}
+function estoqueUltimaContagem(){return estoqueContagens().slice().sort((a,b)=>(Number(b.emTs)||0)-(Number(a.emTs)||0))[0]||null;}
+function estoqueDataCurta(ts){return ts?new Date(ts).toLocaleDateString('pt-BR'):'—';}
+function estoqueHojeISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function estoqueDataISO(iso){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(iso||'')))return '';
+  const [a,m,d]=String(iso).split('-').map(Number);return new Date(a,m-1,d).toLocaleDateString('pt-BR');
+}
+function entrarEstoque(){exigeP('estoque',()=>{renderEstoque();ir('estoque');});}
+function renderEstoque(){
+  estoqueReconciliarSaidasLotes();const saldos=estoqueSaldos(),cont=estoqueUltimaContagem(),fis=(cont&&cont.valores)||{},gerencia=OP.pode('estoque_entrada');
+  const nota=document.getElementById('estoque-nota');if(nota)nota.innerHTML=gerencia?'<b>Saldo calculado</b> = entradas recebidas − insumos das receitas. A conferência física semanal fica separada e nunca altera esse cálculo.':'<b>Conferência semanal</b> · informe as quantidades físicas encontradas. A comparação com o saldo calculado fica reservada à gerência.';
+  const info=document.getElementById('estoque-ultima');if(info)info.textContent=cont?('Conferência de '+(estoqueDataISO(cont.data)||estoqueDataCurta(cont.emTs))+' · '+(cont.op||'—')):'Ainda não há conferência física semanal.';
+  const ins=document.getElementById('estoque-insumos');if(ins)ins.innerHTML=estoqueInsumos().map(it=>{
+    const tem=Object.prototype.hasOwnProperty.call(fis,it.id),f=tem?Number(fis[it.id])||0:null,d=tem?f-(Number(saldos[it.id])||0):null;
+    if(!gerencia)return `<div class="est-item"><div class="est-item-top"><b>${_escHtml(it.nome)}</b><span class="est-sistema">${tem?estoqueFmt(it.id,f):'Não conferido'}</span></div><div class="est-item-sub">Última quantidade física registrada.</div></div>`;
+    return `<div class="est-item"><div class="est-item-top"><b>${_escHtml(it.nome)}</b><span class="est-sistema">Sistema ${estoqueFmt(it.id,saldos[it.id])}</span></div><div class="est-item-sub">${tem?('Conferido '+estoqueFmt(it.id,f)+' · diferença <span style="color:'+estoqueCorDif(d)+'">'+(d>0?'+':'')+estoqueFmt(it.id,d)+'</span>'):'Conferência física: não informada'}</div></div>`;
+  }).join('');
+  const emb=document.getElementById('estoque-embalagens');if(emb)emb.innerHTML=estoqueEmbalagens().map(it=>`<div class="est-item"><div class="est-item-top"><b>${_escHtml(it.nome)}</b><span class="est-sistema">${Object.prototype.hasOwnProperty.call(fis,it.id)?estoqueFmt(it.id,fis[it.id]):'Não conferido'}</span></div><div class="est-item-sub">Somente saldo físico semanal nesta etapa.</div></div>`).join('');
+  const bE=document.getElementById('estoque-btn-entrada'),bC=document.getElementById('estoque-btn-contagem'),bM=document.getElementById('estoque-btn-mov');if(bE)bE.style.display=gerencia?'':'none';if(bC)bC.style.display=OP.pode('estoque_contagem')?'':'none';if(bM)bM.style.display=gerencia?'':'none';
+}
+function abrirEstoqueEntrada(){
+  if(!OP.pode('estoque_entrada')){alert('Você não tem permissão para registrar entradas de estoque.');return;}
+  const sel=document.getElementById('estoque-entrada-item');sel.innerHTML=estoqueInsumos().map(x=>`<option value="${x.id}">${_escHtml(x.nome)}</option>`).join('');
+  document.getElementById('estoque-entrada-qtd').value='';document.getElementById('estoque-entrada-obs').value='';ir('estoque-entrada');
+}
+function salvarEstoqueEntrada(){
+  if(!OP.pode('estoque_entrada'))return;const id=document.getElementById('estoque-entrada-item').value,it=estoqueItem(id),kg=estoqueNumero(document.getElementById('estoque-entrada-qtd').value);
+  if(!it||it.grupo!=='insumo'){alert('Selecione um insumo.');return;}if(kg==null||kg<=0){alert('Informe uma quantidade maior que zero, em kg.');document.getElementById('estoque-entrada-qtd').focus();return;}
+  const g=Math.round(kg*1000),agora=new Date(),obs=String(document.getElementById('estoque-entrada-obs').value||'').trim().slice(0,160);
+  const reg={id:FB.novoId('est_entrada'),tipo:'entrada',em:agora.toLocaleString('pt-BR'),emTs:agora.getTime(),op:getOp(),itens:{[id]:g},observacao:obs||null,dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null)};
+  ESTOQUE_SYNC.localPush('movimentos',reg);alert('Entrada registrada: '+it.nome+' · '+estoqueFmt(id,g)+'.');renderEstoque();ir('estoque');
+}
+function abrirEstoqueContagem(){
+  if(!OP.pode('estoque_contagem')){alert('Você não tem permissão para registrar a conferência semanal.');return;}
+  const d=document.getElementById('estoque-cont-data');d.value=estoqueHojeISO();
+  const ultima=estoqueUltimaContagem(),ant=(ultima&&ultima.valores)||{};
+  document.getElementById('estoque-cont-campos').innerHTML=ESTOQUE_ITENS.map(it=>{
+    const ph=Object.prototype.hasOwnProperty.call(ant,it.id)?('Anterior: '+estoqueFmt(it.id,ant[it.id])):(it.unidade==='un'?'Quantidade':'Ex.: 12,5');
+    return `<label class="est-cont-field"><span>${_escHtml(it.nome)}</span><input class="inp" data-est-id="${it.id}" type="text" inputmode="decimal" placeholder="${_escHtml(ph)}"><small>${it.unidade==='un'?'unidades':'kg'}</small></label>`;
+  }).join('');
+  estoqueAtualizarDiaContagem();ir('estoque-contagem');
+}
+function estoqueAtualizarDiaContagem(){
+  const v=document.getElementById('estoque-cont-data').value,el=document.getElementById('estoque-cont-dia');if(!el)return;if(!v){el.textContent='';return;}
+  const d=new Date(v+'T12:00:00'),seg=d.getDay()===1;el.textContent=seg?'Segunda-feira · conferência semanal':'Atenção: a data escolhida não é segunda-feira.';el.style.color=seg?'var(--grn)':'var(--gold)';
+}
+function salvarEstoqueContagem(){
+  if(!OP.pode('estoque_contagem'))return;const data=document.getElementById('estoque-cont-data').value;if(!data){alert('Informe a data da conferência.');return;}
+  const vals={};for(const inp of document.querySelectorAll('#estoque-cont-campos [data-est-id]')){const id=inp.dataset.estId,it=estoqueItem(id),n=estoqueNumero(inp.value);if(n==null||n<0){alert('Preencha '+(it?it.nome:id)+' com zero ou uma quantidade positiva.');inp.focus();return;}vals[id]=it.unidade==='un'?Math.round(n):Math.round(n*1000);}
+  const d=new Date(data+'T12:00:00');if(d.getDay()!==1&&!confirm('A data escolhida não é segunda-feira. Deseja registrar mesmo assim?'))return;
+  const agora=new Date(),reg={id:FB.novoId('est_contagem'),tipo:'contagem_semanal',data,em:agora.toLocaleString('pt-BR'),emTs:agora.getTime(),op:getOp(),valores:vals,dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null)};
+  ESTOQUE_SYNC.localPush('contagens',reg);alert('Conferência semanal registrada sem alterar o saldo calculado.');renderEstoque();ir('estoque');
+}
+function renderEstoqueMovimentos(){
+  const el=document.getElementById('estoque-mov-lista'),mov=estoqueMovimentos().slice().sort((a,b)=>(Number(b.emTs)||0)-(Number(a.emTs)||0));
+  if(!mov.length){el.innerHTML='<div class="est-vazio">Nenhuma entrada ou saída registrada.</div>';return;}
+  el.innerHTML=mov.map(m=>{
+    const itens=Object.entries(m.itens||{}).map(([id,v])=>{const it=estoqueItem(id);return '<div><b>'+_escHtml(it?it.nome:id)+':</b> '+((Number(v)||0)>0?'+':'')+estoqueFmt(id,v)+'</div>';}).join('');
+    const tit=m.tipo==='entrada'?'Entrada recebida':('Saída automática · Balde #'+(m.loteNum||'—'));
+    return `<div class="est-mov"><div class="est-mov-title">${_escHtml(tit)}</div><div class="est-mov-meta">${_escHtml(m.em||'')} · ${_escHtml(m.op||'—')}${m.receitaNome?' · '+_escHtml(m.receitaNome):''}</div><div class="est-mov-itens">${itens}</div>${m.observacao?'<div class="est-mov-obs">'+_escHtml(m.observacao)+'</div>':''}</div>`;
+  }).join('');
+}
+function abrirEstoqueMovimentos(){if(!OP.pode('estoque_entrada')){alert('A comparação e as movimentações ficam disponíveis somente para a gerência.');return;}renderEstoqueMovimentos();ir('estoque-mov');}
+
+function abrirReceitaCompleta(rid){if(!RECEITAS[rid])return;st.receitaVisual=rid;renderReceitaCompleta();ir('receita-completa');}
+function renderReceitaCompleta(){
+  const rid=st.receitaVisual||'r1',r=RECEITAS[rid];if(!r)return;document.getElementById('receita-full-title').textContent=r.nome;
+  const ferm=(r.passos||[]).find(p=>p.cat==='FERMENTO'),dinamico=r.fermentoFixo==null,baseTotal=(r.passos||[]).reduce((s,p)=>s+(Number(p.g)||0),0),semFerm=baseTotal-(Number(ferm&&ferm.g)||0);
+  document.getElementById('receita-full-total').textContent=dinamico?('Total final: '+formatPeso(semFerm)+' + fermento escolhido'):('Total: '+formatPeso(baseTotal));
+  let html='',grupo='';(r.passos||[]).forEach(p=>{if(p.grupo!==grupo){grupo=p.grupo;html+='<div class="rec-full-grupo">'+_escHtml(grupo)+'</div>';}const q=(dinamico&&p.cat==='FERMENTO')?'conforme temperatura / horas':formatPeso(p.g);html+='<div class="rec-full-item"><span>'+_escHtml(p.nome)+'</span><b>'+_escHtml(q)+'</b></div>';});
+  if(dinamico)html+='<div class="rec-full-fer"><b>Opções de fermento</b>'+OPCOES_FERMENTO.map(o=>'<span>'+o.temp+'°C · '+o.horas+' h = '+o.fermento+' g</span>').join('')+'</div>';
+  document.getElementById('receita-full-lista').innerHTML=html;
+  const obs=receitaObsRegistro(rid),ta=document.getElementById('receita-full-obs'),btn=document.getElementById('receita-full-salvar');ta.value=obs&&obs.texto||'';const pode=OP.pode('receita_obs');ta.readOnly=!pode;btn.style.display=pode?'':'none';document.getElementById('receita-full-obs-meta').textContent=obs?('Atualizado em '+(obs.em||'—')+' · '+(obs.op||'—')):(pode?'Nenhuma observação registrada.':'Nenhuma observação registrada pela gerência.');
+}
+function salvarObservacaoReceita(){
+  if(!OP.pode('receita_obs')){alert('Somente a gerência pode alterar as observações das receitas.');return;}const rid=st.receitaVisual||'',r=RECEITAS[rid];if(!r)return;
+  const texto=String(document.getElementById('receita-full-obs').value||'').trim().slice(0,1200),agora=new Date(),reg={id:rid,receitaNome:r.nome,texto,em:agora.toLocaleString('pt-BR'),atualizadoTs:agora.getTime(),op:getOp()};ESTOQUE_SYNC.localPush('observacoes',reg);renderReceitaCompleta();alert('Observações da receita salvas.');
+}
+function garantirPermissoesV260(){
+  const arr=OP.lista();if(!arr.length)return;let mudou=false;
+  arr.forEach(o=>{o.perms=o.perms||{};const n=String(o.nome||'').trim().toLowerCase();const set=(k,v)=>{if(!Object.prototype.hasOwnProperty.call(o.perms,k)){o.perms[k]=v;mudou=true;}};
+    if(n==='wagner'){set('estoque',true);set('estoque_entrada',true);set('estoque_contagem',true);set('receita_obs',true);}
+    else if(n==='maycon'){set('estoque',true);set('estoque_entrada',false);set('estoque_contagem',true);set('receita_obs',false);}
+    else{set('estoque',false);set('estoque_entrada',false);set('estoque_contagem',false);set('receita_obs',false);}
+  });
+  if(mudou)OP.setLista(arr);
+}
+
+
 const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0,temp:null,fermento:null,fermentoHoras:null,receita:'r1',modo:'normal',subModulo:'secos',baldeSecos:1,wakeLock:null,
   pinBuf:'',pinAlvo:null,pinTipo:'producao',batLote:null,liqLote:null,batTemp:20,batStart:0,batRodando:false,batRecPeso:null,
   ultimoLoteId:null,calcRet:'start',calcAberta:false,etqLote:null,etqRet:'start',
@@ -1690,7 +2044,12 @@ const DEVICE={
     return await new Promise(resolve=>{let fim=false,off=null;const done=u=>{if(fim)return;fim=true;try{off&&off()}catch{}resolve(u||null)};off=this.auth.onAuthStateChanged(u=>done(u),()=>done(null));setTimeout(()=>done(this.auth.currentUser),900)});
   },
   liberar(comNuvem){
-    if(comNuvem){if(!this.cloudStarted){this.cloudStarted=true;SYNC25.init();}else if(SYNC25.iniciado)FB.aoVoltarOnline();}
+    if(comNuvem){
+      if(!this.cloudStarted){this.cloudStarted=true;SYNC25.init();if(typeof ESTOQUE_SYNC!=='undefined')ESTOQUE_SYNC.init();}
+      else if(SYNC25.iniciado)FB.aoVoltarOnline();
+    }else if(typeof ESTOQUE_SYNC!=='undefined'){
+      ESTOQUE_SYNC.garantirInicio();
+    }
     if(this.bootLiberado)return;this.bootLiberado=true;const cb=this.bootCb;if(typeof cb==='function')cb();
   },
   cacheAprovacao(reg){this.registro=reg||null;this.aprovado=true;this.localOnly=false;LS.s('fdo_device_auth_v25',{uid:this.uid,aprovado:true,nome:(reg&&reg.nome)||'',emTs:Date.now()});this.renderConfig()},
@@ -1804,6 +2163,8 @@ const FB={
   // Re-renderiza a tela visível quando dado chega da nuvem
   repaint(){
     try{
+      garantirPermissoesV260();
+      estoqueReconciliarSaidasLotes();
       // v24: se o boot foi pra start em modo legado mas o Firebase agora
       // entregou operadores cadastrados, redireciona pra tela de login
       // (caso "limpou cache mas nuvem tem operadores").
@@ -1819,7 +2180,10 @@ const FB={
       const visivel=document.querySelector('.scr:not(.off)');
       if(!visivel) return;
       const id=visivel.id||'';
-      if(id==='s-history' && typeof renderHist==='function') renderHist();
+      if(id==='s-estoque' && typeof renderEstoque==='function') renderEstoque();
+      else if(id==='s-estoque-mov' && typeof renderEstoqueMovimentos==='function') renderEstoqueMovimentos();
+      else if(id==='s-receita-completa' && typeof renderReceitaCompleta==='function') renderReceitaCompleta();
+      else if(id==='s-history' && typeof renderHist==='function') renderHist();
       else if(id==='s-hist-batimentos' && typeof renderHistBatimentos==='function') renderHistBatimentos();
       else if(id==='s-bater-lotes' && typeof renderBatLotes==='function') renderBatLotes();
       else if(id==='s-batimento-lotes' && typeof renderBatLotes==='function') renderBatLotes();
@@ -1847,11 +2211,15 @@ const OP_PERMS_MOD=[
   {k:'laminacao',     icon:'📐', label:'Laminação'},
   {k:'historico',     icon:'📋', label:'Histórico'},
   {k:'calculadora',   icon:'🧮', label:'Calculadora'},
-  {k:'assistente',    icon:'🤖', label:'Assistente IA'}
+  {k:'assistente',    icon:'🤖', label:'Assistente IA'},
+  {k:'estoque',       icon:'📦', label:'Estoque'}
 ];
 const OP_PERMS_ESP=[
   {k:'apagar',     icon:'🗑', label:'Pode apagar registros (baldes e laminações)', danger:true},
-  {k:'geo_bypass', icon:'📍', label:'Pode acessar fora da fábrica'}
+  {k:'geo_bypass',      icon:'📍', label:'Pode acessar fora da fábrica'},
+  {k:'estoque_entrada', icon:'＋', label:'Pode registrar entradas de estoque'},
+  {k:'estoque_contagem',icon:'✓', label:'Pode registrar conferência semanal'},
+  {k:'receita_obs',     icon:'📝', label:'Pode editar observações das receitas'}
 ];
 const OP_CORES=['#c9973a','#4ade80','#60a5fa','#f87171','#c084fc','#fbbf24'];
 function OP_permsDefault(){ const p={}; OP_PERMS_MOD.forEach(x=>p[x.k]=true); OP_PERMS_ESP.forEach(x=>p[x.k]=false); return p; }
@@ -2111,6 +2479,10 @@ const GEO={
 };
 
 function ir(id){
+  if(id==='estoque' && typeof renderEstoque==='function')renderEstoque();
+  else if(id==='estoque-mov' && typeof renderEstoqueMovimentos==='function')renderEstoqueMovimentos();
+  else if(id==='receita-completa' && typeof renderReceitaCompleta==='function')renderReceitaCompleta();
+
   document.querySelectorAll('.scr').forEach(s=>s.classList.add('off'));
   document.getElementById('s-'+id).classList.remove('off');
   if(id==='history') renderHist();
@@ -2147,8 +2519,8 @@ function carregarConfig(){
   if(typeof DEVICE!=='undefined') DEVICE.renderConfig();
 }
 function exportarBackup(){
-  const chaves=['fdo_lotes','fdo_laminacoes','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25'];
-  const dados={app:'Folhados d\'Ouro — Produção',versao:'25.3',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
+  const chaves=['fdo_lotes','fdo_laminacoes','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25','fdo_estoque_movimentos','fdo_estoque_contagens','fdo_receitas_observacoes','fdo_estoque_outbox_v26','fdo_estoque_inicio_ts_v26'];
+  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.0',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
   chaves.forEach(k=>{ const raw=localStorage.getItem(k); if(raw!==null){ try{dados.dados[k]=JSON.parse(raw);}catch{dados.dados[k]=raw;} } });
   const blob=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
@@ -2561,7 +2933,7 @@ async function criarLoteSecos(){
     }}
   };
   if(ehTeste){ lote.receitaSnapshot=clonarReceita(st.testeReceita); lote.teste=clonarReceita(st.testeMeta); }
-  const todos=LS.g('fdo_lotes',[]);todos.unshift(lote);LS.s('fdo_lotes',todos);return lote;
+  const todos=LS.g('fdo_lotes',[]);todos.unshift(lote);LS.s('fdo_lotes',todos);registrarSaidaEstoqueLote(lote);return lote;
 }
 
 function loteAtivo(l){if(!l)return false;const c=Number(l.cancelado&&l.cancelado.emTs)||0,r=Number(l.restaurado&&l.restaurado.emTs)||0;return !c||r>c;}
@@ -4609,7 +4981,7 @@ FB.proxLamSeqDia=ts=>SYNC25.proxLamSeq(ts);
 FB.criarLaminacaoAtomica=(lam,capacidades)=>SYNC25.criarLaminacaoAtomica(lam,capacidades);
 FB.reiniciarSeq=()=>SYNC25.resetSeq();
 FB.removerRegistro=(k,id)=>SYNC25.remove(k,id);
-FB.aoVoltarOnline=()=>SYNC25.online();
+FB.aoVoltarOnline=()=>{SYNC25.online();if(typeof ESTOQUE_SYNC!=='undefined')ESTOQUE_SYNC.online();};
 
 // Decide e navega para a tela inicial correta respeitando operadores/login.
 // Usado por: bootApp (boot), salvarConfig (após salvar), e destrava do GPS.
@@ -4661,7 +5033,7 @@ window.addEventListener('offline',()=>FB.status('local','Salvo neste aparelho ·
     LS.s('fdo_migr_v248',true);
   }
   // Migra sessões antigas concluídas para o sistema de lotes (uma vez)
-  migrarLotesAntigos();
+  migrarLotesAntigos(); garantirPermissoesV260();
   PESO_BALDE1=getTara();           // aplica a tara configurada
   const op=LS.g('fdo_op','');
   if(op)document.getElementById('inp-op').value=op;
