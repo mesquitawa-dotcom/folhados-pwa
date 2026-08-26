@@ -31,6 +31,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html sw.js .github/workflows/validate-fdo.yml tools/validate_fdo.py tools/test_estoque_v26_0.js tools/test_compat_teste_v25_3.js tools/test_receitas_v26_1.js
+          git checkout -- .github/workflows/validate-fdo.yml
+          git add index.html sw.js tools/validate_fdo.py tools/test_estoque_v26_0.js tools/test_compat_teste_v25_3.js tools/test_receitas_v26_1.js
           git commit -m "v26.1: receitas definitivas versionadas [v26.1-applied]"
           git push origin HEAD:agent/receitas-definitivas-v26-1
