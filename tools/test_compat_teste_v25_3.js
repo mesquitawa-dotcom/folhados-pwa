@@ -4,12 +4,12 @@ const assert=require('assert');
 const html=fs.readFileSync('index.html','utf8');
 
 assert(
-  html.includes("arr=arr.filter(l=>loteAtivo(l)&&!l.teste)"),
-  'Receitas Teste não podem ser espelhadas para fdo_lotes legado'
+  html.includes("arr=arr.filter(l=>loteAtivo(l)&&receitaCompativelLegado(l))"),
+  'Testes e receitas definitivas novas não podem ser espelhados para fdo_lotes legado'
 );
 assert(
-  html.includes("if(k==='fdo_laminacoes')arr=arr.filter(l=>!l.testeId)"),
-  'Laminações de teste não podem ser espelhadas para clientes legados'
+  html.includes("if(k==='fdo_laminacoes')arr=arr.filter(l=>!l.testeId&&(l.receita==='misto'||RECEITAS_PADRAO_IDS.includes(l.receita)))"),
+  'Laminações de teste/receita nova não podem ser espelhadas para clientes legados'
 );
 assert(
   html.includes("document.getElementById('teste-fermento').value='';temp.value='';horas.value='';"),

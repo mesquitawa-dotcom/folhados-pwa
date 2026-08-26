@@ -13,8 +13,8 @@ function extractFunction(src,name){
   }
   throw new Error('fim da função não encontrado: '+name);
 }
-ok(/atualização v26\.0/.test(html),'cabeçalho v26.0 ausente');
-ok((html.match(/abrirReceitaCompleta\('r[1-5]'\)/g)||[]).length===5,'as cinco receitas precisam do botão de consulta');
+ok(/atualização v26\.1/.test(html),'cabeçalho v26.1 ausente');
+ok(html.includes('id="receitas-list"')&&html.includes('function renderReceitasPorcionamento()'),'lista dinâmica de receitas/consulta ausente');
 ok(html.includes('id="receita-full-obs"')&&html.includes('salvarObservacaoReceita'),'observações da receita ausentes');
 ok(html.includes('data-perm="estoque"')&&html.includes('Controle de Estoque'),'módulo Estoque ausente');
 ok(html.includes("'fdo_v25/estoque/movimentos'")&&html.includes("'fdo_v25/estoque/contagens'"),'caminhos granulares do estoque ausentes');
