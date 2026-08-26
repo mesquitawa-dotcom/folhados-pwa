@@ -20,6 +20,12 @@ ok(html.includes('data-perm="estoque"')&&html.includes('Controle de Estoque'),'m
 ok(html.includes("'fdo_v25/estoque/movimentos'")&&html.includes("'fdo_v25/estoque/contagens'"),'caminhos granulares do estoque ausentes');
 ok(html.includes("'saida_receita_'+lote.id"),'saída automática não usa ID determinístico por balde');
 ok(html.includes("n==='wagner'")&&html.includes("n==='maycon'"),'migração de permissões Wagner/Maycon ausente');
+ok(html.includes('let estoqueReconciliando=false'),'proteção contra reentrada da reconciliação ausente');
+ok(html.includes('ok?150:5000'),'retentativa do estoque sem intervalo de segurança');
+ok(html.includes('function estoqueHojeISO()'),'data local da conferência semanal ausente');
+ok(html.includes("else if(typeof ESTOQUE_SYNC!=='undefined')"),'início offline do estoque ausente');
+ok(html.includes('grid-template-columns:minmax(0,1fr) 5.6rem'),'layout móvel da conferência não protegido');
+ok(html.includes("estoqueDataISO(cont.data)||estoqueDataCurta(cont.emTs)"),'data selecionada da conferência não é exibida');
 const am=html.match(/const ESTOQUE_ITENS=(\[.*?\]);\nconst ESTOQUE_POR_PASSO/s);ok(am,'catálogo de estoque não encontrado');
 const itens=vm.runInNewContext(am[1]);
 ok(itens.filter(x=>x.grupo==='insumo').length===8,'esperados 8 insumos controlados');
