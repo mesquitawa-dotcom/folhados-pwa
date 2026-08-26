@@ -130,7 +130,7 @@ html=html[:end]+' garantirPermissoesV260();'+html[end:]
 html=html.replace("versao:'25.3'","versao:'26.0'",1)
 exp=html.find('function exportarBackup')
 if exp<0: fail('exportarBackup não encontrado')
-km=re.search(r"const keys=\[(.*?)\];",html[exp:],re.S)
+km=re.search(r"const chaves=\[(.*?)\];",html[exp:],re.S)
 if not km: fail('lista de chaves do backup não encontrada')
 a=exp+km.start(1);b=exp+km.end(1);inside=html[a:b]
 for key in ('fdo_estoque_movimentos','fdo_estoque_contagens','fdo_receitas_observacoes','fdo_estoque_outbox_v26','fdo_estoque_inicio_ts_v26'):
