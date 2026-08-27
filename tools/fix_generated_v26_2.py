@@ -29,4 +29,14 @@ t=p.read_text(encoding='utf-8')
 t=t.replace("ok(/atualização v26\\.1/.test(html),'cabeçalho v26.1 ausente');","ok(html.includes('NOVIDADES v26.1')&&html.includes('NOVIDADES v26.0'),'histórico funcional v26.0/v26.1 ausente');",1)
 p.write_text(t,encoding='utf-8')
 
+# O simulador da v26.1 extrai somente o bloco de receitas; na v26.2 ele precisa
+# de um stub do novo helper de batimento para conseguir testar o mesmo catálogo isoladamente.
+p=root/'tools/test_receitas_v26_1.js'
+t=p.read_text(encoding='utf-8')
+old="const LS={g:(k,d)=>Object.prototype.hasOwnProperty.call(__store,k)?__store[k]:d};\n${bloco}"
+new="const LS={g:(k,d)=>Object.prototype.hasOwnProperty.call(__store,k)?__store[k]:d};\nfunction batTemposBaseLegado(){return {t1:4,t2:6,t3:3,t4:2};}\n${bloco}"
+if old not in t: raise SystemExit('marcador do simulador v26.1 não encontrado')
+t=t.replace(old,new,1)
+p.write_text(t,encoding='utf-8')
+
 print('Arquivos gerados v26.2 corrigidos')
