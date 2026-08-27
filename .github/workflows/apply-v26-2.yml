@@ -20,6 +20,18 @@ jobs:
         run: python3 tools/fix_apply_v26_2.py
       - name: Aplicar patch
         run: python3 tools/apply_v26_2.py
+      - name: Corrigir validador gerado
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('tools/validate_fdo.py')
+          s=p.read_text(encoding='utf-8')
+          old="'temposProgramados:clonarReceita','versao:'26.2''"
+          new="'temposProgramados:clonarReceita',\"versao:'26.2'\""
+          if old not in s:
+              raise SystemExit('marcador inválido do validador não encontrado')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          PY
       - name: Validar
         run: |
           git diff --check
