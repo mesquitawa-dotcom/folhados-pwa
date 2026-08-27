@@ -1866,7 +1866,7 @@ function voltarEditorReceita(){const rid=st.receitaEditId||st.receitaVisual;st.r
 function receitaLerEditor(){
   const r=st.receitaEditOriginal,v=receitaValores(r);for(const inp of document.querySelectorAll('#receita-edit-campos [data-rec-k]')){const n=Number(inp.value);if(!Number.isInteger(n)||n<0){alert('Confira '+(inp.previousElementSibling?inp.previousElementSibling.textContent:'o peso')+'. Use gramas inteiras e valor não negativo.');inp.focus();return null;}v[inp.dataset.recK]=n;}
   if(r&&r.fermentoFixo!=null){const f=Number(document.getElementById('receita-edit-fermento').value),t=Number(document.getElementById('receita-edit-temp').value),h=Number(document.getElementById('receita-edit-horas').value);if(!Number.isInteger(f)||f<0||!isFinite(t)||t<=0||!isFinite(h)||h<=0){alert('Confira fermento, temperatura e horas.');return null;}v.fermento=f;v.temp=t;v.horas=h;}
-  const bt={};for(const c of BATIMENTO_CAMPOS){const el=document.getElementById('receita-edit-b'+c.k.slice(1)),n=Number(el&&el.value);if(!isFinite(n)||n<0||n>120){alert('Confira '+c.nome+'. Informe minutos entre 0 e 120.');if(el)el.focus();return null;}bt[c.k]=Math.round(n*10)/10;}v.batimento=bt;return v;
+  const bt={};for(const c of BATIMENTO_CAMPOS){const el=document.getElementById('receita-edit-b'+c.k),n=Number(el&&el.value);if(!isFinite(n)||n<0||n>120){alert('Confira '+c.nome+'. Informe minutos entre 0 e 120.');if(el)el.focus();return null;}bt[c.k]=Math.round(n*10)/10;}v.batimento=bt;return v;
 }
 function salvarEdicaoReceita(){
   if(!OP.pode('receita_editar')||!receitaNuvemObrigatoria())return;const rid=st.receitaEditId,antes=st.receitaEditOriginal;if(!rid||!antes)return;const nome=String(document.getElementById('receita-edit-nome').value||'').trim();if(nome.length<2){alert('Informe o nome da receita.');return;}const motivo=String(document.getElementById('receita-edit-motivo').value||'').trim();if(motivo.length<8){alert('Escreva o motivo da alteração (mínimo de 8 caracteres).');document.getElementById('receita-edit-motivo').focus();return;}const v=receitaLerEditor();if(!v)return;const fixa=antes.fermentoFixo!=null,temp=fixa?v.temp:null,horas=fixa?v.horas:null,depois=receitaMontarEditada(antes,v,nome,temp,horas);depois.batimento=clonarReceita(v.batimento);const mudancas=receitaDiferencas(antes,depois);if(!mudancas.length){alert('Nenhuma alteração foi feita na receita.');return;}const resumo=mudancas.slice(0,16).join('\n')+(mudancas.length>16?'\n+'+(mudancas.length-16)+' alterações':'');if(!confirm('CONFIRMAR ALTERAÇÃO DE RECEITA\n\n'+resumo+'\n\nMotivo: '+motivo+'\n\nBaldes já existentes permanecerão com a receita anterior.'))return;
@@ -2193,7 +2193,8 @@ const LS={g:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.p
 //   localStorage e a tela atual é re-renderizada (sem F5).
 // • Chaves sincronizadas: só dados de produção (fdo_lotes, fdo_laminacoes,
 //   fdo_lote_seq). Configs locais (PIN, chave Gemini, modo impressora,
-//   tempos do batimento, tara, qtd de etiquetas) NÃO sobem para a nuvem.
+//   tara e qtd de etiquetas) NÃO sobem para a nuvem. Os tempos do batimento v26.2
+//   pertencem às receitas e sincronizam pela estrutura de receitas definitivas.
 const FB_CFG={
   apiKey:"AIzaSyDN3uZEjtmKE678io-61aIhgFnkxG1PrnE",
   authDomain:"producaofolhadosdouro-b6fb5.firebaseapp.com",
@@ -3261,7 +3262,7 @@ const BATIMENTO_CAMPOS=[
 ];
 function batTemposNormalizar(v,base){
   const b=base||{t1:getBatT1(),t2:getBatT2(),t3:getBatT3(),t4:getBatT4()},o={};
-  BATIMENTO_CAMPOS.forEach(c=>{const n=Number(v&&v[c.k]);o[c.k]=(isFinite(n)&&n>=0)?n:Number(b[c.k]);});return o;
+  BATIMENTO_CAMPOS.forEach(c=>{const tem=!!(v&&Object.prototype.hasOwnProperty.call(v,c.k)),n=tem?Number(v[c.k]):NaN;o[c.k]=(isFinite(n)&&n>=0)?n:Number(b[c.k]);});return o;
 }
 function batTemposBaseLegado(){return batTemposNormalizar({t1:getBatT1(),t2:getBatT2(),t3:getBatT3(),t4:getBatT4()},{t1:4,t2:6,t3:3,t4:2});}
 function batTemposReceita(r){return batTemposNormalizar(r&&r.batimento,batTemposBaseLegado());}
@@ -4081,14 +4082,14 @@ function limparTesteAtivo(){ st.testeBase=null;st.testeReceita=null;st.testeMeta
 function abrirTesteBase(){ limparTesteAtivo();st.receitaExecucao=null;st.farinhasLotes=null;aplicarReceitasDefinitivas();renderTesteBase();ir('teste-base'); }
 function testeNumero(id){ const el=document.getElementById(id),s=String(el&&el.value!=null?el.value:'').trim().replace(',','.');if(!s)return null;const n=Number(s);return isFinite(n)?n:null; }
 function testeLerValores(){ const v={};TESTE_CAMPOS.forEach(c=>v[c.k]=testeNumero(c.id));return v; }
-function testeLerBatimento(){const o={};for(const c of BATIMENTO_CAMPOS){const el=document.getElementById('teste-b'+c.k.slice(1)),n=Number(el&&el.value);if(!isFinite(n)||n<0)return null;o[c.k]=Math.round(n*10)/10;}return o;}
+function testeLerBatimento(){const o={};for(const c of BATIMENTO_CAMPOS){const el=document.getElementById('teste-b'+c.k),n=Number(el&&el.value);if(!isFinite(n)||n<0)return null;o[c.k]=Math.round(n*10)/10;}return o;}
 function abrirTesteEditor(rid){
   const r=RECEITAS[rid];if(!r)return;
   limparTesteAtivo();st.testeBase=rid;st.farinhasLotes=null;
   const v=testeValoresBase(rid);TESTE_CAMPOS.forEach(c=>{const el=document.getElementById(c.id);if(el)el.value=v[c.k];});
   const temp=document.getElementById('teste-temp'),horas=document.getElementById('teste-horas');
   if(r.fermentoFixo!=null){temp.value=r.fermentoTemp!=null?r.fermentoTemp:17;horas.value=r.fermentoHoras!=null?r.fermentoHoras:'';}else{document.getElementById('teste-fermento').value='';temp.value='';horas.value='';}
-  const bt=batTemposReceita(r);BATIMENTO_CAMPOS.forEach(c=>{const el=document.getElementById('teste-b'+c.k.slice(1));if(el)el.value=bt[c.k];});
+  const bt=batTemposReceita(r);BATIMENTO_CAMPOS.forEach(c=>{const el=document.getElementById('teste-b'+c.k);if(el)el.value=bt[c.k];});
   document.getElementById('teste-obs').value='';document.getElementById('teste-edit-title').textContent='TESTE · base '+r.rotulo;
   atualizarResumoTeste();ir('teste-edit');
 }
