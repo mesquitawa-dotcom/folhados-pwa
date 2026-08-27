@@ -22,4 +22,11 @@ v=v.replace("'temposProgramados:clonarReceita','versao:'26.2''","'temposPrograma
 v=v.replace(',"versao:\'26.1\'"','',1)
 p.write_text(v,encoding='utf-8')
 
+# Teste de regressão do estoque deve provar a funcionalidade v26.0 preservada,
+# sem exigir que a versão corrente continue sendo literalmente v26.1.
+p=root/'tools/test_estoque_v26_0.js'
+t=p.read_text(encoding='utf-8')
+t=t.replace("ok(/atualização v26\\.1/.test(html),'cabeçalho v26.1 ausente');","ok(html.includes('NOVIDADES v26.1')&&html.includes('NOVIDADES v26.0'),'histórico funcional v26.0/v26.1 ausente');",1)
+p.write_text(t,encoding='utf-8')
+
 print('Arquivos gerados v26.2 corrigidos')
