@@ -1,4 +1,4 @@
-name: Aplicar patch v26.2
+name: Revisar v26.2
 
 on:
   push:
@@ -9,20 +9,16 @@ permissions:
   contents: write
 
 jobs:
-  apply:
-    if: ${{ !contains(github.event.head_commit.message, '[v26.2-applied]') }}
+  review:
+    if: ${{ contains(github.event.head_commit.message, '[v26.2-review-fix]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: agent/estoque-batimento-receita-v26-2
-      - name: Corrigir aplicador
-        run: python3 tools/fix_apply_v26_2.py
-      - name: Aplicar patch
-        run: python3 tools/apply_v26_2.py
-      - name: Corrigir arquivos gerados
-        run: python3 tools/fix_generated_v26_2.py
-      - name: Validar
+      - name: Aplicar correções da revisão
+        run: python3 tools/review_fix_v26_2.py
+      - name: Validar revisão
         run: |
           git diff --check
           python3 tools/validate_fdo.py
@@ -32,10 +28,10 @@ jobs:
           node tools/test_estoque_v26_0.js
           node tools/test_receitas_v26_1.js
           node tools/test_v26_2.js
-      - name: Commitar código gerado
+      - name: Commitar revisão
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html sw.js tools/validate_fdo.py tools/test_estoque_v26_0.js tools/test_receitas_v26_1.js tools/test_v26_2.js
-          git commit -m "v26.2: lembrete de estoque e batimento por receita [v26.2-applied]"
+          git add index.html tools/test_v26_2.js
+          git commit -m "fix: corrigir leitura dos tempos de batimento v26.2 [v26.2-reviewed]"
           git push origin HEAD:agent/estoque-batimento-receita-v26-2
