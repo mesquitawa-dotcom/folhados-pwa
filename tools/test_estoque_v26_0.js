@@ -13,7 +13,7 @@ function extractFunction(src,name){
   }
   throw new Error('fim da função não encontrado: '+name);
 }
-ok(/atualização v26\.1/.test(html),'cabeçalho v26.1 ausente');
+ok(html.includes('NOVIDADES v26.1')&&html.includes('NOVIDADES v26.0'),'histórico funcional v26.0/v26.1 ausente');
 ok(html.includes('id="receitas-list"')&&html.includes('function renderReceitasPorcionamento()'),'lista dinâmica de receitas/consulta ausente');
 ok(html.includes('id="receita-full-obs"')&&html.includes('salvarObservacaoReceita'),'observações da receita ausentes');
 ok(html.includes('data-perm="estoque"')&&html.includes('Controle de Estoque'),'módulo Estoque ausente');
