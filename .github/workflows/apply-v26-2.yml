@@ -16,6 +16,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: agent/estoque-batimento-receita-v26-2
+      - name: Corrigir aplicador
+        run: python3 tools/fix_apply_v26_2.py
       - name: Aplicar patch
         run: python3 tools/apply_v26_2.py
       - name: Validar
