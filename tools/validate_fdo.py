@@ -10,13 +10,25 @@ errors=[]
 
 def fail(msg): errors.append(msg)
 
-# v26.1 — receitas definitivas versionadas, auditáveis e arquiváveis
+# v26.2 — lembrete de estoque + batimento por receita
 for marker in (
-    'atualização v26.1','id="receitas-list"','id="s-receita-completa"','id="s-receita-edit"',
+    'atualização v26.2','id="inp-est-cont-op"','id="inp-est-cont-dia"','id="estoque-lembrete-bg"',
+    'function estoqueChecarLembreteContagem()','fdo_estoque_configuracoes','fdo_v25/estoque/configuracoes',
+    'id="receita-edit-batimento"','function batTemposReceita(r)','function batTemposDoLote(l)',
+    'function congelarBatimentoBaldesPendentesV262()','function migrarBatimentoReceitasV262()',
+    'temposProgramados:clonarReceita',"versao:'26.2'"
+):
+    if marker not in html: fail('v26.2 sem marcador: '+marker)
+if 'id="inp-bt1"' in html or 'id="inp-bt2"' in html or 'id="inp-bt3"' in html or 'id="inp-bt4"' in html:
+    fail('Tempos globais do batimento ainda aparecem nas Configurações')
+
+# v26.1 — receitas definitivas versionadas, auditáveis e arquiváveis permanecem
+for marker in (
+    'NOVIDADES v26.1','id="receitas-list"','id="s-receita-completa"','id="s-receita-edit"',
     'id="s-receitas-arquivadas"','id="s-receita-auditoria"','fdo_receitas_definitivas','fdo_receitas_auditoria',
     'fdo_v25/receitas_definitivas','fdo_v25/receitas_auditoria','function aprovarTesteComoReceita(loteId)',
     'function congelarSnapshotsReceitasLegadas()','lote.receitaSnapshot=clonarReceita(r)',
-    "{k:'receita_editar'","versao:'26.1'"
+    "{k:'receita_editar'"
 ):
     if marker not in html: fail('v26.1 sem marcador: '+marker)
 
@@ -140,6 +152,6 @@ console.log(JSON.stringify({padrao:__padrao,teste:__testeTotal}));
 if errors:
     print('\n'.join('ERRO: '+e for e in errors))
     raise SystemExit(1)
-print('VALIDAÇÃO FDO v26.1 OK')
+print('VALIDAÇÃO FDO v26.2 OK')
 print('Receitas padrão: R1=15464 R2=15690 R3=15544 R4=15564 R5=15714 g')
 print('Receita Teste de referência v25.3: 15448 g')

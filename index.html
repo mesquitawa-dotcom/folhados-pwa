@@ -2,7 +2,14 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — atualização v26.1
+       FOLHADOS D'OURO — atualização v26.2
+       NOVIDADES v26.2:
+       • Lembrete de conferência de estoque por operador e dia da semana configuráveis.
+       • O responsável recebe pop-up no dia programado; conferência já registrada no dia não volta a ser cobrada.
+       • Tempos do batimento passam a pertencer à receita e deixam de ser configuração global de rotina.
+       • Os tempos anteriores (4 fases em sequência) viram base de migração para todas as receitas já existentes.
+       • Receita completa e Receita Teste permitem alterar os tempos de batimento; mudanças definitivas entram na auditoria.
+       • Balde e batimento guardam a configuração usada, preservando históricos e retomada do cronômetro.
        NOVIDADES v26.1:
        • Receita Teste aprovada pode virar uma nova receita definitiva pelo Histórico, sem alterar o teste original.
        • Receitas definitivas podem ser editadas pela gerência somente com motivo escrito e confirmação das mudanças.
@@ -702,6 +709,12 @@
     .est-cont-field span{font-size:.76rem;color:var(--gl);line-height:1.25}.est-cont-field input{text-align:right;padding:.5rem;font-size:.88rem}.est-cont-field small{font-size:.62rem;color:var(--mut);min-width:1.5rem}
     .est-mov{background:var(--bg3);border:1px solid var(--brd);border-radius:.52rem;padding:.72rem .78rem;margin-bottom:.55rem}.est-mov-title{color:var(--gold);font-size:.82rem;font-weight:bold}.est-mov-meta{font-size:.63rem;color:var(--mut);line-height:1.4;margin:.22rem 0 .4rem}.est-mov-itens{font-size:.72rem;color:var(--text);line-height:1.55}.est-mov-itens b{color:var(--gl)}.est-mov-obs{font-size:.67rem;color:var(--mut);font-style:italic;margin-top:.35rem}.est-vazio{text-align:center;color:var(--mut);padding:2rem .6rem;font-size:.82rem}
 
+    /* ════ LEMBRETE DE ESTOQUE (v26.2) ════ */
+    .est-rem-bg{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:1rem}
+    .est-rem-bg.on{display:flex}.est-rem-card{width:min(100%,20rem);background:var(--bg3);border:1px solid var(--gold);border-radius:.7rem;padding:1.15rem;box-shadow:0 .5rem 2rem rgba(0,0,0,.55)}
+    .est-rem-icon{font-size:2.5rem;text-align:center}.est-rem-title{font-size:1.15rem;color:var(--gl);font-weight:bold;text-align:center;margin:.45rem 0}
+    .est-rem-txt{font-size:.82rem;color:var(--text);line-height:1.5;text-align:center;margin-bottom:.9rem}.est-rem-actions{display:flex;flex-direction:column;gap:.5rem}
+
     /* ════ GESTÃO DE RECEITAS DEFINITIVAS (v26.1) ════ */
     .rec-status{font-size:.66rem;color:var(--mut);line-height:1.4;margin-top:.35rem}.rec-status.arquivada{color:var(--red);font-weight:bold}
     .rec-mgr{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.75rem}.rec-mgr .btn-danger{grid-column:1/-1;min-height:2.7rem}
@@ -758,13 +771,16 @@
   <input id="inp-cfgpin" class="inp" type="tel" inputmode="numeric" maxlength="8" placeholder="456" autocomplete="off">
   <label class="cfg-row" style="font-size:.72rem;line-height:1.3">Pedida toda vez que abrir as Configurações. Deixe em branco para manter a atual.</label>
   <div class="cfg-sep"></div>
-  <div class="cfg-s" style="font-size:.75rem">⏱ Tempos do batimento (minutos, somados em sequência):</div>
+  <div class="cfg-s" style="font-size:.75rem">📦 Lembrete da conferência de estoque:</div>
   <div class="cfg-grid">
-    <label class="cfg-mini">Batimento inicial lento<input id="inp-bt1" class="inp" type="number" min="0" placeholder="4"></label>
-    <label class="cfg-mini">Colocar fermento<input id="inp-bt2" class="inp" type="number" min="0" placeholder="6"></label>
-    <label class="cfg-mini">Colocar a massa<input id="inp-bt3" class="inp" type="number" min="0" placeholder="3"></label>
-    <label class="cfg-mini">Ver ponto de véu<input id="inp-bt4" class="inp" type="number" min="0" placeholder="2"></label>
+    <label class="cfg-mini">Responsável<select id="inp-est-cont-op" class="inp"><option value="">Sem lembrete</option></select></label>
+    <label class="cfg-mini">Dia da semana<select id="inp-est-cont-dia" class="inp">
+      <option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option><option value="6">Sábado</option><option value="0">Domingo</option>
+    </select></label>
   </div>
+  <div class="cfg-s" style="font-size:.68rem;line-height:1.45">O operador escolhido recebe um aviso ao entrar no aplicativo no dia programado. Só aparecem aqui operadores ativos com permissão para conferência de estoque.</div>
+  <div class="cfg-sep"></div>
+  <div class="cfg-s" style="font-size:.72rem;line-height:1.45;color:var(--gold)">⏱ Os tempos do batimento agora são configurados dentro de cada receita, em <b>Receita completa → Editar receita</b>.</div>
   <label class="cfg-mini" style="margin-top:.1rem">Dividir massa em (partes p/ gelar)<input id="inp-bdiv" class="inp" type="number" min="1" placeholder="4"></label>
   <label class="cfg-mini" style="margin-top:.1rem">Peso do balde vazio / tara (g)<input id="inp-tara" class="inp" type="number" min="0" placeholder="474"></label>
   <div class="cfg-sep"></div>
@@ -963,6 +979,7 @@
     </div>
     <div id="receita-edit-campos"></div>
     <div id="receita-edit-fermentacao"></div>
+    <div id="receita-edit-batimento"></div>
     <div class="rec-edit-card">
       <div class="rec-edit-title">Por que esta receita está mudando?</div>
       <textarea id="receita-edit-motivo" class="inp rec-edit-reason" maxlength="500" placeholder="Descreva o motivo da alteração. Este texto ficará no histórico de alterações."></textarea>
@@ -986,6 +1003,18 @@
     <button class="link-btn" onclick="voltarAuditoriaReceita()">← Voltar</button>
   </div>
   <div class="rec-full-scroll" id="receita-auditoria-list"></div>
+</div>
+
+<div id="estoque-lembrete-bg" class="est-rem-bg" role="dialog" aria-modal="true" aria-labelledby="estoque-lembrete-title">
+  <div class="est-rem-card">
+    <div class="est-rem-icon">📦</div>
+    <div class="est-rem-title" id="estoque-lembrete-title">Hoje é dia da contagem</div>
+    <div class="est-rem-txt" id="estoque-lembrete-txt">Hoje é dia de fazer a contagem do estoque.</div>
+    <div class="est-rem-actions">
+      <button class="btn-main" onclick="estoqueLembreteAgora()">✓ Fazer contagem agora</button>
+      <button class="link-btn" style="width:100%;text-align:center" onclick="estoqueLembreteDepois()">Mais tarde</button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══ CONTROLE DE ESTOQUE (v26.0) ═══ -->
@@ -1109,6 +1138,16 @@
         <label class="teste-field"><span class="teste-label">Horas</span><input id="teste-horas" class="teste-inp" type="number" inputmode="decimal" min="0.1" step="0.1" oninput="atualizarResumoTeste()" placeholder="ex.: 14"></label>
       </div>
       <div class="teste-note" style="margin-top:.5rem">Ao informar um fermento que já existe nas opções normais, temperatura e horas são preenchidas automaticamente. Confira visualmente antes de iniciar.</div>
+    </div>
+    <div class="teste-card">
+      <div class="teste-card-title">Batimento · minutos em sequência</div>
+      <div class="teste-grid">
+        <label class="teste-field"><span class="teste-label">Inicial lento</span><input id="teste-bt1" class="teste-inp" type="number" inputmode="decimal" min="0" step="0.5" oninput="atualizarResumoTeste()"></label>
+        <label class="teste-field"><span class="teste-label">Até colocar fermento</span><input id="teste-bt2" class="teste-inp" type="number" inputmode="decimal" min="0" step="0.5" oninput="atualizarResumoTeste()"></label>
+        <label class="teste-field"><span class="teste-label">Até colocar a massa</span><input id="teste-bt3" class="teste-inp" type="number" inputmode="decimal" min="0" step="0.5" oninput="atualizarResumoTeste()"></label>
+        <label class="teste-field"><span class="teste-label">Até ver ponto de véu</span><input id="teste-bt4" class="teste-inp" type="number" inputmode="decimal" min="0" step="0.5" oninput="atualizarResumoTeste()"></label>
+      </div>
+      <div class="teste-note" style="margin-top:.45rem">Começa com os tempos da receita base. Altere somente se este teste também exigir outro batimento.</div>
     </div>
     <div class="teste-card">
       <div class="teste-card-title">Observações do teste</div>
@@ -1757,11 +1796,22 @@ function aplicarReceitasDefinitivas(){
   Object.keys(RECEITAS).forEach(k=>{if(!RECEITAS_PADRAO_IDS.includes(k))delete RECEITAS[k];});
   RECEITAS_PADRAO_IDS.forEach(k=>{RECEITAS[k]=clonarReceita(RECEITAS_ORIGINAIS[k]);});
   receitasDefinitivas().forEach(reg=>{if(reg&&reg.id&&reg.receita&&Array.isArray(reg.receita.passos))RECEITAS[reg.id]=clonarReceita(reg.receita);});
+  Object.values(RECEITAS).forEach(r=>{if(r&&!r.batimento)r.batimento=batTemposBaseLegado();});
 }
 function congelarSnapshotsReceitasLegadas(){
   const todos=LS.g('fdo_lotes',[]);let mudou=false;const agora=Date.now();
   todos.forEach(l=>{if(!l||l.receitaSnapshot||!RECEITAS_PADRAO_IDS.includes(l.receita)||!RECEITAS_ORIGINAIS[l.receita])return;l.receitaSnapshot=clonarReceita(RECEITAS_ORIGINAIS[l.receita]);l.snapshotMigrado={emTs:agora,origem:'base v26.0 para preservação futura'};mudou=true;});
   if(mudou)LS.s('fdo_lotes',todos);return mudou;
+}
+function congelarBatimentoBaldesPendentesV262(){
+  if(LS.g('fdo_migr_bat_baldes_v262',false))return false;const todos=LS.g('fdo_lotes',[]),base=batTemposBaseLegado();let mudou=false;
+  todos.forEach(l=>{const feito=l&&l.etapas&&l.etapas.batimento&&l.etapas.batimento.feito;if(!l||feito||!loteAtivo(l)||l.batimentoConfig||(l.receitaSnapshot&&l.receitaSnapshot.batimento))return;l.batimentoConfig=clonarReceita(base);l.batimentoConfigMigradoV262={emTs:Date.now(),origem:'tempos globais vigentes antes da v26.2'};mudou=true;});
+  if(mudou)LS.s('fdo_lotes',todos);LS.s('fdo_migr_bat_baldes_v262',true);return mudou;
+}
+function migrarBatimentoReceitasV262(){
+  if(LS.g('fdo_migr_bat_receitas_v262',false))return;aplicarReceitasDefinitivas();const base=batTemposBaseLegado(),agora=new Date(),lista=receitasOrdenadas();
+  lista.forEach(x=>{const ant=receitaDefRegistro(x.id);if(ant&&ant.receita&&ant.receita.batimento)return;const rec=clonarReceita(x.r);rec.batimento=clonarReceita(base);const reg={id:x.id,numero:x.numero,ativo:x.ativo!==false,origem:(ant&&ant.origem)||(RECEITAS_PADRAO_IDS.includes(x.id)?'receita_padrao':'receita_definitiva'),origemBaldeId:(ant&&ant.origemBaldeId)||null,origemTesteId:(ant&&ant.origemTesteId)||null,receita:rec,criadoEm:(ant&&ant.criadoEm)||agora.toLocaleString('pt-BR'),criadoTs:(ant&&ant.criadoTs)||agora.getTime(),criadoPor:(ant&&ant.criadoPor)||getOp(),atualizadoEm:agora.toLocaleString('pt-BR'),atualizadoTs:agora.getTime(),atualizadoPor:getOp(),migracaoBatimentoV262:{emTs:agora.getTime(),base:clonarReceita(base)}};ESTOQUE_SYNC.localPush('receitas',reg);});
+  LS.s('fdo_migr_bat_receitas_v262',true);aplicarReceitasDefinitivas();
 }
 function receitaFarinhasTexto(v){return 'Bagatelle '+v.bag+' g, Feuilletage '+v.feu+' g, Italiana 00 '+v.ita+' g';}
 function receitaDiferencas(a,b){
@@ -1769,6 +1819,7 @@ function receitaDiferencas(a,b){
   const va=receitaValores(a),vb=receitaValores(b);[...RECEITA_EDIT_CAMPOS,{k:'fermento',nome:'Fermento seco'}].forEach(c=>{if(Number(va[c.k])!==Number(vb[c.k]))out.push(c.nome+': '+va[c.k]+' g → '+vb[c.k]+' g');});
   const ta=a.fermentoTemp!=null?Number(a.fermentoTemp):(a.fermentoFixo!=null?17:null),tb=b.fermentoTemp!=null?Number(b.fermentoTemp):(b.fermentoFixo!=null?17:null);if(ta!==tb)out.push('Temperatura: '+(ta==null?'—':ta+'°C')+' → '+(tb==null?'—':tb+'°C'));
   const ha=a.fermentoHoras!=null?Number(a.fermentoHoras):null,hb=b.fermentoHoras!=null?Number(b.fermentoHoras):null;if(ha!==hb)out.push('Fermentação: '+(ha==null?'—':ha+' h')+' → '+(hb==null?'—':hb+' h'));
+  const ba=batTemposReceita(a),bb=batTemposReceita(b);BATIMENTO_CAMPOS.forEach(c=>{if(Number(ba[c.k])!==Number(bb[c.k]))out.push(c.nome+': '+batFmtMin(ba[c.k])+' min → '+batFmtMin(bb[c.k])+' min');});
   return out;
 }
 function receitaRegistrarAudit(tipo,rid,motivo,antes,depois,extra){
@@ -1809,18 +1860,20 @@ function renderEditorReceita(){
   const rid=st.receitaEditId,r=st.receitaEditOriginal;if(!rid||!r)return;document.getElementById('receita-edit-title').textContent='Editar '+(r.rotulo||r.nome);document.getElementById('receita-edit-nome').value=r.nome||'';document.getElementById('receita-edit-motivo').value='';const v=receitaValores(r),porGrupo={};RECEITA_EDIT_CAMPOS.forEach(c=>(porGrupo[c.grupo]=porGrupo[c.grupo]||[]).push(c));
   document.getElementById('receita-edit-campos').innerHTML=Object.entries(porGrupo).map(([g,cs])=>`<div class="rec-edit-card"><div class="rec-edit-title">${_escHtml(g)} · gramas</div><div class="rec-edit-grid">${cs.map(c=>`<label class="rec-edit-field"><span>${_escHtml(c.nome)}</span><input class="inp" data-rec-k="${c.k}" type="number" inputmode="numeric" min="0" step="1" value="${v[c.k]}"></label>`).join('')}</div></div>`).join('');
   const fixa=r.fermentoFixo!=null,ft=r.fermentoTemp!=null?r.fermentoTemp:17,fh=r.fermentoHoras!=null?r.fermentoHoras:'';document.getElementById('receita-edit-fermentacao').innerHTML=fixa?`<div class="rec-edit-card"><div class="rec-edit-title">Fermentação fixa</div><div class="rec-edit-grid"><label class="rec-edit-field"><span>Fermento seco · g</span><input class="inp" id="receita-edit-fermento" type="number" inputmode="numeric" min="0" step="1" value="${v.fermento}"></label><label class="rec-edit-field"><span>Temperatura · °C</span><input class="inp" id="receita-edit-temp" type="number" inputmode="decimal" step="0.1" value="${ft}"></label><label class="rec-edit-field"><span>Horas</span><input class="inp" id="receita-edit-horas" type="number" inputmode="decimal" min="0.1" step="0.1" value="${fh}"></label></div></div>`:`<div class="rec-edit-card"><div class="rec-edit-title">Fermentação</div><div class="rec-edit-note">Esta receita usa as opções operacionais de temperatura/horas do Porcionamento. Esta tela não altera a tabela de fermento.</div></div>`;
+  const bt=batTemposReceita(r);document.getElementById('receita-edit-batimento').innerHTML=`<div class="rec-edit-card"><div class="rec-edit-title">Batimento · minutos em sequência</div><div class="rec-edit-grid"><label class="rec-edit-field"><span>Batimento inicial lento</span><input class="inp" id="receita-edit-bt1" type="number" inputmode="decimal" min="0" step="0.5" value="${bt.t1}"></label><label class="rec-edit-field"><span>Depois, até colocar fermento</span><input class="inp" id="receita-edit-bt2" type="number" inputmode="decimal" min="0" step="0.5" value="${bt.t2}"></label><label class="rec-edit-field"><span>Depois, até colocar a massa</span><input class="inp" id="receita-edit-bt3" type="number" inputmode="decimal" min="0" step="0.5" value="${bt.t3}"></label><label class="rec-edit-field"><span>Depois, até ver ponto de véu</span><input class="inp" id="receita-edit-bt4" type="number" inputmode="decimal" min="0" step="0.5" value="${bt.t4}"></label></div><div class="rec-edit-note" style="margin-top:.45rem">Os minutos são intervalos somados em sequência. Esta configuração será congelada em cada novo balde.</div></div>`;
 }
 function voltarEditorReceita(){const rid=st.receitaEditId||st.receitaVisual;st.receitaEditId=null;st.receitaEditOriginal=null;if(rid)abrirReceitaCompleta(rid);else ir('receitas');}
 function receitaLerEditor(){
   const r=st.receitaEditOriginal,v=receitaValores(r);for(const inp of document.querySelectorAll('#receita-edit-campos [data-rec-k]')){const n=Number(inp.value);if(!Number.isInteger(n)||n<0){alert('Confira '+(inp.previousElementSibling?inp.previousElementSibling.textContent:'o peso')+'. Use gramas inteiras e valor não negativo.');inp.focus();return null;}v[inp.dataset.recK]=n;}
-  if(r&&r.fermentoFixo!=null){const f=Number(document.getElementById('receita-edit-fermento').value),t=Number(document.getElementById('receita-edit-temp').value),h=Number(document.getElementById('receita-edit-horas').value);if(!Number.isInteger(f)||f<0||!isFinite(t)||t<=0||!isFinite(h)||h<=0){alert('Confira fermento, temperatura e horas.');return null;}v.fermento=f;v.temp=t;v.horas=h;}return v;
+  if(r&&r.fermentoFixo!=null){const f=Number(document.getElementById('receita-edit-fermento').value),t=Number(document.getElementById('receita-edit-temp').value),h=Number(document.getElementById('receita-edit-horas').value);if(!Number.isInteger(f)||f<0||!isFinite(t)||t<=0||!isFinite(h)||h<=0){alert('Confira fermento, temperatura e horas.');return null;}v.fermento=f;v.temp=t;v.horas=h;}
+  const bt={};for(const c of BATIMENTO_CAMPOS){const el=document.getElementById('receita-edit-b'+c.k),n=Number(el&&el.value);if(!isFinite(n)||n<0||n>120){alert('Confira '+c.nome+'. Informe minutos entre 0 e 120.');if(el)el.focus();return null;}bt[c.k]=Math.round(n*10)/10;}v.batimento=bt;return v;
 }
 function salvarEdicaoReceita(){
-  if(!OP.pode('receita_editar')||!receitaNuvemObrigatoria())return;const rid=st.receitaEditId,antes=st.receitaEditOriginal;if(!rid||!antes)return;const nome=String(document.getElementById('receita-edit-nome').value||'').trim();if(nome.length<2){alert('Informe o nome da receita.');return;}const motivo=String(document.getElementById('receita-edit-motivo').value||'').trim();if(motivo.length<8){alert('Escreva o motivo da alteração (mínimo de 8 caracteres).');document.getElementById('receita-edit-motivo').focus();return;}const v=receitaLerEditor();if(!v)return;const fixa=antes.fermentoFixo!=null,temp=fixa?v.temp:null,horas=fixa?v.horas:null,depois=receitaMontarEditada(antes,v,nome,temp,horas),mudancas=receitaDiferencas(antes,depois);if(!mudancas.length){alert('Nenhuma alteração foi feita na receita.');return;}const resumo=mudancas.slice(0,12).join('\n')+(mudancas.length>12?'\n+'+(mudancas.length-12)+' alterações':'');if(!confirm('CONFIRMAR ALTERAÇÃO DE RECEITA\n\n'+resumo+'\n\nMotivo: '+motivo+'\n\nBaldes já existentes permanecerão com a receita anterior.'))return;
+  if(!OP.pode('receita_editar')||!receitaNuvemObrigatoria())return;const rid=st.receitaEditId,antes=st.receitaEditOriginal;if(!rid||!antes)return;const nome=String(document.getElementById('receita-edit-nome').value||'').trim();if(nome.length<2){alert('Informe o nome da receita.');return;}const motivo=String(document.getElementById('receita-edit-motivo').value||'').trim();if(motivo.length<8){alert('Escreva o motivo da alteração (mínimo de 8 caracteres).');document.getElementById('receita-edit-motivo').focus();return;}const v=receitaLerEditor();if(!v)return;const fixa=antes.fermentoFixo!=null,temp=fixa?v.temp:null,horas=fixa?v.horas:null,depois=receitaMontarEditada(antes,v,nome,temp,horas);depois.batimento=clonarReceita(v.batimento);const mudancas=receitaDiferencas(antes,depois);if(!mudancas.length){alert('Nenhuma alteração foi feita na receita.');return;}const resumo=mudancas.slice(0,16).join('\n')+(mudancas.length>16?'\n+'+(mudancas.length-16)+' alterações':'');if(!confirm('CONFIRMAR ALTERAÇÃO DE RECEITA\n\n'+resumo+'\n\nMotivo: '+motivo+'\n\nBaldes já existentes permanecerão com a receita anterior.'))return;
   const agora=new Date(),antReg=receitaDefRegistro(rid),reg={id:rid,numero:receitaNumero(rid,antes),ativo:true,origem:(antReg&&antReg.origem)||'receita_padrao',origemBaldeId:(antReg&&antReg.origemBaldeId)||null,origemTesteId:(antReg&&antReg.origemTesteId)||null,receita:clonarReceita(depois),criadoEm:(antReg&&antReg.criadoEm)||agora.toLocaleString('pt-BR'),criadoTs:(antReg&&antReg.criadoTs)||agora.getTime(),criadoPor:(antReg&&antReg.criadoPor)||getOp(),atualizadoEm:agora.toLocaleString('pt-BR'),atualizadoTs:agora.getTime(),atualizadoPor:getOp()};ESTOQUE_SYNC.localPush('receitas',reg);receitaRegistrarAudit('editada',rid,motivo,antes,depois,{mudancas});st.receitaEditId=null;st.receitaEditOriginal=null;alert('Receita alterada e registrada no histórico de alterações.');abrirReceitaCompleta(rid);
 }
 async function aprovarTesteComoReceita(loteId){
-  if(!OP.pode('receita_editar')||!receitaNuvemObrigatoria())return;const todos=LS.g('fdo_lotes',[]),l=todos.find(x=>x.id===loteId);if(!l||!l.teste||!l.receitaSnapshot||!loteAtivo(l)){alert('Este teste não está disponível para aprovação.');return;}const existente=receitaPorOrigemBalde(loteId);if(existente){abrirReceitaCompleta(existente.id);return;}const sug=receitaProximoNumeroLocal(),nomeIn=String(prompt('Nome da nova receita definitiva:','Receita '+sug)||'').trim();if(!nomeIn)return;const motivo=String(prompt('Por que este teste foi aprovado como receita definitiva?')||'').trim();if(motivo.length<8){alert('Escreva um motivo com pelo menos 8 caracteres para registrar a aprovação.');return;}const t=l.teste.fermentacao||{},total=(l.receitaSnapshot.passos||[]).reduce((a,p)=>a+(Number(p.g)||0),0),ferTxt=(t.temp!=null&&t.horas!=null)?('\nFermentação: '+t.temp+'°C · '+t.horas+' h · '+t.fermento_g+' g'):'';if(!confirm('TRANSFORMAR TESTE EM RECEITA DEFINITIVA?\n\nBalde #'+l.num+' · base '+(l.teste.baseRotulo||l.teste.baseReceita||'—')+'\nTotal executado: '+formatPeso(total)+ferTxt+'\n\nMotivo: '+motivo+'\n\nO teste original continuará intacto no Histórico.'))return;const numero=await proxNumeroReceita();if(!numero)return;const rid=FB.novoId('rec'),rec=clonarReceita(l.receitaSnapshot);rec.nome=(nomeIn==='Receita '+sug&&numero!==sug)?('Receita '+numero):nomeIn;rec.rotulo='R'+numero;rec.teste=false;rec.origemTesteId=l.teste.id||null;rec.origemBaldeId=l.id;delete rec.baseReceita;const fReal=t.fermento_g!=null?Number(t.fermento_g):receitaValorPasso(rec,'Fermento seco');rec.fermentoFixo=fReal;rec.fermentoHoras=t.horas!=null?Number(t.horas):(rec.fermentoHoras!=null?Number(rec.fermentoHoras):null);rec.fermentoTemp=t.temp!=null?Number(t.temp):(rec.fermentoTemp!=null?Number(rec.fermentoTemp):17);const agora=new Date(),reg={id:rid,numero,ativo:true,origem:'teste_aprovado',origemBaldeId:l.id,origemTesteId:l.teste.id||null,receita:rec,criadoEm:agora.toLocaleString('pt-BR'),criadoTs:agora.getTime(),criadoPor:getOp(),atualizadoEm:agora.toLocaleString('pt-BR'),atualizadoTs:agora.getTime(),atualizadoPor:getOp()};ESTOQUE_SYNC.localPush('receitas',reg);receitaRegistrarAudit('criada_de_teste',rid,motivo,null,rec,{origemBaldeId:l.id,origemTesteId:l.teste.id||null,mudancas:['Criada a partir do teste do Balde #'+l.num]});alert('Receita '+rec.rotulo+' criada. Ela já aparece no Porcionamento de Secos.');renderHist();abrirReceitaCompleta(rid);
+  if(!OP.pode('receita_editar')||!receitaNuvemObrigatoria())return;const todos=LS.g('fdo_lotes',[]),l=todos.find(x=>x.id===loteId);if(!l||!l.teste||!l.receitaSnapshot||!loteAtivo(l)){alert('Este teste não está disponível para aprovação.');return;}const existente=receitaPorOrigemBalde(loteId);if(existente){abrirReceitaCompleta(existente.id);return;}const sug=receitaProximoNumeroLocal(),nomeIn=String(prompt('Nome da nova receita definitiva:','Receita '+sug)||'').trim();if(!nomeIn)return;const motivo=String(prompt('Por que este teste foi aprovado como receita definitiva?')||'').trim();if(motivo.length<8){alert('Escreva um motivo com pelo menos 8 caracteres para registrar a aprovação.');return;}const t=l.teste.fermentacao||{},total=(l.receitaSnapshot.passos||[]).reduce((a,p)=>a+(Number(p.g)||0),0),ferTxt=(t.temp!=null&&t.horas!=null)?('\nFermentação: '+t.temp+'°C · '+t.horas+' h · '+t.fermento_g+' g'):'';if(!confirm('TRANSFORMAR TESTE EM RECEITA DEFINITIVA?\n\nBalde #'+l.num+' · base '+(l.teste.baseRotulo||l.teste.baseReceita||'—')+'\nTotal executado: '+formatPeso(total)+ferTxt+'\n\nMotivo: '+motivo+'\n\nO teste original continuará intacto no Histórico.'))return;const numero=await proxNumeroReceita();if(!numero)return;const rid=FB.novoId('rec'),rec=clonarReceita(l.receitaSnapshot);rec.batimento=clonarReceita((l.receitaSnapshot&&l.receitaSnapshot.batimento)||l.batimentoConfig||(l.etapas&&l.etapas.batimento&&l.etapas.batimento.temposProgramados)||batTemposBaseLegado());rec.nome=(nomeIn==='Receita '+sug&&numero!==sug)?('Receita '+numero):nomeIn;rec.rotulo='R'+numero;rec.teste=false;rec.origemTesteId=l.teste.id||null;rec.origemBaldeId=l.id;delete rec.baseReceita;const fReal=t.fermento_g!=null?Number(t.fermento_g):receitaValorPasso(rec,'Fermento seco');rec.fermentoFixo=fReal;rec.fermentoHoras=t.horas!=null?Number(t.horas):(rec.fermentoHoras!=null?Number(rec.fermentoHoras):null);rec.fermentoTemp=t.temp!=null?Number(t.temp):(rec.fermentoTemp!=null?Number(rec.fermentoTemp):17);const agora=new Date(),reg={id:rid,numero,ativo:true,origem:'teste_aprovado',origemBaldeId:l.id,origemTesteId:l.teste.id||null,receita:rec,criadoEm:agora.toLocaleString('pt-BR'),criadoTs:agora.getTime(),criadoPor:getOp(),atualizadoEm:agora.toLocaleString('pt-BR'),atualizadoTs:agora.getTime(),atualizadoPor:getOp()};ESTOQUE_SYNC.localPush('receitas',reg);receitaRegistrarAudit('criada_de_teste',rid,motivo,null,rec,{origemBaldeId:l.id,origemTesteId:l.teste.id||null,mudancas:['Criada a partir do teste do Balde #'+l.num]});alert('Receita '+rec.rotulo+' criada. Ela já aparece no Porcionamento de Secos.');renderHist();abrirReceitaCompleta(rid);
 }
 function arquivarReceitaAtual(){
   if(!OP.pode('receita_editar')||!receitaNuvemObrigatoria())return;const rid=st.receitaVisual,r=RECEITAS[rid];if(!r||!receitaAtiva(rid))return;if(receitasOrdenadas().filter(x=>x.ativo).length<=1){alert('Não é possível arquivar a última receita ativa.');return;}const motivo=String(prompt('Por que esta receita será arquivada?')||'').trim();if(motivo.length<8){alert('Escreva um motivo com pelo menos 8 caracteres.');return;}if(!confirm('Arquivar '+(r.rotulo||r.nome)+'?\n\nEla sairá do Porcionamento, mas nenhum balde, teste ou histórico será apagado.'))return;const agora=new Date(),ant=receitaDefRegistro(rid),reg={id:rid,numero:receitaNumero(rid,r),ativo:false,origem:(ant&&ant.origem)||'receita_padrao',origemBaldeId:(ant&&ant.origemBaldeId)||null,origemTesteId:(ant&&ant.origemTesteId)||null,receita:clonarReceita(r),criadoEm:(ant&&ant.criadoEm)||agora.toLocaleString('pt-BR'),criadoTs:(ant&&ant.criadoTs)||agora.getTime(),criadoPor:(ant&&ant.criadoPor)||getOp(),atualizadoEm:agora.toLocaleString('pt-BR'),atualizadoTs:agora.getTime(),atualizadoPor:getOp()};ESTOQUE_SYNC.localPush('receitas',reg);receitaRegistrarAudit('arquivada',rid,motivo,r,r,{mudancas:['Receita retirada do Porcionamento; históricos preservados.']});alert('Receita arquivada.');ir('receitas');
@@ -1927,6 +1980,7 @@ const ESTOQUE_SYNC={
   defs:{
     movimentos:{local:'fdo_estoque_movimentos',path:'fdo_v25/estoque/movimentos'},
     contagens:{local:'fdo_estoque_contagens',path:'fdo_v25/estoque/contagens'},
+    configuracoes:{local:'fdo_estoque_configuracoes',path:'fdo_v25/estoque/configuracoes'},
     observacoes:{local:'fdo_receitas_observacoes',path:'fdo_v25/receitas_observacoes'},
     receitas:{local:'fdo_receitas_definitivas',path:'fdo_v25/receitas_definitivas'},
     auditoria:{local:'fdo_receitas_auditoria',path:'fdo_v25/receitas_auditoria'}
@@ -1942,7 +1996,7 @@ const ESTOQUE_SYNC={
     if(i<0)out.push(this.clone(reg));else if(this.ts(reg)>=this.ts(out[i]))out[i]={...this.clone(out[i]),...this.clone(reg)};
     return out.sort((a,b)=>this.ts(b)-this.ts(a));
   },
-  out(){const base={movimentos:{},contagens:{},observacoes:{},receitas:{},auditoria:{}};const x=LS.g(this.OUT,base)||base;Object.keys(base).forEach(k=>x[k]=x[k]||{});return x;},
+  out(){const base={movimentos:{},contagens:{},configuracoes:{},observacoes:{},receitas:{},auditoria:{}};const x=LS.g(this.OUT,base)||base;Object.keys(base).forEach(k=>x[k]=x[k]||{});return x;},
   saveOut(x){try{localStorage.setItem(this.OUT,JSON.stringify(x))}catch{}},
   queue(nome,reg){const o=this.out(),id=this.key(reg.id),at=o[nome]&&o[nome][id];if(!at||this.ts(reg)>=this.ts(at))o[nome][id]=this.clone(reg);this.saveOut(o);},
   pending(){const o=this.out();return Object.values(o).some(m=>Object.keys(m||{}).length);},
@@ -1952,6 +2006,8 @@ const ESTOQUE_SYNC={
     loc.forEach(x=>{arr=this.upsert(arr,x);if(!rem.some(r=>r.id===x.id))this.queue(nome,x);});
     this.save(nome,arr);if(nome==='receitas')aplicarReceitasDefinitivas();this.ready[nome]=true;FB.repaint();this.flush();
     if(nome==='movimentos')estoqueReconciliarSaidasLotes();
+    if(nome==='receitas')setTimeout(()=>{try{migrarBatimentoReceitasV262();}catch(e){console.warn('[RECEITAS] migração batimento',e)}},0);
+    if(nome==='configuracoes')setTimeout(()=>{try{const vis=document.querySelector('.scr:not(.off)');if(vis&&vis.id==='s-start')estoqueChecarLembreteContagem();}catch(e){}},0);
   },
   async flush(){
     if(this.flushing||!FB.db||!navigator.onLine)return;const o=this.out(),jobs=[];
@@ -2064,13 +2120,12 @@ function abrirEstoqueContagem(){
   estoqueAtualizarDiaContagem();ir('estoque-contagem');
 }
 function estoqueAtualizarDiaContagem(){
-  const v=document.getElementById('estoque-cont-data').value,el=document.getElementById('estoque-cont-dia');if(!el)return;if(!v){el.textContent='';return;}
-  const d=new Date(v+'T12:00:00'),seg=d.getDay()===1;el.textContent=seg?'Segunda-feira · conferência semanal':'Atenção: a data escolhida não é segunda-feira.';el.style.color=seg?'var(--grn)':'var(--gold)';
+  const v=document.getElementById('estoque-cont-data').value,el=document.getElementById('estoque-cont-dia');if(!el)return;if(!v){el.textContent='';return;}const d=new Date(v+'T12:00:00'),cfg=estoqueConfigLembrete(),dia=cfg.ativo?Number(cfg.dia):1,ok=d.getDay()===dia;el.textContent=ok?(ESTOQUE_DIAS[dia]+' · conferência programada'):('Atenção: a data escolhida não é '+ESTOQUE_DIAS[dia].toLowerCase()+'.');el.style.color=ok?'var(--grn)':'var(--gold)';
 }
 function salvarEstoqueContagem(){
   if(!OP.pode('estoque_contagem'))return;const data=document.getElementById('estoque-cont-data').value;if(!data){alert('Informe a data da conferência.');return;}
   const vals={};for(const inp of document.querySelectorAll('#estoque-cont-campos [data-est-id]')){const id=inp.dataset.estId,it=estoqueItem(id),n=estoqueNumero(inp.value);if(n==null||n<0){alert('Preencha '+(it?it.nome:id)+' com zero ou uma quantidade positiva.');inp.focus();return;}vals[id]=it.unidade==='un'?Math.round(n):Math.round(n*1000);}
-  const d=new Date(data+'T12:00:00');if(d.getDay()!==1&&!confirm('A data escolhida não é segunda-feira. Deseja registrar mesmo assim?'))return;
+  const d=new Date(data+'T12:00:00'),cfg=estoqueConfigLembrete(),dia=cfg.ativo?Number(cfg.dia):1;if(d.getDay()!==dia&&!confirm('A data escolhida não é '+ESTOQUE_DIAS[dia].toLowerCase()+'. Deseja registrar mesmo assim?'))return;
   const agora=new Date(),reg={id:FB.novoId('est_contagem'),tipo:'contagem_semanal',data,em:agora.toLocaleString('pt-BR'),emTs:agora.getTime(),op:getOp(),valores:vals,dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null)};
   ESTOQUE_SYNC.localPush('contagens',reg);alert('Conferência semanal registrada sem alterar o saldo calculado.');renderEstoque();ir('estoque');
 }
@@ -2094,6 +2149,7 @@ function renderReceitaCompleta(){
   let html='',grupo='';(r.passos||[]).forEach(p=>{if(p.grupo!==grupo){grupo=p.grupo;html+='<div class="rec-full-grupo">'+_escHtml(grupo)+'</div>';}const q=(dinamico&&p.cat==='FERMENTO')?'conforme temperatura / horas':formatPeso(p.g);html+='<div class="rec-full-item"><span>'+_escHtml(p.nome)+'</span><b>'+_escHtml(q)+'</b></div>';});
   if(dinamico)html+='<div class="rec-full-fer"><b>Opções de fermento</b>'+OPCOES_FERMENTO.map(o=>'<span>'+o.temp+'°C · '+o.horas+' h = '+o.fermento+' g</span>').join('')+'</div>';
   else if(r.fermentoTemp!=null&&r.fermentoHoras!=null)html+='<div class="rec-full-fer"><b>Fermentação fixa</b><span>'+r.fermentoTemp+'°C · '+r.fermentoHoras+' h = '+r.fermentoFixo+' g</span></div>';
+  const bt=batTemposReceita(r);html+='<div class="rec-full-fer"><b>Batimento · minutos em sequência</b><span>Inicial lento: '+batFmtMin(bt.t1)+' min</span><span>Depois, até colocar fermento: +'+batFmtMin(bt.t2)+' min</span><span>Depois, até colocar a massa: +'+batFmtMin(bt.t3)+' min</span><span>Depois, até conferir véu: +'+batFmtMin(bt.t4)+' min</span><span><b>Total programado: '+batFmtMin(bt.t1+bt.t2+bt.t3+bt.t4)+' min</b></span></div>';
   document.getElementById('receita-full-lista').innerHTML=html;
   const obs=receitaObsRegistro(rid),ta=document.getElementById('receita-full-obs'),btn=document.getElementById('receita-full-salvar');ta.value=obs&&obs.texto||'';const pode=OP.pode('receita_obs');ta.readOnly=!pode;btn.style.display=pode?'':'none';document.getElementById('receita-full-obs-meta').textContent=obs?('Atualizado em '+(obs.em||'—')+' · '+(obs.op||'—')):(pode?'Nenhuma observação registrada.':'Nenhuma observação registrada pela gerência.');
   const gest=document.getElementById('receita-full-gestao'),podeGerir=OP.pode('receita_editar');if(gest)gest.style.display=podeGerir?'grid':'none';const ed=document.getElementById('receita-full-editar');if(ed)ed.style.display=ativa?'':'none';const arq=document.getElementById('receita-full-arquivar');if(arq)arq.textContent=ativa?'🗄 Arquivar receita':'↩ Restaurar receita';
@@ -2137,7 +2193,8 @@ const LS={g:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.p
 //   localStorage e a tela atual é re-renderizada (sem F5).
 // • Chaves sincronizadas: só dados de produção (fdo_lotes, fdo_laminacoes,
 //   fdo_lote_seq). Configs locais (PIN, chave Gemini, modo impressora,
-//   tempos do batimento, tara, qtd de etiquetas) NÃO sobem para a nuvem.
+//   tara e qtd de etiquetas) NÃO sobem para a nuvem. Os tempos do batimento v26.2
+//   pertencem às receitas e sincronizam pela estrutura de receitas definitivas.
 const FB_CFG={
   apiKey:"AIzaSyDN3uZEjtmKE678io-61aIhgFnkxG1PrnE",
   authDomain:"producaofolhadosdouro-b6fb5.firebaseapp.com",
@@ -2622,7 +2679,7 @@ function ir(id){
   if(id==='history') renderHist();
   if(id==='hist-batimentos') renderHistBatimentos();
   if(id==='config') carregarConfig();
-  if(id==='start' && typeof aplicarPermsStart==='function') aplicarPermsStart();
+  if(id==='start' && typeof aplicarPermsStart==='function'){ aplicarPermsStart(); setTimeout(()=>{try{estoqueChecarLembreteContagem();}catch(e){}},180); }
   if(id==='login' && typeof renderLogin==='function') renderLogin();
   if(id==='geo'){
     try{
@@ -2631,16 +2688,30 @@ function ir(id){
     }catch{}
   }
 }
+const ESTOQUE_DIAS=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+function estoqueConfigLembrete(){const a=LS.g('fdo_estoque_configuracoes',[]),r=Array.isArray(a)?a.find(x=>x&&x.id==='lembrete_contagem'):null;return r||{id:'lembrete_contagem',operadorId:'',dia:1,ativo:false};}
+function carregarConfigLembreteEstoque(){
+  const sel=document.getElementById('inp-est-cont-op'),dia=document.getElementById('inp-est-cont-dia');if(!sel||!dia)return;const cfg=estoqueConfigLembrete(),ops=OP.lista().filter(o=>o&&o.ativo&&o.perms&&o.perms.estoque_contagem);sel.innerHTML='<option value="">Sem lembrete</option>'+ops.map(o=>'<option value="'+_escHtml(o.id)+'">'+_escHtml(o.nome)+'</option>').join('');sel.value=ops.some(o=>o.id===cfg.operadorId)?cfg.operadorId:'';dia.value=String(Number.isInteger(Number(cfg.dia))?Number(cfg.dia):1);
+}
+function salvarConfigLembreteEstoque(){
+  const sel=document.getElementById('inp-est-cont-op'),d=document.getElementById('inp-est-cont-dia');if(!sel||!d)return;const id=String(sel.value||''),dia=Number(d.value),op=OP.porId(id),agora=new Date(),reg={id:'lembrete_contagem',operadorId:(op&&op.ativo&&op.perms&&op.perms.estoque_contagem)?id:'',operadorNome:(op&&op.nome)||'',dia:(dia>=0&&dia<=6)?dia:1,ativo:!!(op&&op.ativo&&op.perms&&op.perms.estoque_contagem),em:agora.toLocaleString('pt-BR'),atualizadoTs:agora.getTime(),op:getOp()};ESTOQUE_SYNC.localPush('configuracoes',reg);
+}
+function estoqueContagemFeitaNaData(data){return estoqueContagens().some(c=>c&&c.data===data);}
+function estoqueLembreteChave(data,opId){return 'fdo_est_lembrete_'+data+'_'+String(opId||'');}
+function estoqueChecarLembreteContagem(){
+  const cfg=estoqueConfigLembrete(),op=OP.atual();if(!cfg.ativo||!op||op.id!==cfg.operadorId||!OP.pode('estoque_contagem'))return;const agora=new Date(),hoje=estoqueHojeISO();if(agora.getDay()!==Number(cfg.dia)||estoqueContagemFeitaNaData(hoje))return;try{if(sessionStorage.getItem(estoqueLembreteChave(hoje,op.id))==='depois')return;}catch(e){}const bg=document.getElementById('estoque-lembrete-bg'),txt=document.getElementById('estoque-lembrete-txt');if(txt)txt.textContent='Hoje é '+ESTOQUE_DIAS[agora.getDay()].toLowerCase()+', dia de fazer a contagem do estoque. Responsável: '+op.nome+'.';if(bg)bg.classList.add('on');
+}
+function estoqueLembreteFechar(){const bg=document.getElementById('estoque-lembrete-bg');if(bg)bg.classList.remove('on');}
+function estoqueLembreteAgora(){estoqueLembreteFechar();abrirEstoqueContagem();}
+function estoqueLembreteDepois(){const op=OP.atual(),hoje=estoqueHojeISO();try{if(op)sessionStorage.setItem(estoqueLembreteChave(hoje,op.id),'depois');}catch(e){}estoqueLembreteFechar();}
+
 function carregarConfig(){
   const k=getKey(); if(k)document.getElementById('inp-key').value=k;
   const op=LS.g('fdo_op',''); if(op)document.getElementById('inp-op').value=op;
   document.getElementById('inp-pin').value=getPin();
   document.getElementById('chk-pin').checked=pinAtivo();
   document.getElementById('inp-cfgpin').value=''; // sempre em branco (preencha só p/ trocar)
-  document.getElementById('inp-bt1').value=getBatT1();
-  document.getElementById('inp-bt2').value=getBatT2();
-  document.getElementById('inp-bt3').value=getBatT3();
-  document.getElementById('inp-bt4').value=getBatT4();
+  carregarConfigLembreteEstoque();
   document.getElementById('inp-bdiv').value=getBatDiv();
   document.getElementById('inp-tara').value=getTara();
   // Restrição por localização (v22)
@@ -2653,8 +2724,8 @@ function carregarConfig(){
   if(typeof DEVICE!=='undefined') DEVICE.renderConfig();
 }
 function exportarBackup(){
-  const chaves=['fdo_lotes','fdo_laminacoes','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25','fdo_estoque_movimentos','fdo_estoque_contagens','fdo_receitas_observacoes','fdo_receitas_definitivas','fdo_receitas_auditoria','fdo_estoque_outbox_v26','fdo_estoque_inicio_ts_v26'];
-  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.1',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
+  const chaves=['fdo_lotes','fdo_laminacoes','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25','fdo_estoque_movimentos','fdo_estoque_contagens','fdo_estoque_configuracoes','fdo_receitas_observacoes','fdo_receitas_definitivas','fdo_receitas_auditoria','fdo_estoque_outbox_v26','fdo_estoque_inicio_ts_v26'];
+  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.2',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
   chaves.forEach(k=>{ const raw=localStorage.getItem(k); if(raw!==null){ try{dados.dados[k]=JSON.parse(raw);}catch{dados.dados[k]=raw;} } });
   const blob=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
@@ -2679,12 +2750,8 @@ function salvarConfig(){
     if(cpin.length<3){alert('A senha das Configurações precisa ter pelo menos 3 dígitos.');return;}
     LS.s('fdo_cfg_pin',cpin);
   }
-  // Tempos do batimento (minutos) e divisor de partes
-  const numPos=(id,def)=>{ const v=parseInt(document.getElementById(id).value,10); return (isFinite(v)&&v>=0)?v:def; };
-  LS.s('fdo_bat_t1',numPos('inp-bt1',4));
-  LS.s('fdo_bat_t2',numPos('inp-bt2',6));
-  LS.s('fdo_bat_t3',numPos('inp-bt3',3));
-  LS.s('fdo_bat_t4',numPos('inp-bt4',2));
+  // v26.2: responsável/dia da conferência; tempos do batimento ficam nas receitas.
+  salvarConfigLembreteEstoque();
   const dv=parseInt(document.getElementById('inp-bdiv').value,10); LS.s('fdo_bat_div',(isFinite(dv)&&dv>=1)?dv:4);
   const tv=parseInt(document.getElementById('inp-tara').value,10); LS.s('fdo_tara_balde',(isFinite(tv)&&tv>=0)?tv:474);
   PESO_BALDE1=getTara();
@@ -3186,6 +3253,29 @@ function getBatT4(){ return Number(LS.g('fdo_bat_t4',2))||2; }   // depois → p
 function getBatDiv(){ return Number(LS.g('fdo_bat_div',4))||4; } // partes para gelar
 function getTara(){ return Number(LS.g('fdo_tara_balde',474))||474; } // tara (g) do balde vazio, para conferência
 
+// v26.2 — tempos do batimento pertencem à receita. As chaves antigas ficam somente como base/fallback de migração.
+const BATIMENTO_CAMPOS=[
+  {k:'t1',nome:'Batimento inicial lento'},
+  {k:'t2',nome:'Colocar fermento'},
+  {k:'t3',nome:'Colocar a massa'},
+  {k:'t4',nome:'Ver ponto de véu'}
+];
+function batTemposNormalizar(v,base){
+  const b=base||{t1:getBatT1(),t2:getBatT2(),t3:getBatT3(),t4:getBatT4()},o={};
+  BATIMENTO_CAMPOS.forEach(c=>{const tem=!!(v&&Object.prototype.hasOwnProperty.call(v,c.k)),n=tem?Number(v[c.k]):NaN;o[c.k]=(isFinite(n)&&n>=0)?n:Number(b[c.k]);});return o;
+}
+function batTemposBaseLegado(){return batTemposNormalizar({t1:getBatT1(),t2:getBatT2(),t3:getBatT3(),t4:getBatT4()},{t1:4,t2:6,t3:3,t4:2});}
+function batTemposReceita(r){return batTemposNormalizar(r&&r.batimento,batTemposBaseLegado());}
+function batTemposDoLote(l){
+  const b=l&&l.etapas&&l.etapas.batimento;if(b&&b.temposProgramados)return batTemposNormalizar(b.temposProgramados,batTemposBaseLegado());
+  if(l&&l.receitaSnapshot&&l.receitaSnapshot.batimento)return batTemposNormalizar(l.receitaSnapshot.batimento,batTemposBaseLegado());
+  if(l&&l.batimentoConfig)return batTemposNormalizar(l.batimentoConfig,batTemposBaseLegado());
+  return batTemposBaseLegado();
+}
+function batFmtMin(n){n=Number(n)||0;return Number.isInteger(n)?String(n):String(Math.round(n*10)/10).replace('.',',');}
+function batTemposTexto(v){const b=batTemposNormalizar(v,batTemposBaseLegado());return batFmtMin(b.t1)+' + '+batFmtMin(b.t2)+' + '+batFmtMin(b.t3)+' + '+batFmtMin(b.t4)+' min';}
+
+
 // Fermento (g) deste lote: prefere o valor gravado; cai p/ a tabela por temperatura; por fim, o padrão da receita
 function loteFermentoG(lote){
   const e=(lote&&lote.etapas)||{};
@@ -3221,7 +3311,7 @@ function pesoBalde2Lote(lote){
   return s;
 }
 
-let batCronInt=null, batBatStartMs=0, batAvisados=[], batTempoSeg=0, batAudioCtx=null;
+let batCronInt=null, batBatStartMs=0, batAvisados=[], batTempoSeg=0, batAudioCtx=null, batTemposRun=null;
 
 function setBatFase(f){
   ['temp','balde1','balde2','batendo','peso'].forEach(x=>{
@@ -3231,7 +3321,7 @@ function setBatFase(f){
 function abrirBatimento(id){
   const lote=LS.g('fdo_lotes',[]).find(l=>l.id===id);
   if(!lote){ abrirBatimentoLotes(); return; }
-  st.batLote=id; st.batStart=Date.now(); st.batRodando=false; batLimparRun();
+  st.batLote=id; st.batStart=Date.now(); st.batRodando=false; batLimparRun(); batTemposRun=batTemposDoLote(lote);
   st.batB1Alvo=null; st.batB2Alvo=null; st.batPesoB1=null; st.batPesoB2=null;
   // reset cronômetro / fases
   if(batCronInt){clearInterval(batCronInt);batCronInt=null;}
@@ -3246,7 +3336,7 @@ function abrirBatimento(id){
   const p=porcInfo(lote);
   document.getElementById('bat-lote-num').textContent='#'+lote.num;
   document.getElementById('bat-lote-rec').textContent=lote.receitaNome||lote.rotulo||'';
-  document.getElementById('bat-lote-meta').textContent=[lote.criado||'', p.op?('op. '+p.op):'', p.total_g?('total '+formatPeso(p.total_g)):''].filter(Boolean).join(' · ');
+  document.getElementById('bat-lote-meta').textContent=[lote.criado||'', p.op?('op. '+p.op):'', p.total_g?('total '+formatPeso(p.total_g)):'','batimento '+batTemposTexto(batTemposRun)].filter(Boolean).join(' · ');
   const tDia=tempAmbienteDoDia();
   const note=document.getElementById('bat-temp-note');
   if(tDia!=null){ st.batTemp=tDia; note.textContent='Puxado de um batimento de hoje — confirme ou ajuste.'; note.classList.add('puxado'); }
@@ -3396,7 +3486,7 @@ function batAnunciar(txt){
   setTimeout(()=>falarForcado(txt),6500);
 }
 function batAgenda(){
-  const t1=getBatT1(), t2=getBatT2(), t3=getBatT3(), t4=getBatT4();
+  const bt=batTemposNormalizar(batTemposRun,batTemposBaseLegado()),t1=bt.t1,t2=bt.t2,t3=bt.t3,t4=bt.t4;
   return [
     {min:t1,          txt:'Colocar o sal e a manteiga.'},
     {min:t1+t2,       txt:'Colocar lentamente o fermento com porção de farinha bem misturados. Misturar bem o fermento com o trigo.'},
@@ -3408,7 +3498,7 @@ function fmtMMSS(seg){ const m=Math.floor(seg/60), s=seg%60; return String(m).pa
 // Persistência da batida (resiste a sair do app / descartar a aba) — req5
 function batSalvarRun(fase){
   if(!st.batLote) return;
-  LS.s('fdo_bat_run',{ loteId:st.batLote, startMs:batBatStartMs, fase:fase, temp:st.batTemp, tempoSeg:batTempoSeg, avisados:batAvisados.slice(), savedAt:Date.now() });
+  LS.s('fdo_bat_run',{ loteId:st.batLote, startMs:batBatStartMs, fase:fase, temp:st.batTemp, tempoSeg:batTempoSeg, avisados:batAvisados.slice(), tempos:clonarReceita(batTemposRun||batTemposBaseLegado()), savedAt:Date.now() });
 }
 function batLimparRun(){ try{ localStorage.removeItem('fdo_bat_run'); }catch(e){} }
 
@@ -3493,6 +3583,7 @@ function batConcluirComPeso(){
     feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(),
     op:getOp(), tempAmbiente:st.batTemp,
     tempoSeg:batTempoSeg, tempoTxt:fmtMMSS(batTempoSeg),
+    temposProgramados:clonarReceita(batTemposRun||batTemposDoLote(lote)),
     pesoTotal:(isFinite(peso)?peso:null), partes:div, porParte:porParte,
     partesUsadas:0,
     peso_balde1:(st.batPesoB1!=null?st.batPesoB1:null), peso_balde2:(st.batPesoB2!=null?st.batPesoB2:null),
@@ -3512,7 +3603,7 @@ function batSair(destino){
     if(!ok) return;
   }
   if(batCronInt){clearInterval(batCronInt);batCronInt=null;}
-  batPararMicPeso(); st.batRodando=false; batLimparRun(); liberarWakeLock();
+  batPararMicPeso(); st.batRodando=false; batLimparRun(); batTemposRun=null; liberarWakeLock();
   ir(destino);
 }
 // Restaura uma batida em andamento após recarregar/descartar a aba (req5)
@@ -3522,11 +3613,11 @@ function batRestaurar(){
   if(Date.now()-(run.savedAt||0) > 12*3600*1000){ batLimparRun(); return false; } // velho demais
   const lote=LS.g('fdo_lotes',[]).find(l=>l.id===run.loteId);
   if(!lote){ batLimparRun(); return false; }
-  st.batLote=run.loteId; st.batStart=run.startMs||Date.now(); st.batTemp=(run.temp!=null?run.temp:20);
+  st.batLote=run.loteId; st.batStart=run.startMs||Date.now(); st.batTemp=(run.temp!=null?run.temp:20); batTemposRun=batTemposNormalizar(run.tempos||batTemposDoLote(lote),batTemposBaseLegado());
   const p=porcInfo(lote);
   document.getElementById('bat-lote-num').textContent='#'+lote.num;
   document.getElementById('bat-lote-rec').textContent=lote.receitaNome||lote.rotulo||'';
-  document.getElementById('bat-lote-meta').textContent=[lote.criado||'', p.op?('op. '+p.op):''].filter(Boolean).join(' · ');
+  document.getElementById('bat-lote-meta').textContent=[lote.criado||'', p.op?('op. '+p.op):'','batimento '+batTemposTexto(batTemposRun)].filter(Boolean).join(' · ');
   document.getElementById('bat-temp-val').textContent=st.batTemp;
   batBatStartMs=run.startMs||Date.now();
   batAvisados=Array.isArray(run.avisados)?run.avisados.slice():[];
@@ -3991,12 +4082,14 @@ function limparTesteAtivo(){ st.testeBase=null;st.testeReceita=null;st.testeMeta
 function abrirTesteBase(){ limparTesteAtivo();st.receitaExecucao=null;st.farinhasLotes=null;aplicarReceitasDefinitivas();renderTesteBase();ir('teste-base'); }
 function testeNumero(id){ const el=document.getElementById(id),s=String(el&&el.value!=null?el.value:'').trim().replace(',','.');if(!s)return null;const n=Number(s);return isFinite(n)?n:null; }
 function testeLerValores(){ const v={};TESTE_CAMPOS.forEach(c=>v[c.k]=testeNumero(c.id));return v; }
+function testeLerBatimento(){const o={};for(const c of BATIMENTO_CAMPOS){const el=document.getElementById('teste-b'+c.k),n=Number(el&&el.value);if(!isFinite(n)||n<0)return null;o[c.k]=Math.round(n*10)/10;}return o;}
 function abrirTesteEditor(rid){
   const r=RECEITAS[rid];if(!r)return;
   limparTesteAtivo();st.testeBase=rid;st.farinhasLotes=null;
   const v=testeValoresBase(rid);TESTE_CAMPOS.forEach(c=>{const el=document.getElementById(c.id);if(el)el.value=v[c.k];});
   const temp=document.getElementById('teste-temp'),horas=document.getElementById('teste-horas');
   if(r.fermentoFixo!=null){temp.value=r.fermentoTemp!=null?r.fermentoTemp:17;horas.value=r.fermentoHoras!=null?r.fermentoHoras:'';}else{document.getElementById('teste-fermento').value='';temp.value='';horas.value='';}
+  const bt=batTemposReceita(r);BATIMENTO_CAMPOS.forEach(c=>{const el=document.getElementById('teste-b'+c.k);if(el)el.value=bt[c.k];});
   document.getElementById('teste-obs').value='';document.getElementById('teste-edit-title').textContent='TESTE · base '+r.rotulo;
   atualizarResumoTeste();ir('teste-edit');
 }
@@ -4009,29 +4102,30 @@ function testeFermentoBase(rid,temp,horas){
   const r=RECEITAS[rid];if(!r)return null;if(r.fermentoFixo!=null)return Number(r.fermentoFixo);
   const o=OPCOES_FERMENTO.find(x=>Number(x.temp)===Number(temp)&&Number(x.horas)===Number(horas));return o?Number(o.fermento):null;
 }
-function testeAlteracoes(rid,v,temp,horas){
+function testeAlteracoes(rid,v,temp,horas,bat){
   const r=RECEITAS[rid]||RECEITAS.r3,base=testeValoresBase(rid),out=[];
   TESTE_CAMPOS.forEach(c=>{let de=base[c.k];if(c.k==='fermento')de=testeFermentoBase(rid,temp,horas);const para=v[c.k];if(de==null||Number(de)!==Number(para))out.push({k:c.k,nome:c.nome,de:de==null?null:Number(de),para:Number(para),unidade:'g'});});
   if(r.fermentoFixo!=null){const baseTemp=r.fermentoTemp!=null?Number(r.fermentoTemp):17;if(Number(temp)!==baseTemp)out.push({k:'temp',nome:'Temperatura',de:baseTemp,para:Number(temp),unidade:'°C'});if(r.fermentoHoras!=null&&Number(horas)!==Number(r.fermentoHoras))out.push({k:'horas',nome:'Fermentação',de:Number(r.fermentoHoras),para:Number(horas),unidade:'h'});}
+  if(bat){const bb=batTemposReceita(r),bn=batTemposNormalizar(bat,bb);BATIMENTO_CAMPOS.forEach(c=>{if(Number(bb[c.k])!==Number(bn[c.k]))out.push({k:'bat_'+c.k,nome:c.nome,de:Number(bb[c.k]),para:Number(bn[c.k]),unidade:' min'});});}
   return out;
 }
 function testeFmtAlt(a){const u=a.unidade||'';if(a.de==null)return '<b>'+_escHtml(a.nome)+':</b> definido no teste: '+String(a.para)+u;return '<b>'+_escHtml(a.nome)+':</b> '+String(a.de)+u+' → '+String(a.para)+u;}
 function atualizarResumoTeste(){
   const rid=st.testeBase,r=RECEITAS[rid],box=document.getElementById('teste-resumo');if(!r||!box)return;
-  const v=testeLerValores(),faltam=TESTE_CAMPOS.filter(c=>v[c.k]==null),temp=testeNumero('teste-temp'),horas=testeNumero('teste-horas');
+  const v=testeLerValores(),faltam=TESTE_CAMPOS.filter(c=>v[c.k]==null),temp=testeNumero('teste-temp'),horas=testeNumero('teste-horas'),bat=testeLerBatimento();
   if(faltam.length){box.innerHTML='<div class="teste-total">Preencha todos os pesos</div><div class="teste-diffs">Falta: '+faltam.map(x=>_escHtml(x.nome)).join(', ')+'</div>';return;}
-  const total=Object.values(v).reduce((s,n)=>s+(Number(n)||0),0),alts=(temp!=null&&horas!=null)?testeAlteracoes(rid,v,temp,horas):[],dif=alts.length?alts.map(testeFmtAlt).join('<br>'):'Nenhuma alteração de peso identificada ainda.',fer=(temp==null||horas==null)?'<br><span style="color:var(--red)">Defina temperatura e horas da fermentação.</span>':'';
-  box.innerHTML='<div class="teste-total">Total do teste: '+formatPeso(total)+'</div><div class="teste-diffs"><b>Alterações em relação à '+_escHtml(r.rotulo)+':</b><br>'+dif+fer+'</div>';
+  const total=Object.values(v).reduce((s,n)=>s+(Number(n)||0),0),alts=(temp!=null&&horas!=null&&bat)?testeAlteracoes(rid,v,temp,horas,bat):[],dif=alts.length?alts.map(testeFmtAlt).join('<br>'):'Nenhuma alteração identificada ainda.',fer=(temp==null||horas==null)?'<br><span style="color:var(--red)">Defina temperatura e horas da fermentação.</span>':'',batAviso=bat?'':'<br><span style="color:var(--red)">Confira os tempos do batimento.</span>';
+  box.innerHTML='<div class="teste-total">Total do teste: '+formatPeso(total)+'</div><div class="teste-diffs"><b>Alterações em relação à '+_escHtml(r.rotulo)+':</b><br>'+dif+fer+batAviso+'</div>';
 }
 function salvarReceitaTeste(){
   const rid=st.testeBase,base=RECEITAS[rid];if(!base){ir('teste-base');return;}
   const v=testeLerValores();for(const c of TESTE_CAMPOS){const n=v[c.k];if(n==null||n<0||!Number.isInteger(n)){alert('Confira '+c.nome+'. Use gramas inteiras, sem valor negativo.');document.getElementById(c.id).focus();return;}}
-  const temp=testeNumero('teste-temp'),horas=testeNumero('teste-horas');if(temp==null||temp<=0){alert('Informe a temperatura da fermentação deste teste.');document.getElementById('teste-temp').focus();return;}if(horas==null||horas<=0){alert('Informe quantas horas de fermentação serão usadas neste teste.');document.getElementById('teste-horas').focus();return;}
+  const temp=testeNumero('teste-temp'),horas=testeNumero('teste-horas'),bat=testeLerBatimento();if(temp==null||temp<=0){alert('Informe a temperatura da fermentação deste teste.');document.getElementById('teste-temp').focus();return;}if(horas==null||horas<=0){alert('Informe quantas horas de fermentação serão usadas neste teste.');document.getElementById('teste-horas').focus();return;}if(!bat){alert('Confira os quatro tempos do batimento deste teste.');return;}
   const farTxt='Bagatelle '+v.bag+' g, Feuilletage '+v.feu+' g, Italiana 00 '+v.ita+' g';
-  const r=montarReceita({nome:'TESTE · '+base.rotulo,rotulo:'TESTE · '+base.rotulo,farinhas:farTxt,fermentoFixo:v.fermento,fermentoHoras:horas,teste:true,baseReceita:rid},v.bag,v.feu,v.ita,{agua:v.agua,acucar:v.acucar,leite:v.leite,sal:v.sal,manteiga:v.manteiga,aprov:v.aprov,semLaminar:v.semLaminar,fermento:v.fermento});
+  const r=montarReceita({nome:'TESTE · '+base.rotulo,rotulo:'TESTE · '+base.rotulo,farinhas:farTxt,fermentoFixo:v.fermento,fermentoHoras:horas,teste:true,baseReceita:rid,batimento:clonarReceita(bat)},v.bag,v.feu,v.ita,{agua:v.agua,acucar:v.acucar,leite:v.leite,sal:v.sal,manteiga:v.manteiga,aprov:v.aprov,semLaminar:v.semLaminar,fermento:v.fermento});
   r.passosLiquidos=r.passosLiquidos.filter(p=>!(p.nome==='Massa laminada'&&Number(p.g)===0));r.passosLiquidos.forEach((p,i)=>p.id=i+1);
   const agora=new Date(),obsTxt=String(document.getElementById('teste-obs').value||'').trim().slice(0,1200),observacoes=obsTxt?[{id:FB.novoId('obs'),em:agora.toLocaleString('pt-BR'),emTs:agora.getTime(),op:getOp(),texto:obsTxt}]:[];
-  st.testeReceita=r;st.testeMeta={id:FB.novoId('teste'),baseReceita:rid,baseNome:base.nome,baseRotulo:base.rotulo,criadoEm:agora.toLocaleString('pt-BR'),criadoTs:agora.getTime(),atualizadoTs:agora.getTime(),criadoPor:getOp(),valores:clonarReceita(v),fermentacao:{temp:Number(temp),fermento_g:v.fermento,horas:Number(horas)},alteracoes:testeAlteracoes(rid,v,temp,horas),observacoes};
+  st.testeReceita=r;st.testeMeta={id:FB.novoId('teste'),baseReceita:rid,baseNome:base.nome,baseRotulo:base.rotulo,criadoEm:agora.toLocaleString('pt-BR'),criadoTs:agora.getTime(),atualizadoTs:agora.getTime(),criadoPor:getOp(),valores:clonarReceita(v),fermentacao:{temp:Number(temp),fermento_g:v.fermento,horas:Number(horas)},batimento:clonarReceita(bat),alteracoes:testeAlteracoes(rid,v,temp,horas,bat),observacoes};
   st.receita='teste';st.temp=Number(temp);st.fermento=v.fermento;st.fermentoHoras=Number(horas);st.subModulo='secos';st.farinhasLotes=null;RECEITA=r.passosSecos;
   const h=document.getElementById('hdr-rec');if(h)h.textContent='Secos · TESTE · '+base.rotulo;abrirLotesFarinha();
 }
@@ -5170,7 +5264,7 @@ window.addEventListener('offline',()=>FB.status('local','Salvo neste aparelho ·
     LS.s('fdo_migr_v248',true);
   }
   // Migra sessões antigas concluídas para o sistema de lotes (uma vez)
-  migrarLotesAntigos(); congelarSnapshotsReceitasLegadas(); aplicarReceitasDefinitivas(); garantirPermissoesV260();
+  migrarLotesAntigos(); congelarSnapshotsReceitasLegadas(); aplicarReceitasDefinitivas(); congelarBatimentoBaldesPendentesV262(); garantirPermissoesV260();
   PESO_BALDE1=getTara();           // aplica a tara configurada
   const op=LS.g('fdo_op','');
   if(op)document.getElementById('inp-op').value=op;

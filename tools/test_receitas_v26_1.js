@@ -3,7 +3,7 @@ const assert=require('assert');
 const html=fs.readFileSync('index.html','utf8');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(m=>m[1]).join('\n');
 function has(x,msg){assert(html.includes(x),msg)}
-has('atualização v26.1','cabeçalho v26.1');
+has('NOVIDADES v26.1','histórico funcional v26.1 preservado');
 has("fdo_receitas_definitivas",'persistência das receitas definitivas');
 has("fdo_receitas_auditoria",'auditoria das receitas');
 has("fdo_v25/receitas_definitivas",'sync granular de receitas');
@@ -32,6 +32,7 @@ const bloco=scripts.slice(ini,fim);
 const program=`
 const __store={};
 const LS={g:(k,d)=>Object.prototype.hasOwnProperty.call(__store,k)?__store[k]:d};
+function batTemposBaseLegado(){return {t1:4,t2:6,t3:3,t4:2};}
 ${bloco}
 const __orig=RECEITAS_ORIGINAIS.r3.passos.reduce((s,p)=>s+(p.g||0),0);
 const __edit=montarReceita({nome:'R3 editada',rotulo:'R3',farinhas:'editada'},3601,0,4400,{agua:3600});
