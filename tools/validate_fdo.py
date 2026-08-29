@@ -10,14 +10,22 @@ errors=[]
 
 def fail(msg): errors.append(msg)
 
-# v26.3 — confiabilidade, diagnóstico e offline real
+# v26.4 — segurança Firebase e históricos append-only
 for marker in (
-    'atualização v26.3',"const GEMINI_MODEL='gemini-3.6-flash'",'function testarAssistenteConfig()',
+    'atualização v26.4','NOVIDADES v26.4:',"imutavel(nome){return nome==='movimentos'||nome==='auditoria';}",
+    'conflitoHistorico=false',"await ref.once('value')","await ref.set(reg)",'Conflito histórico · registro da nuvem preservado',
+    "versao:'26.4'"
+):
+    if marker not in html: fail('v26.4 sem marcador: '+marker)
+
+# v26.3 — confiabilidade, diagnóstico e offline real preservada
+for marker in (
+    'NOVIDADES v26.3:',"const GEMINI_MODEL='gemini-3.6-flash'",'function testarAssistenteConfig()',
     'vendor/firebase-app-compat.js','vendor/firebase-auth-compat.js','vendor/firebase-database-compat.js',
     'function storageFalhou(err,chave)','id="storage-info"','fdo_operadores_inicializados',
     'Cadastro de operadores indisponível','pinFalhasV263','function verificarRelogioServidor()',
     'function registrarEstornoEstoqueLote(lote)','function registrarReaplicacaoEstoqueLote(lote)',
-    "tipo:'estorno_cancelamento'","tipo:'reaplicacao_restauro'","versao:'26.3'"
+    "tipo:'estorno_cancelamento'","tipo:'reaplicacao_restauro'",
 ):
     if marker not in html: fail('v26.3 sem marcador: '+marker)
 if 'gemini-2.0-flash' in html: fail('Gemini 2.0 Flash desativado ainda presente')
@@ -168,6 +176,6 @@ console.log(JSON.stringify({padrao:__padrao,teste:__testeTotal}));
 if errors:
     print('\n'.join('ERRO: '+e for e in errors))
     raise SystemExit(1)
-print('VALIDAÇÃO FDO v26.3 OK')
+print('VALIDAÇÃO FDO v26.4 OK')
 print('Receitas padrão: R1=15464 R2=15690 R3=15544 R4=15564 R5=15714 g')
 print('Receita Teste de referência v25.3: 15448 g')

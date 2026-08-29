@@ -2,7 +2,13 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — atualização v26.3
+       FOLHADOS D'OURO — atualização v26.4
+       NOVIDADES v26.4:
+       • Segurança Firebase: trilhas históricas passam a ser append-only nas Rules.
+       • Auditoria de receitas e movimentos de estoque reconhecem retry idempotente sem regravar o remoto.
+       • Mesmo ID histórico com conteúdo diferente vira conflito e nunca sobrescreve o registro já gravado.
+       • A allowlist de fdo_v25 fecha caminhos não previstos, preservando somente estruturas usadas pelo app.
+       • Nenhuma receita, peso, fermento, tempo, snapshot ou fluxo produtivo foi alterado.
        NOVIDADES v26.3:
        • Confiabilidade: falha de armazenamento local passa a bloquear a operação e avisar claramente.
        • Firebase SDK passa a ser servido localmente e pré-cacheado para boot offline previsível.
@@ -804,7 +810,7 @@
   <div class="cfg-sep"></div>
   <div class="cfg-t" style="font-size:1rem">📱 Este aparelho</div>
   <div class="cfg-s" id="device-info" style="font-size:.68rem;line-height:1.45;word-break:break-all">Identificação Firebase: —</div>
-  <div class="cfg-s" style="font-size:.68rem;line-height:1.45">Versão 26.3 · cache fdo-v26-3 · Firebase SDK local</div>
+  <div class="cfg-s" style="font-size:.68rem;line-height:1.45">Versão 26.4 · cache fdo-v26-4 · Firebase SDK local</div>
   <div class="cfg-s" id="storage-info" style="font-size:.68rem;line-height:1.45">Armazenamento local: verificando…</div>
   <div class="cfg-sep"></div>
   <div class="cfg-t" style="font-size:1rem">💾 Backup</div>
@@ -2001,6 +2007,9 @@ const ESTOQUE_SYNC={
   clone(v){return v==null?v:JSON.parse(JSON.stringify(v));},
   key(id){return String(id||'sem_id').replace(/[.#$\[\]\/]/g,'_');},
   ts(x){return Math.max(Number(x&&x.atualizadoTs)||0,Number(x&&x.emTs)||0,Number(x&&x.criadoTs)||0);},
+  imutavel(nome){return nome==='movimentos'||nome==='auditoria';},
+  canon(v){if(Array.isArray(v))return v.map(x=>this.canon(x));if(v&&typeof v==='object'){const o={};Object.keys(v).sort().forEach(k=>o[k]=this.canon(v[k]));return o;}return v;},
+  igual(a,b){return JSON.stringify(this.canon(a))===JSON.stringify(this.canon(b));},
   list(nome){const d=this.defs[nome];return d?LS.g(d.local,[]):[];},
   save(nome,arr){const d=this.defs[nome];if(!d)return;try{localStorage.setItem(d.local,JSON.stringify(arr))}catch{}},
   upsert(arr,reg){
@@ -2024,14 +2033,29 @@ const ESTOQUE_SYNC={
   async flush(){
     if(this.flushing||!FB.db||!navigator.onLine)return;const o=this.out(),jobs=[];
     Object.keys(this.defs).forEach(nome=>Object.entries(o[nome]||{}).forEach(([id,reg])=>jobs.push([nome,id,reg])));
-    if(!jobs.length)return;this.flushing=true;FB.status('pending','Estoque salvo · sincronizando…');let ok=true;
+    if(!jobs.length)return;this.flushing=true;FB.status('pending','Estoque salvo · sincronizando…');let ok=true,conflitoHistorico=false;
     for(const [nome,id,reg] of jobs){
       try{
-        await FB.db.ref(this.defs[nome].path+'/'+id).transaction(cur=>!cur||this.ts(reg)>=this.ts(cur)?reg:cur,undefined,false);
-        const agora=this.out(),cur=agora[nome]&&agora[nome][id];if(cur&&JSON.stringify(cur)===JSON.stringify(reg))delete agora[nome][id];this.saveOut(agora);
+        const ref=FB.db.ref(this.defs[nome].path+'/'+id);
+        if(this.imutavel(nome)){
+          let remoto=(await ref.once('value')).val();
+          if(remoto==null){
+            try{await ref.set(reg);remoto=reg;}
+            catch(gravaErr){remoto=(await ref.once('value')).val();if(!this.igual(remoto,reg))throw gravaErr;}
+          }
+          if(!this.igual(remoto,reg)){
+            ok=false;conflitoHistorico=true;
+            console.error('[HISTÓRICO] conflito imutável preservado na nuvem',nome,id,{local:reg,remoto});
+            continue;
+          }
+        }else{
+          await ref.transaction(cur=>!cur||this.ts(reg)>=this.ts(cur)?reg:cur,undefined,false);
+        }
+        const agora=this.out(),cur=agora[nome]&&agora[nome][id];if(cur&&this.igual(cur,reg))delete agora[nome][id];this.saveOut(agora);
       }catch(e){ok=false;console.warn('[ESTOQUE] sync',nome,id,e);}
     }
     this.flushing=false;
+    if(conflitoHistorico){FB.status('err','⚠ Conflito histórico · registro da nuvem preservado');return;}
     if(this.pending()&&navigator.onLine){
       if(!ok)FB.status('err','⚠ Estoque salvo aqui · nuvem pendente');
       setTimeout(()=>this.flush(),ok?150:5000);return;
@@ -2800,7 +2824,7 @@ function carregarConfig(){
 }
 function exportarBackup(){
   const chaves=['fdo_lotes','fdo_laminacoes','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25','fdo_estoque_movimentos','fdo_estoque_contagens','fdo_estoque_configuracoes','fdo_receitas_observacoes','fdo_receitas_definitivas','fdo_receitas_auditoria','fdo_estoque_outbox_v26','fdo_estoque_inicio_ts_v26'];
-  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.3',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
+  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.4',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
   chaves.forEach(k=>{ const raw=localStorage.getItem(k); if(raw!==null){ try{dados.dados[k]=JSON.parse(raw);}catch{dados.dados[k]=raw;} } });
   const blob=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
