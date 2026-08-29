@@ -18,7 +18,7 @@ function extractFunction(src,name){
   throw new Error('fim não encontrado: '+name);
 }
 
-has(html,'atualização v26.3','cabeçalho v26.3');
+has(html,'NOVIDADES v26.3:','histórico v26.3 preservado');
 has(html,"const GEMINI_MODEL='gemini-3.6-flash'",'modelo Gemini estável definido em um ponto');
 notHas(html,'gemini-2.0-flash','modelo Gemini desativado removido');
 has(html,"if(!r.ok)throw new Error",'erro HTTP do Gemini tratado');
@@ -91,8 +91,5 @@ sandbox.estoqueReconciliarAjustesCancelamento();
 assert.strictEqual(sandbox.movs.filter(m=>m.tipo==='estorno_cancelamento').length,1,'reconciliação deve reconstruir estorno ausente');
 assert.strictEqual(sandbox.movs.filter(m=>m.tipo==='reaplicacao_restauro').length,1,'reconciliação deve reconstruir reaplicação');
 assert.deepStrictEqual(saldoTotal(sandbox.movs),{farinha:-80,agua:-20},'recuperação completa deve manter somente a baixa do balde ativo');
-
-has(html,'Versão 26.3 · cache fdo-v26-3','diagnóstico exibe versão/cache');
-has(sw,"const CACHE='fdo-v26-3'",'cache v26.3');
 
 console.log('TESTE v26.3 OK · IA + armazenamento + offline + acesso + relógio + estoque reconciliável');
