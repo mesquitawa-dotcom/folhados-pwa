@@ -1,6 +1,6 @@
 // Folhados d'Ouro — Service Worker
 // Versão do cache: incrementada a TODA entrega.
-const CACHE='fdo-v26-4';
+const CACHE='fdo-v26-5';
 const ASSETS=[
   './',
   './index.html',
@@ -8,6 +8,7 @@ const ASSETS=[
   './icon-192.png',
   './icon-512.png',
   './vendor/firebase-app-compat.js',
+  './vendor/firebase-app-check-compat.js',
   './vendor/firebase-auth-compat.js',
   './vendor/firebase-database-compat.js',
 ];

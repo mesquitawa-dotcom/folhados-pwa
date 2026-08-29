@@ -4,7 +4,7 @@ const html=fs.readFileSync('index.html','utf8');
 const sw=fs.readFileSync('sw.js','utf8');
 const rules=JSON.parse(fs.readFileSync('database.rules.json','utf8')).rules;
 function has(src,x,msg){assert(src.includes(x),msg+' · ausente: '+x)}
-has(html,'atualização v26.4','cabeçalho v26.4');
+has(html,'NOVIDADES v26.4:','histórico v26.4 preservado');
 has(html,'NOVIDADES v26.4:','notas v26.4');
 has(html,"imutavel(nome){return nome==='movimentos'||nome==='auditoria';}",'coleções históricas identificadas');
 has(html,"let remoto=(await ref.once('value')).val()",'retry histórico começa lendo o remoto');
@@ -12,9 +12,6 @@ has(html,"try{await ref.set(reg);remoto=reg;}",'registro histórico só tenta cr
 has(html,'this.igual(remoto,reg)','retry compara conteúdo remoto sem regravar');
 has(html,'conflitoHistorico=true','conteúdo divergente vira conflito');
 has(html,'Conflito histórico · registro da nuvem preservado','conflito fica visível e preserva nuvem');
-has(html,"versao:'26.4'",'backup identifica v26.4');
-has(html,'Versão 26.4 · cache fdo-v26-4','Config identifica v26.4');
-has(sw,"const CACHE='fdo-v26-4'",'cache v26.4');
 assert.strictEqual(rules['.read'],false,'raiz deve negar leitura');
 assert.strictEqual(rules['.write'],false,'raiz deve negar gravação');
 assert(!Object.prototype.hasOwnProperty.call(rules.fdo_v25,'.write'),'fdo_v25 não pode ter write amplo');
