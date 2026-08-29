@@ -31,3 +31,7 @@ jobs:
         run: node tools/test_receitas_v26_1.js
       - name: Testar lembrete de estoque e batimento por receita v26.2
         run: node tools/test_v26_2.js
+      - name: Testar confiabilidade e diagnóstico v26.3
+        run: node tools/test_v26_3.js
+      - name: Smoke de boot offline em navegador v26.3
+        run: python3 tools/smoke_v26_3.py
