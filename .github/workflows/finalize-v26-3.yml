@@ -1,0 +1,42 @@
+name: Finalizar v26.3
+
+on:
+  push:
+    branches:
+      - agent/confiabilidade-v26-3
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]' && !contains(github.event.head_commit.message, '[v26.3 finalized]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/confiabilidade-v26-3
+      - name: Aplicar acabamento
+        run: python3 tools/finalize_v26_3.py
+      - name: Validar aplicação, receitas e regressões
+        run: |
+          python3 tools/validate_fdo.py
+          node tools/test_sync_v25_1.js
+          node tools/test_receita_teste_v25_3.js
+          node tools/test_compat_teste_v25_3.js
+          node tools/test_estoque_v26_0.js
+          node tools/test_receitas_v26_1.js
+          node tools/test_v26_2.js
+          node tools/test_v26_3.js
+          python3 tools/smoke_v26_3.py
+      - name: Commitar somente se tudo passou
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "Nenhuma mudança"
+            exit 0
+          fi
+          git commit -m "v26.3 — acabamento de confiabilidade [v26.3 finalized]"
+          git push origin HEAD:agent/confiabilidade-v26-3
