@@ -1,0 +1,52 @@
+name: Aplicar v26.5 App Check
+
+on:
+  push:
+    branches:
+      - agent/app-check-v26-5
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]' && !contains(github.event.head_commit.message, '[v26.5 applied]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/app-check-v26-5
+      - name: Baixar Firebase App Check compat 10.13.2
+        run: |
+          curl -fsSL https://www.gstatic.com/firebasejs/10.13.2/firebase-app-check-compat.js -o vendor/firebase-app-check-compat.js
+          test -s vendor/firebase-app-check-compat.js
+          grep -q 'ReCaptchaEnterpriseProvider' vendor/firebase-app-check-compat.js
+          grep -q '@firebase/app-check-compat' vendor/firebase-app-check-compat.js
+      - name: Aplicar patch cirúrgico v26.5
+        run: python3 tools/apply_v26_5.py
+      - name: Validar PWA, sintaxe, assets e receitas
+        run: python3 tools/validate_fdo.py
+      - name: Executar regressões v25.1 até v26.5
+        run: |
+          node tools/test_sync_v25_1.js
+          node tools/test_receita_teste_v25_3.js
+          node tools/test_compat_teste_v25_3.js
+          node tools/test_estoque_v26_0.js
+          node tools/test_receitas_v26_1.js
+          node tools/test_v26_2.js
+          node tools/test_v26_3.js
+          node tools/test_v26_4.js
+          node tools/test_v26_5.js
+      - name: Smoke de boot offline v26.5
+        run: python3 tools/smoke_v26_5.py
+      - name: Commitar somente código permanente validado
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js vendor/firebase-app-check-compat.js vendor/README.md tools/validate_fdo.py tools/test_v26_4.js tools/test_v26_5.js tools/smoke_v26_5.py
+          if git diff --cached --quiet; then
+            echo "Nenhuma mudança permanente a commitar"
+            exit 0
+          fi
+          git commit -m "v26.5 — App Check Enterprise sem enforcement [v26.5 applied]"
+          git push origin HEAD:agent/app-check-v26-5
