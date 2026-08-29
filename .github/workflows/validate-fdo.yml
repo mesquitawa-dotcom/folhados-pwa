@@ -33,14 +33,16 @@ jobs:
         run: node tools/test_v26_2.js
       - name: Testar confiabilidade e diagnóstico v26.3
         run: node tools/test_v26_3.js
-      - name: Smoke de boot offline em navegador v26.3
-        run: python3 tools/smoke_v26_3.py
+      - name: Testar segurança Firebase v26.4
+        run: node tools/test_v26_4.js
+      - name: Smoke de boot offline em navegador v26.4
+        run: python3 tools/smoke_v26_4.py
 
   firebase-rules:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -50,4 +52,4 @@ jobs:
       - name: Instalar ferramentas de teste das Rules
         run: npm install --no-save --no-package-lock @firebase/rules-unit-testing firebase firebase-tools
       - name: Testar Realtime Database Rules no Emulator Suite
-        run: npx firebase emulators:exec --only database --project demo-fdo-rules "node tools/test_database_rules_v26_3.js"
+        run: npx firebase emulators:exec --only database --project demo-fdo-rules "node tools/test_database_rules_v26_4.js"
