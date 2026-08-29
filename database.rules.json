@@ -34,7 +34,7 @@
     "fdo_acessos": {
       ".read": false,
       "$id": {
-        ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true && ((!data.exists() && newData.exists()) || (data.exists() && newData.exists() && newData.val() === data.val()))"
+        ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true && !data.exists() && newData.exists()"
       }
     },
 
@@ -54,7 +54,7 @@
       "estoque": {
         "movimentos": {
           "$id": {
-            ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true && ((!data.exists() && newData.exists()) || (data.exists() && newData.exists() && newData.val() === data.val()))"
+            ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true && !data.exists() && newData.exists()"
           }
         },
         "contagens": {
@@ -76,7 +76,7 @@
       },
       "receitas_auditoria": {
         "$id": {
-          ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true && ((!data.exists() && newData.exists()) || (data.exists() && newData.exists() && newData.val() === data.val()))"
+          ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true && !data.exists() && newData.exists()"
         }
       },
       "receitas_meta": {
