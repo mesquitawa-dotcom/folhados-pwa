@@ -23,7 +23,7 @@ has(html,'function storageFalhou(err,chave)','falha de armazenamento tratada');
 has(html,"id='storage-fatal-v263'",'falha de armazenamento cria bloqueio visível');
 has(html,'function atualizarStorageInfo()','diagnóstico de armazenamento disponível');
 has(html,"id=\"storage-info\"",'Config mostra saúde do armazenamento');
-has(html,"throw e;}FB.push(k,v);return true",'LS.s não pode fingir sucesso após falha local');
+has(html,"catch(e){storageFalhou(e,k);throw e}FB.push(k,v);return true",'LS.s não pode fingir sucesso após falha local');
 
 has(html,"fdo_operadores_inicializados",'estado de implantação dos operadores preservado');
 has(html,'Cadastro de operadores indisponível','lista vazia após implantação bloqueia produção');
@@ -40,7 +40,7 @@ has(html,'Relógio do aparelho parece incorreto','alerta de relógio incorreto')
 has(html,'function registrarEstornoEstoqueLote(lote)','estorno de baixa por cancelamento');
 has(html,'function registrarReaplicacaoEstoqueLote(lote)','restauração reaplica a baixa quando necessário');
 has(html,'function estoqueReconciliarAjustesCancelamento()','estorno/reaplicação são reconciliáveis');
-has(html,"estoqueAcao:'estornar'",'cancelamento registra decisão de estoque');
+has(html,"estoqueAcao='estornar'",'cancelamento registra decisão de estoque');
 has(html,"tipo:'estorno_cancelamento'",'movimento de estorno é auditável');
 has(html,"tipo:'reaplicacao_restauro'",'movimento de restauração é auditável');
 
