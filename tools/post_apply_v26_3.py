@@ -33,7 +33,13 @@ for req in ('vendor/firebase-app-compat.js','vendor/firebase-auth-compat.js','ve
 
 """
 v=v.replace(needle,checks+needle,1)
+# O cabeçalho principal agora é v26.3; v26.2 permanece como seção histórica.
+v=v.replace("    'atualização v26.2','id=\"inp-est-cont-op\"'","    'NOVIDADES v26.2:','id=\"inp-est-cont-op\"'",1)
 v=v.replace("    'temposProgramados:clonarReceita',\"versao:'26.2'\"\n","    'temposProgramados:clonarReceita'\n",1)
+# storage-fatal-v263 é criado dinamicamente apenas quando há falha real de gravação.
+mid="missing_ids=sorted(used_ids-html_ids)\n"
+if v.count(mid)!=1: raise SystemExit('âncora missing_ids não encontrada')
+v=v.replace(mid,"missing_ids=sorted(used_ids-html_ids)\nmissing_ids=[x for x in missing_ids if x!='storage-fatal-v263']\n",1)
 v=v.replace("print('VALIDAÇÃO FDO v26.2 OK')","print('VALIDAÇÃO FDO v26.3 OK')",1)
 p.write_text(v,encoding='utf-8')
 print('POST PATCH v26.3 aplicado em sw.js + validate_fdo.py')
