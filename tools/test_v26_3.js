@@ -62,15 +62,13 @@ has(html,"registrarEstornoEstoqueLote(lote);registrarReaplicacaoEstoqueLote(lote
 // Simulação contábil do novo fluxo de estoque, isolando as funções reais do app.
 const stockFns=['estoqueMovimentoPorId','registrarEstornoEstoqueLote','registrarReaplicacaoEstoqueLote','estoqueReconciliarAjustesCancelamento']
   .map(n=>extractFunction(html,n)).join('\n');
-const sandbox={
-  movs:[],lotes:[],
-  estoqueMovimentos(){return this.movs;},
-  estoqueTemMovimento(id){return this.movs.some(m=>m&&m.id===id);},
-  ESTOQUE_SYNC:{localPush(nome,reg){assert.strictEqual(nome,'movimentos');sandbox.movs.push(JSON.parse(JSON.stringify(reg)));}},
-  DEVICE:{audit(){return {teste:true};}},getOp(){return 'Teste';},
-  LS:{g(k,d){return k==='fdo_lotes'?sandbox.lotes:d;}},
-  console
-};
+const sandbox={movs:[],lotes:[],console};
+sandbox.estoqueMovimentos=()=>sandbox.movs;
+sandbox.estoqueTemMovimento=id=>sandbox.movs.some(m=>m&&m.id===id);
+sandbox.ESTOQUE_SYNC={localPush(nome,reg){assert.strictEqual(nome,'movimentos');sandbox.movs.push(JSON.parse(JSON.stringify(reg)));}};
+sandbox.DEVICE={audit(){return {teste:true};}};
+sandbox.getOp=()=> 'Teste';
+sandbox.LS={g(k,d){return k==='fdo_lotes'?sandbox.lotes:d;}};
 vm.createContext(sandbox);vm.runInContext(stockFns,sandbox);
 function saldoTotal(movs){const out={};for(const m of movs)for(const [k,v] of Object.entries(m.itens||{}))out[k]=(out[k]||0)+(Number(v)||0);return out;}
 
