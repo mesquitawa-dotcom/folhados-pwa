@@ -18,6 +18,7 @@ jobs:
           ref: agent/confiabilidade-v26-3
       - name: Aplicar patch cirúrgico
         run: |
+          python3 tools/repair_apply_v26_3.py
           python3 tools/apply_v26_3.py
           python3 tools/post_apply_v26_3.py
       - name: Validar aplicação e receitas
