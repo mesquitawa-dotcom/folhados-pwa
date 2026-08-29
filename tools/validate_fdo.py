@@ -10,13 +10,28 @@ errors=[]
 
 def fail(msg): errors.append(msg)
 
+# v26.3 — confiabilidade, diagnóstico e offline real
+for marker in (
+    'atualização v26.3',"const GEMINI_MODEL='gemini-3.6-flash'",'function testarAssistenteConfig()',
+    'vendor/firebase-app-compat.js','vendor/firebase-auth-compat.js','vendor/firebase-database-compat.js',
+    'function storageFalhou(err,chave)','id="storage-info"','fdo_operadores_inicializados',
+    'Cadastro de operadores indisponível','pinFalhasV263','function verificarRelogioServidor()',
+    'function registrarEstornoEstoqueLote(lote)','function registrarReaplicacaoEstoqueLote(lote)',
+    "tipo:'estorno_cancelamento'","tipo:'reaplicacao_restauro'","versao:'26.3'"
+):
+    if marker not in html: fail('v26.3 sem marcador: '+marker)
+if 'gemini-2.0-flash' in html: fail('Gemini 2.0 Flash desativado ainda presente')
+if 'www.gstatic.com/firebasejs/10.13.2/' in html: fail('Firebase ainda depende do CDN no boot')
+for req in ('vendor/firebase-app-compat.js','vendor/firebase-auth-compat.js','vendor/firebase-database-compat.js'):
+    if not (ROOT/req).exists(): fail('Firebase local ausente: '+req)
+
 # v26.2 — lembrete de estoque + batimento por receita
 for marker in (
-    'atualização v26.2','id="inp-est-cont-op"','id="inp-est-cont-dia"','id="estoque-lembrete-bg"',
+    'NOVIDADES v26.2:','id="inp-est-cont-op"','id="inp-est-cont-dia"','id="estoque-lembrete-bg"',
     'function estoqueChecarLembreteContagem()','fdo_estoque_configuracoes','fdo_v25/estoque/configuracoes',
     'id="receita-edit-batimento"','function batTemposReceita(r)','function batTemposDoLote(l)',
     'function congelarBatimentoBaldesPendentesV262()','function migrarBatimentoReceitasV262()',
-    'temposProgramados:clonarReceita',"versao:'26.2'"
+    'temposProgramados:clonarReceita'
 ):
     if marker not in html: fail('v26.2 sem marcador: '+marker)
 if 'id="inp-bt1"' in html or 'id="inp-bt2"' in html or 'id="inp-bt3"' in html or 'id="inp-bt4"' in html:
@@ -93,6 +108,7 @@ if missing: fail('Handlers onclick sem função declarada: '+', '.join(missing))
 html_ids=set(re.findall(r'\bid="([^"]+)"',html))
 used_ids=set(re.findall(r'getElementById\([\'\"]([^\'\"]+)[\'\"]\)',inline))
 missing_ids=sorted(used_ids-html_ids)
+missing_ids=[x for x in missing_ids if x!='storage-fatal-v263']
 if missing_ids: fail('IDs usados no JS e ausentes no HTML: '+', '.join(missing_ids))
 
 # 4) PWA: manifest e assets locais
@@ -152,6 +168,6 @@ console.log(JSON.stringify({padrao:__padrao,teste:__testeTotal}));
 if errors:
     print('\n'.join('ERRO: '+e for e in errors))
     raise SystemExit(1)
-print('VALIDAÇÃO FDO v26.2 OK')
+print('VALIDAÇÃO FDO v26.3 OK')
 print('Receitas padrão: R1=15464 R2=15690 R3=15544 R4=15564 R5=15714 g')
 print('Receita Teste de referência v25.3: 15448 g')

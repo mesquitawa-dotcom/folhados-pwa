@@ -2,7 +2,15 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — atualização v26.2
+       FOLHADOS D'OURO — atualização v26.3
+       NOVIDADES v26.3:
+       • Confiabilidade: falha de armazenamento local passa a bloquear a operação e avisar claramente.
+       • Firebase SDK passa a ser servido localmente e pré-cacheado para boot offline previsível.
+       • Assistente migra do Gemini 2.0 Flash desativado para Gemini 3.6 Flash estável, com erro visível e teste em Config.
+       • Após operadores já terem sido implantados, lista vazia não libera mais o app sem login (fail-closed).
+       • PIN recebe limitação temporária após tentativas repetidas; relógio do aparelho é conferido contra o servidor.
+       • Cancelamento de balde distingue insumo realmente usado de lançamento por engano, com estorno/reaplicação auditáveis.
+       • Nenhum peso, total, fermento, tempo de receita ou snapshot histórico foi alterado.
        NOVIDADES v26.2:
        • Lembrete de conferência de estoque por operador e dia da semana configuráveis.
        • O responsável recebe pop-up no dia programado; conferência já registrada no dia não volta a ser cobrada.
@@ -730,9 +738,9 @@
 
   </style>
   <!-- Firebase Realtime Database (compat, namespaced) — CDN, sem build -->
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
+  <script src="vendor/firebase-app-compat.js"></script>
+  <script src="vendor/firebase-auth-compat.js"></script>
+  <script src="vendor/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -755,6 +763,8 @@
   <div class="cfg-s">Acesse <strong style="color:var(--gl)">aistudio.google.com</strong><br>
     → Get API key → Create API key</div>
   <input id="inp-key" class="inp" type="password" placeholder="AIza..." autocomplete="off">
+  <button class="link-btn" id="btn-testar-ia" style="width:100%;text-align:center;margin-top:-.2rem;margin-bottom:.4rem" onclick="testarAssistenteConfig()">Testar Assistente</button>
+  <div class="cfg-s" id="ai-test-status" style="font-size:.68rem;line-height:1.4;margin-top:-.15rem"></div>
   <div class="cfg-s" style="font-size:.75rem;margin-top:-.2rem">Operador padrão (legado, opcional):</div>
   <input id="inp-op" class="inp" type="text" placeholder="Wagner">
   <div class="cfg-sep"></div>
@@ -794,6 +804,8 @@
   <div class="cfg-sep"></div>
   <div class="cfg-t" style="font-size:1rem">📱 Este aparelho</div>
   <div class="cfg-s" id="device-info" style="font-size:.68rem;line-height:1.45;word-break:break-all">Identificação Firebase: —</div>
+  <div class="cfg-s" style="font-size:.68rem;line-height:1.45">Versão 26.3 · cache fdo-v26-3 · Firebase SDK local</div>
+  <div class="cfg-s" id="storage-info" style="font-size:.68rem;line-height:1.45">Armazenamento local: verificando…</div>
   <div class="cfg-sep"></div>
   <div class="cfg-t" style="font-size:1rem">💾 Backup</div>
   <div class="cfg-s" style="font-size:.72rem;line-height:1.45">Exporta uma cópia dos dados de produção deste aparelho para recuperação e auditoria.</div>
@@ -2064,13 +2076,33 @@ function registrarSaidaEstoqueLote(lote){
   const ts=Number(lote.criadoTs)||Date.now(),reg={id,tipo:'saida_receita',em:lote.criado||new Date(ts).toLocaleString('pt-BR'),emTs:ts,op:(porcInfo(lote).op||getOp()),loteId:lote.id,loteNum:lote.num,receita:lote.receita,receitaNome:lote.receitaNome||lote.rotulo||'',itens,dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null)};
   ESTOQUE_SYNC.localPush('movimentos',reg);return true;
 }
+function estoqueMovimentoPorId(id){return estoqueMovimentos().find(m=>m&&m.id===id)||null;}
+function registrarEstornoEstoqueLote(lote){
+  if(!lote||!lote.id||!lote.cancelado)return false;const cts=Number(lote.cancelado.emTs)||0;if(!cts)return false;
+  const id='estorno_saida_'+lote.id+'_'+cts;if(estoqueTemMovimento(id))return false;
+  const saida=estoqueMovimentoPorId('saida_receita_'+lote.id);if(!saida)return false;const itens={};
+  Object.entries(saida.itens||{}).forEach(([k,v])=>{const n=Number(v)||0;if(n)itens[k]=-n;});if(!Object.keys(itens).length)return false;
+  const reg={id,tipo:'estorno_cancelamento',em:new Date(cts).toLocaleString('pt-BR'),emTs:cts+1,atualizadoTs:cts+1,op:(lote.cancelado.op||getOp()),loteId:lote.id,loteNum:lote.num,receita:lote.receita,receitaNome:lote.receitaNome||lote.rotulo||'',itens,observacao:'Balde cancelado como lançamento por engano; insumos não utilizados.',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null)};
+  ESTOQUE_SYNC.localPush('movimentos',reg);return true;
+}
+function registrarReaplicacaoEstoqueLote(lote){
+  if(!lote||!lote.id||!lote.restaurado)return false;const rts=Number(lote.restaurado.emTs)||0;if(!rts)return false;
+  const id='reaplica_saida_'+lote.id+'_'+rts;if(estoqueTemMovimento(id))return false;
+  const saida=estoqueMovimentoPorId('saida_receita_'+lote.id);if(!saida)return false;const itens={};
+  Object.entries(saida.itens||{}).forEach(([k,v])=>{const n=Number(v)||0;if(n)itens[k]=n;});if(!Object.keys(itens).length)return false;
+  const reg={id,tipo:'reaplicacao_restauro',em:new Date(rts).toLocaleString('pt-BR'),emTs:rts+1,atualizadoTs:rts+1,op:(lote.restaurado.op||getOp()),loteId:lote.id,loteNum:lote.num,receita:lote.receita,receitaNome:lote.receitaNome||lote.rotulo||'',itens,observacao:'Balde restaurado; baixa de insumos reaplicada.',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null)};
+  ESTOQUE_SYNC.localPush('movimentos',reg);return true;
+}
+function estoqueReconciliarAjustesCancelamento(){
+  let n=0;LS.g('fdo_lotes',[]).forEach(l=>{if(!l||!l.cancelado||l.cancelado.estoqueAcao!=='estornar')return;const c=Number(l.cancelado.emTs)||0,r=Number(l.restaurado&&l.restaurado.emTs)||0;if(r>c){if(registrarReaplicacaoEstoqueLote(l))n++;}else if(registrarEstornoEstoqueLote(l))n++;});return n;
+}
 let estoqueReconciliando=false;
 function estoqueReconciliarSaidasLotes(){
   if(estoqueReconciliando)return 0;
   const inicio=Number(ESTOQUE_SYNC.inicioTs||LS.g('fdo_estoque_inicio_ts_v26',0))||0;if(!inicio)return 0;
   estoqueReconciliando=true;
   try{
-    let n=0;LS.g('fdo_lotes',[]).forEach(l=>{if(l&&Number(l.criadoTs)>=inicio&&registrarSaidaEstoqueLote(l))n++;});return n;
+    let n=0;LS.g('fdo_lotes',[]).forEach(l=>{if(l&&Number(l.criadoTs)>=inicio&&registrarSaidaEstoqueLote(l))n++;});n+=estoqueReconciliarAjustesCancelamento();return n;
   }finally{estoqueReconciliando=false;}
 }
 function estoqueSaldos(){
@@ -2134,7 +2166,7 @@ function renderEstoqueMovimentos(){
   if(!mov.length){el.innerHTML='<div class="est-vazio">Nenhuma entrada ou saída registrada.</div>';return;}
   el.innerHTML=mov.map(m=>{
     const itens=Object.entries(m.itens||{}).map(([id,v])=>{const it=estoqueItem(id);return '<div><b>'+_escHtml(it?it.nome:id)+':</b> '+((Number(v)||0)>0?'+':'')+estoqueFmt(id,v)+'</div>';}).join('');
-    const tit=m.tipo==='entrada'?'Entrada recebida':('Saída automática · Balde #'+(m.loteNum||'—'));
+    const tit=m.tipo==='entrada'?'Entrada recebida':m.tipo==='estorno_cancelamento'?('Estorno · Balde #'+(m.loteNum||'—')):m.tipo==='reaplicacao_restauro'?('Saída reaplicada · Balde #'+(m.loteNum||'—')):('Saída automática · Balde #'+(m.loteNum||'—'));
     return `<div class="est-mov"><div class="est-mov-title">${_escHtml(tit)}</div><div class="est-mov-meta">${_escHtml(m.em||'')} · ${_escHtml(m.op||'—')}${m.receitaNome?' · '+_escHtml(m.receitaNome):''}</div><div class="est-mov-itens">${itens}</div>${m.observacao?'<div class="est-mov-obs">'+_escHtml(m.observacao)+'</div>':''}</div>`;
   }).join('');
 }
@@ -2185,7 +2217,34 @@ let bypassGeoSessao=false;
 // Cobre o caso "limpou cache mas nuvem tem operadores" — sem isso, o app
 // fica preso em s-start com módulos ocultos por aplicarPermsStart.
 let _bootPendenteOperadores=false;
-const LS={g:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch{return d}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{} FB.push(k,v);}};
+let _storageFalhaMostrada=false;
+function storageFalhou(err,chave){
+  console.error('[STORAGE] falha ao gravar',chave,err);
+  if(_storageFalhaMostrada)return;_storageFalhaMostrada=true;
+  setTimeout(()=>{
+    if(document.getElementById('storage-fatal-v263'))return;
+    const bg=document.createElement('div');bg.id='storage-fatal-v263';
+    bg.style.cssText='position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,.94);display:flex;align-items:center;justify-content:center;padding:1rem';
+    const card=document.createElement('div');card.style.cssText='width:min(100%,22rem);background:#1a1305;border:2px solid #f87171;border-radius:.7rem;padding:1.1rem;color:#f0e6c8;font-family:Georgia,serif;text-align:center;line-height:1.45';
+    card.innerHTML='<div style="font-size:2rem">⚠️</div><div style="font-size:1.05rem;color:#f87171;font-weight:bold;margin:.35rem 0">Falha ao salvar neste aparelho</div><div style="font-size:.78rem">A operação foi interrompida para evitar perda silenciosa de dados. Não continue a produção neste aparelho. Feche e abra o PWA novamente; se o aviso voltar, use outro aparelho e avise a gerência.</div><button style="margin-top:.8rem;width:100%;min-height:2.6rem;background:#c9973a;border:0;border-radius:.4rem;font-family:Georgia,serif;font-weight:bold;font-size:.8rem" onclick="location.reload()">Recarregar aplicativo</button>';
+    bg.appendChild(card);document.body.appendChild(bg);
+  },0);
+}
+try{
+  const _storageSetItemNativo=Storage.prototype.setItem;
+  Storage.prototype.setItem=function(k,v){try{return _storageSetItemNativo.call(this,k,v)}catch(e){storageFalhou(e,k);throw e}};
+}catch(e){console.warn('[STORAGE] proteção global indisponível',e)}
+async function atualizarStorageInfo(){
+  const el=document.getElementById('storage-info');if(!el)return;
+  try{
+    const est=navigator.storage&&navigator.storage.estimate?await navigator.storage.estimate():null;
+    if(!est||!Number(est.quota)){el.textContent='Armazenamento local: disponível · medição não suportada';return;}
+    const used=Number(est.usage)||0,quota=Number(est.quota)||0,pct=quota?(used/quota*100):0;
+    el.textContent='Armazenamento local: '+(used/1048576).toFixed(1)+' MB de '+(quota/1048576).toFixed(0)+' MB · '+pct.toFixed(1)+'%'+(pct>=80?' · ATENÇÃO':' · OK');
+    el.style.color=pct>=80?'var(--red)':'var(--mut)';
+  }catch(e){el.textContent='Armazenamento local: diagnóstico indisponível';}
+}
+const LS={g:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch{return d}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){storageFalhou(e,k);throw e}FB.push(k,v);return true;}};
 // ===== Firebase Realtime Database (sincronia multi-aparelho) ============
 // • Fonte de verdade local: localStorage (leitura instantânea, offline-first).
 // • Espelho remoto: Realtime Database. LS.s grava no local E empurra para o FB.
@@ -2208,6 +2267,21 @@ const FB_CFG={
 // Identidade do APARELHO é separada da identidade do PADEIRO.
 // O padeiro continua escolhendo nome + PIN. O Firebase Auth apenas impede que
 // navegadores/aparelhos não cadastrados leiam ou alterem a nuvem.
+let _relogioAvisadoV263=false;
+function verificarRelogioServidor(){
+  if(!FB.db)return;
+  try{
+    FB.db.ref('.info/serverTimeOffset').once('value').then(snap=>{
+      const off=Number(snap.val())||0;
+      if(Math.abs(off)>5*60*1000&&!_relogioAvisadoV263){
+        _relogioAvisadoV263=true;
+        const min=Math.round(Math.abs(off)/60000);
+        alert('⚠️ Relógio do aparelho parece incorreto ('+min+' min de diferença). Ative Data e hora automáticas no Android antes de registrar novas produções.');
+      }
+    }).catch(()=>{});
+  }catch(e){}
+}
+
 const DEVICE={
   auth:null, uid:null, registro:null, aprovado:false, localOnly:false,
   iniciado:false, cloudStarted:false, bootLiberado:false, bootCb:null, ref:null,
@@ -2250,7 +2324,7 @@ const DEVICE={
     this.bootCb=cb||this.bootCb;if(this.iniciado)return;this.iniciado=true;
     if(typeof firebase==='undefined'||!firebase.initializeApp||!firebase.auth){this.mostrar('O módulo Firebase Authentication não carregou. Recarregue o aplicativo.','Firebase Authentication indisponível');return}
     try{
-      if(!firebase.apps.length)firebase.initializeApp(FB_CFG);FB.db=firebase.database();this.auth=firebase.auth();
+      if(!firebase.apps.length)firebase.initializeApp(FB_CFG);FB.db=firebase.database();this.auth=firebase.auth();verificarRelogioServidor();
       try{await this.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)}catch(e){}
       let user=await this.usuarioRestaurado();
       if(!user&&navigator.onLine){const cred=await this.auth.signInAnonymously();user=cred.user||this.auth.currentUser}
@@ -2412,7 +2486,7 @@ const OP_CORES=['#c9973a','#4ade80','#60a5fa','#f87171','#c084fc','#fbbf24'];
 function OP_permsDefault(){ const p={}; OP_PERMS_MOD.forEach(x=>p[x.k]=true); OP_PERMS_ESP.forEach(x=>p[x.k]=false); return p; }
 
 const OP={
-  lista(){ return LS.g('fdo_operadores',[]); },
+  lista(){ const arr=LS.g('fdo_operadores',[]);if(Array.isArray(arr)&&arr.length){try{localStorage.setItem('fdo_operadores_inicializados',JSON.stringify(true))}catch(e){storageFalhou(e,'fdo_operadores_inicializados')}}return arr; },
   setLista(arr){ LS.s('fdo_operadores',arr); },
   porId(id){ return OP.lista().find(o=>o.id===id)||null; },
   atual(){ const id=LS.g('fdo_op_atual',null); if(!id)return null; const o=OP.porId(id); return (o&&o.ativo)?o:null; },
@@ -2706,6 +2780,7 @@ function estoqueLembreteAgora(){estoqueLembreteFechar();abrirEstoqueContagem();}
 function estoqueLembreteDepois(){const op=OP.atual(),hoje=estoqueHojeISO();try{if(op)sessionStorage.setItem(estoqueLembreteChave(hoje,op.id),'depois');}catch(e){}estoqueLembreteFechar();}
 
 function carregarConfig(){
+  atualizarStorageInfo();
   const k=getKey(); if(k)document.getElementById('inp-key').value=k;
   const op=LS.g('fdo_op',''); if(op)document.getElementById('inp-op').value=op;
   document.getElementById('inp-pin').value=getPin();
@@ -2725,7 +2800,7 @@ function carregarConfig(){
 }
 function exportarBackup(){
   const chaves=['fdo_lotes','fdo_laminacoes','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25','fdo_estoque_movimentos','fdo_estoque_contagens','fdo_estoque_configuracoes','fdo_receitas_observacoes','fdo_receitas_definitivas','fdo_receitas_auditoria','fdo_estoque_outbox_v26','fdo_estoque_inicio_ts_v26'];
-  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.2',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
+  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.3',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
   chaves.forEach(k=>{ const raw=localStorage.getItem(k); if(raw!==null){ try{dados.dados[k]=JSON.parse(raw);}catch{dados.dados[k]=raw;} } });
   const blob=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
@@ -2833,16 +2908,25 @@ function pinDigito(d){
 }
 function pinApagar(){ st.pinBuf=st.pinBuf.slice(0,-1); atualizarPinDots(); document.getElementById('pin-err').textContent=''; }
 function pinLimpar(){ st.pinBuf=''; atualizarPinDots(); document.getElementById('pin-err').textContent=''; }
+let pinFalhasV263=0,pinBloqAteV263=0;
 function verificarPin(){
+  const agora=Date.now();
+  if(agora<pinBloqAteV263){
+    st.pinBuf='';atualizarPinDots();
+    document.getElementById('pin-err').textContent='Muitas tentativas. Aguarde '+Math.ceil((pinBloqAteV263-agora)/1000)+' s.';
+    return;
+  }
   if(st.pinBuf===pinEsperado()){
+    pinFalhasV263=0;pinBloqAteV263=0;
     // Só o acesso à produção fica desbloqueado pela sessão; o Config e o
     // login de operador pedem senha sempre.
     if(st.pinTipo==='producao') sessaoDesbloqueada=true;
     const fn=st.pinAlvo; st.pinAlvo=null; st.pinBuf='';
     if(typeof fn==='function') fn(); else ir('start');
   }else{
-    st.pinBuf=''; atualizarPinDots();
-    document.getElementById('pin-err').textContent='Senha incorreta. Tente de novo.';
+    pinFalhasV263++;st.pinBuf=''; atualizarPinDots();
+    if(pinFalhasV263>=5){pinFalhasV263=0;pinBloqAteV263=Date.now()+30000;document.getElementById('pin-err').textContent='Muitas tentativas. Aguarde 30 s.';}
+    else document.getElementById('pin-err').textContent='Senha incorreta. Tente de novo.';
     const w=document.getElementById('pin-wrap');
     w.classList.remove('err'); void w.offsetWidth; w.classList.add('err');
   }
@@ -3140,15 +3224,28 @@ async function criarLoteSecos(){
 
 function loteAtivo(l){if(!l)return false;const c=Number(l.cancelado&&l.cancelado.emTs)||0,r=Number(l.restaurado&&l.restaurado.emTs)||0;return !c||r>c;}
 function apagarLote(id){
-  if(!OP.pode('apagar')){alert('Você não tem permissão para cancelar baldes.\nPeça ao administrador.');return;}
+  if(!OP.pode('apagar')){alert('Você não tem permissão para cancelar baldes.\
+Peça ao administrador.');return;}
   const todos=LS.g('fdo_lotes',[]),lote=todos.find(l=>l.id===id);if(!lote||!loteAtivo(lote))return;
-  if(!confirm(`Cancelar o Balde #${lote.num}?\n\nEle sai das etapas de produção, mas permanece no histórico e pode ser restaurado.`))return;
-  lote.cancelado={em:new Date().toLocaleString('pt-BR'),emTs:Date.now(),op:getOp()};LS.s('fdo_lotes',todos);renderHist();
+  if(!confirm(`Cancelar o Balde #${lote.num}?\
+\
+Ele sai das etapas de produção, mas permanece no histórico e pode ser restaurado.`))return;
+  let estoqueAcao='manter';
+  if(estoqueTemMovimento('saida_receita_'+lote.id)){
+    const usados=confirm(`ESTOQUE DO BALDE #${lote.num}\
+\
+Os ingredientes deste balde chegaram a ser utilizados?\
+\
+OK = SIM · manter a baixa no estoque\
+Cancelar = NÃO · foi lançamento por engano e a baixa será estornada`);
+    if(!usados){if(!confirm('Confirmar que os ingredientes NÃO foram utilizados e que a baixa deve ser estornada?'))return;estoqueAcao='estornar';}
+  }
+  lote.cancelado={em:new Date().toLocaleString('pt-BR'),emTs:Date.now(),op:getOp(),estoqueAcao};LS.s('fdo_lotes',todos);if(estoqueAcao==='estornar')registrarEstornoEstoqueLote(lote);renderHist();
 }
 function restaurarLote(id){
   if(!OP.pode('apagar'))return;const todos=LS.g('fdo_lotes',[]),lote=todos.find(l=>l.id===id);if(!lote||loteAtivo(lote))return;
   if(!confirm(`Restaurar o Balde #${lote.num} para a produção?`))return;
-  lote.restaurado={em:new Date().toLocaleString('pt-BR'),emTs:Date.now(),op:getOp()};LS.s('fdo_lotes',todos);renderHist();
+  const reaplicar=!!(lote.cancelado&&lote.cancelado.estoqueAcao==='estornar');lote.restaurado={em:new Date().toLocaleString('pt-BR'),emTs:Date.now(),op:getOp(),estoqueReaplicar:reaplicar};LS.s('fdo_lotes',todos);if(reaplicar)registrarReaplicacaoEstoqueLote(lote);renderHist();
 }
 
 // Migra sessões antigas concluídas (fdo_sess) para lotes — só uma vez
@@ -4544,18 +4641,32 @@ function processarComando(txt,alt){
   if(txt.length>5)perguntarGemini(txt);
 }
 
+const GEMINI_MODEL='gemini-3.6-flash';
 async function perguntarGemini(pergunta){
   const key=getKey();if(!key)return;
   const p=RECEITA[st.step];
-  const ctx=`Passo atual ${p.id}, ${p.grupo}, ${p.nome} ${p.qty}.\nPergunta: "${pergunta}"`;
+  const ctx=`Passo atual ${p.id}, ${p.grupo}, ${p.nome} ${p.qty}.\
+Pergunta: "${pergunta}"`;
   try{
     setDot('off','Consultando...');
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system_instruction:{parts:[{text:montarSystem()}]},contents:[{role:'user',parts:[{text:ctx}]}],generationConfig:{maxOutputTokens:150,temperature:0.3}})});
-    const data=await r.json();
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system_instruction:{parts:[{text:montarSystem()}]},contents:[{role:'user',parts:[{text:ctx}]}],generationConfig:{maxOutputTokens:150}})});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error((data&&data.error&&data.error.message)||('HTTP '+r.status));
     const resp=data?.candidates?.[0]?.content?.parts?.[0]?.text||'';
     setDot('on','Ouvindo');
-    if(resp){mostrarAI(resp);falar(resp);}
-  }catch(err){setDot('on','Ouvindo');}
+    if(resp){mostrarAI(resp);falar(resp);}else mostrarAI('Assistente não retornou uma resposta. A produção continua normalmente.');
+  }catch(err){console.warn('[IA] indisponível',err);setDot('on','Ouvindo · IA indisponível');mostrarAI('Assistente indisponível agora. A produção continua normalmente.');}
+}
+async function testarAssistenteConfig(){
+  const out=document.getElementById('ai-test-status'),btn=document.getElementById('btn-testar-ia'),key=String(document.getElementById('inp-key').value||'').trim();
+  if(!out||!btn)return;if(!key){out.style.color='var(--red)';out.textContent='Informe a chave Gemini para testar.';return;}
+  btn.disabled=true;out.style.color='var(--mut)';out.textContent='Testando '+GEMINI_MODEL+'…';
+  try{
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{role:'user',parts:[{text:'Responda somente OK'}]}],generationConfig:{maxOutputTokens:10}})});
+    const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error((data&&data.error&&data.error.message)||('HTTP '+r.status));
+    out.style.color='var(--grn)';out.textContent='✓ Assistente conectado · '+GEMINI_MODEL;
+  }catch(e){out.style.color='var(--red)';out.textContent='⚠ Não foi possível acessar o Assistente. Confira internet e chave API.';}
+  finally{btn.disabled=false;}
 }
 
 function falar(texto){
@@ -5229,6 +5340,11 @@ function destinoBoot(){
   // não chegou. Marca flag e dá 10s pro Firebase responder; se chegar com
   // operadores, o FB.repaint() redireciona pra tela de login.
   if(!OP.lista().length){
+    if(LS.g('fdo_operadores_inicializados',false)===true){
+      const msg='O cadastro de operadores já existia neste aparelho, mas está indisponível. Conecte à internet e toque em “Verificar autorização”. A produção foi bloqueada para evitar acesso sem login.';
+      if(typeof DEVICE!=='undefined'&&DEVICE.mostrar)DEVICE.mostrar(msg,'Cadastro de operadores indisponível');else alert(msg);
+      return;
+    }
     _bootPendenteOperadores=true;
     setTimeout(()=>{ _bootPendenteOperadores=false; }, 10000);
     ir('start');
