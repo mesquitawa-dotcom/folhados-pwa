@@ -28,6 +28,7 @@ jobs:
           python3 tools/repair_apply_v26_4.py
           python3 tools/repair_retry_v26_4.py
           python3 tools/apply_v26_4.py
+          python3 tools/post_retry_v26_4.py
       - name: Validar PWA, sintaxe, assets e receitas
         run: python3 tools/validate_fdo.py
       - name: Executar regressões v25.1 até v26.4
