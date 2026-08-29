@@ -26,6 +26,7 @@ jobs:
       - name: Aplicar patch cirúrgico v26.4
         run: |
           python3 tools/repair_apply_v26_4.py
+          python3 tools/repair_retry_v26_4.py
           python3 tools/apply_v26_4.py
       - name: Validar PWA, sintaxe, assets e receitas
         run: python3 tools/validate_fdo.py
