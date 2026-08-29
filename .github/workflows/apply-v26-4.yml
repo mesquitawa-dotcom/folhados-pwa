@@ -24,7 +24,9 @@ jobs:
         with:
           node-version: '22'
       - name: Aplicar patch cirúrgico v26.4
-        run: python3 tools/apply_v26_4.py
+        run: |
+          python3 tools/repair_apply_v26_4.py
+          python3 tools/apply_v26_4.py
       - name: Validar PWA, sintaxe, assets e receitas
         run: python3 tools/validate_fdo.py
       - name: Executar regressões v25.1 até v26.4
