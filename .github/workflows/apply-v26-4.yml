@@ -47,13 +47,16 @@ jobs:
         run: npx firebase emulators:exec --only database --project demo-fdo-rules "node tools/test_database_rules_v26_4.js"
       - name: Smoke de boot offline v26.4
         run: python3 tools/smoke_v26_4.py
-      - name: Commitar somente se tudo passou
+      - name: Commitar somente arquivos permanentes validados
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
+          git add index.html sw.js database.rules.json .github/workflows/validate-fdo.yml tools/validate_fdo.py tools/test_v26_3.js tools/test_v26_4.js tools/smoke_v26_4.py tools/test_database_rules_v26_4.js
+          if git ls-files --error-unmatch tools/test_database_rules_v26_3.js >/dev/null 2>&1; then
+            git add -u tools/test_database_rules_v26_3.js
+          fi
           if git diff --cached --quiet; then
-            echo "Nenhuma mudança a commitar"
+            echo "Nenhuma mudança permanente a commitar"
             exit 0
           fi
           git commit -m "v26.4 — segurança Firebase e históricos append-only [v26.4 applied]"
