@@ -2,7 +2,13 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — atualização v26.4
+       FOLHADOS D'OURO — atualização v26.5
+       NOVIDADES v26.5:
+       • Firebase App Check com reCAPTCHA Enterprise integrado ao cliente, sem enforcement nesta versão.
+       • Tokens App Check são renovados automaticamente quando o aparelho está online.
+       • Configurações passa a mostrar diagnóstico do token App Check para validação antes do enforcement.
+       • SDK App Check compat 10.13.2 é servido localmente e pré-cacheado, preservando o boot offline.
+       • Nenhuma receita, peso, fermento, tempo, snapshot ou fluxo produtivo foi alterado.
        NOVIDADES v26.4:
        • Segurança Firebase: trilhas históricas passam a ser append-only nas Rules.
        • Auditoria de receitas e movimentos de estoque reconhecem retry idempotente sem regravar o remoto.
@@ -745,6 +751,7 @@
   </style>
   <!-- Firebase Realtime Database (compat, namespaced) — SDK local, sem build -->
   <script src="vendor/firebase-app-compat.js"></script>
+  <script src="vendor/firebase-app-check-compat.js"></script>
   <script src="vendor/firebase-auth-compat.js"></script>
   <script src="vendor/firebase-database-compat.js"></script>
 </head>
@@ -810,7 +817,8 @@
   <div class="cfg-sep"></div>
   <div class="cfg-t" style="font-size:1rem">📱 Este aparelho</div>
   <div class="cfg-s" id="device-info" style="font-size:.68rem;line-height:1.45;word-break:break-all">Identificação Firebase: —</div>
-  <div class="cfg-s" style="font-size:.68rem;line-height:1.45">Versão 26.4 · cache fdo-v26-4 · Firebase SDK local</div>
+  <div class="cfg-s" style="font-size:.68rem;line-height:1.45">Versão 26.5 · cache fdo-v26-5 · Firebase SDK local · App Check</div>
+  <div class="cfg-s" id="appcheck-info" style="font-size:.68rem;line-height:1.45">App Check: verificando…</div>
   <div class="cfg-s" id="storage-info" style="font-size:.68rem;line-height:1.45">Armazenamento local: verificando…</div>
   <div class="cfg-sep"></div>
   <div class="cfg-t" style="font-size:1rem">💾 Backup</div>
@@ -2287,6 +2295,37 @@ const FB_CFG={
   messagingSenderId:"904726497964",
   appId:"1:904726497964:web:03b4b9111ff0ff2580ed09"
 };
+
+// ===== Firebase App Check — v26.5 ==========================================
+// reCAPTCHA Enterprise score-based. A site key é pública por definição.
+// Nesta versão o cliente só envia tokens; enforcement continua DESATIVADO no console.
+const APP_CHECK_SITE_KEY='6LcPFJ8tAAAAAFk2yg6aQ5Qi0NNMERW220URnH2A';
+const APP_CHECK={
+  iniciado:false,ok:false,erro:'',
+  init(){
+    if(this.iniciado)return this.ok;
+    this.iniciado=true;
+    if(typeof firebase==='undefined'||!firebase.appCheck||!firebase.appCheck.ReCaptchaEnterpriseProvider){
+      this.erro='SDK App Check não carregou';console.warn('[APP CHECK]',this.erro);return false;
+    }
+    try{
+      const ac=firebase.appCheck();
+      ac.activate(new firebase.appCheck.ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY),true);
+      this.ok=true;this.erro='';return true;
+    }catch(e){this.erro=(e&&e.message)||String(e);console.warn('[APP CHECK] init',e);return false}
+  },
+  async diagnostico(){
+    const el=document.getElementById('appcheck-info');if(!el)return;
+    if(!navigator.onLine){el.textContent='App Check: offline · será validado ao conectar';return}
+    if(!this.iniciado&&typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length)this.init();
+    if(!this.ok){el.textContent='App Check: ⚠ SDK não inicializado';return}
+    try{
+      const r=await firebase.appCheck().getToken(false);
+      el.textContent=(r&&r.token)?'App Check: ✓ token válido · reCAPTCHA Enterprise':'App Check: ⚠ sem token';
+    }catch(e){el.textContent='App Check: ⚠ token não obtido';console.warn('[APP CHECK] token',e)}
+  }
+};
+
 // ===== Autorização do aparelho via Firebase Authentication (v25.2) ========
 // Identidade do APARELHO é separada da identidade do PADEIRO.
 // O padeiro continua escolhendo nome + PIN. O Firebase Auth apenas impede que
@@ -2348,7 +2387,7 @@ const DEVICE={
     this.bootCb=cb||this.bootCb;if(this.iniciado)return;this.iniciado=true;
     if(typeof firebase==='undefined'||!firebase.initializeApp||!firebase.auth){this.mostrar('O módulo Firebase Authentication não carregou. Recarregue o aplicativo.','Firebase Authentication indisponível');return}
     try{
-      if(!firebase.apps.length)firebase.initializeApp(FB_CFG);FB.db=firebase.database();this.auth=firebase.auth();verificarRelogioServidor();
+      if(!firebase.apps.length)firebase.initializeApp(FB_CFG);APP_CHECK.init();FB.db=firebase.database();this.auth=firebase.auth();verificarRelogioServidor();
       try{await this.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)}catch(e){}
       let user=await this.usuarioRestaurado();
       if(!user&&navigator.onLine){const cred=await this.auth.signInAnonymously();user=cred.user||this.auth.currentUser}
@@ -2386,6 +2425,7 @@ const FB={
     if(typeof firebase==='undefined'||!firebase.initializeApp){ this.status('local','Salvo neste aparelho · sem nuvem'); return; }
     try{
       if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
+      APP_CHECK.init();
       this.db=firebase.database();
       this.status(navigator.onLine?'pending':'local',navigator.onLine?'Sincronizando…':'Salvo neste aparelho · sem internet');
       // Escuta cada chave sincronizada. Quando muda na nuvem, aplica local
@@ -2805,6 +2845,7 @@ function estoqueLembreteDepois(){const op=OP.atual(),hoje=estoqueHojeISO();try{i
 
 function carregarConfig(){
   atualizarStorageInfo();
+  if(typeof APP_CHECK!=='undefined')APP_CHECK.diagnostico();
   const k=getKey(); if(k)document.getElementById('inp-key').value=k;
   const op=LS.g('fdo_op',''); if(op)document.getElementById('inp-op').value=op;
   document.getElementById('inp-pin').value=getPin();
@@ -2824,7 +2865,7 @@ function carregarConfig(){
 }
 function exportarBackup(){
   const chaves=['fdo_lotes','fdo_laminacoes','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25','fdo_estoque_movimentos','fdo_estoque_contagens','fdo_estoque_configuracoes','fdo_receitas_observacoes','fdo_receitas_definitivas','fdo_receitas_auditoria','fdo_estoque_outbox_v26','fdo_estoque_inicio_ts_v26'];
-  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.4',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
+  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.5',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
   chaves.forEach(k=>{ const raw=localStorage.getItem(k); if(raw!==null){ try{dados.dados[k]=JSON.parse(raw);}catch{dados.dados[k]=raw;} } });
   const blob=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
@@ -5322,7 +5363,7 @@ const SYNC25={
   absorverSeq(v){const n=Number(v)||0,local=Number(LS.g('fdo_lote_seq',0))||0;if(n>local)this.local('fdo_lote_seq',n);if(FB.db&&n>0)FB.db.ref('fdo_v25/meta/lote_seq').transaction(cur=>Math.max(Number(cur)||0,n),undefined,false).catch(()=>{})},
   init(){
     if(this.iniciado)return;if(typeof DEVICE!=='undefined'&&!DEVICE.aprovado){FB.status('err','⚠ Aparelho não autorizado');return}this.iniciado=true;
-    if(typeof firebase==='undefined'||!firebase.initializeApp){this.iniciado=false;FB.status('local','Salvo neste aparelho · sem nuvem');return}try{if(!firebase.apps.length)firebase.initializeApp(FB_CFG);FB.db=firebase.database();FB.status(navigator.onLine?'pending':'local',navigator.onLine?'Sincronizando…':'Salvo neste aparelho · sem internet');
+    if(typeof firebase==='undefined'||!firebase.initializeApp){this.iniciado=false;FB.status('local','Salvo neste aparelho · sem nuvem');return}try{if(!firebase.apps.length)firebase.initializeApp(FB_CFG);APP_CHECK.init();FB.db=firebase.database();FB.status(navigator.onLine?'pending':'local',navigator.onLine?'Sincronizando…':'Salvo neste aparelho · sem internet');
       this.COL.forEach(k=>{FB.db.ref(this.path(k)).on('value',snap=>this.apply(k,snap.val()),e=>{console.warn('[FB25] granular',k,e);FB.status('err','⚠ Nuvem v25 indisponível')});FB.db.ref(k).on('value',snap=>this.legacy(k,snap.val()),e=>console.warn('[FB25] legacy',k,e))});
       this.SCALAR.forEach(k=>FB.db.ref(k).on('value',snap=>{const v=snap.val();if(v==null){const l=localStorage.getItem(k);if(l!==null)try{FB.db.ref(k).set(JSON.parse(l))}catch(e){};return}FB.applying=true;this.local(k,v);FB.applying=false;FB.repaint()},e=>console.warn('[FB25] scalar listen',k,e)));
       FB.db.ref('fdo_lote_seq').on('value',snap=>this.absorverSeq(snap.val()));FB.db.ref('fdo_v25/meta/lote_seq').on('value',snap=>{const n=Number(snap.val())||0;if(n>(Number(LS.g('fdo_lote_seq',0))||0))this.local('fdo_lote_seq',n)});FB.db.ref('fdo_v25/meta/lote_seq_reset').on('value',snap=>{const t=Number(snap.val())||0,seen=Number(LS.g('fdo_seq_reset_ts_v25',0))||0;if(t>seen){this.local('fdo_seq_reset_ts_v25',t);this.local('fdo_lote_seq',0)}});FB.db.ref('fdo_v25/meta/schema').transaction(cur=>Math.max(Number(cur)||0,1),undefined,false).catch(()=>{});this.flush();

@@ -1,1 +1,1 @@
-Firebase JavaScript SDK compat 10.13.2, copiado do CDN oficial gstatic para permitir boot offline previsível. Fontes: https://www.gstatic.com/firebasejs/10.13.2/ . O código do aplicativo continua usando a API compat existente.
+Firebase JavaScript SDK compat 10.13.2, copiado do CDN oficial gstatic para permitir boot offline previsível. Componentes locais usados pelo PWA: App, App Check, Authentication e Realtime Database. Fontes: https://www.gstatic.com/firebasejs/10.13.2/ . O código do aplicativo continua usando a API compat existente.
