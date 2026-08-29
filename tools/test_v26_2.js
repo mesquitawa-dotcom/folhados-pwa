@@ -3,7 +3,7 @@ const assert=require('assert');
 const vm=require('vm');
 const html=fs.readFileSync('index.html','utf8');
 function has(x,msg){assert(html.includes(x),msg)}
-has('atualização v26.2','cabeçalho v26.2');
+has('NOVIDADES v26.2:','seção histórica v26.2');
 has('id="inp-est-cont-op"','responsável da contagem configurável');
 has('id="inp-est-cont-dia"','dia da contagem configurável');
 has('id="estoque-lembrete-bg"','pop-up da contagem');

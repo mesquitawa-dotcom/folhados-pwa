@@ -1,12 +1,15 @@
 // Folhados d'Ouro — Service Worker
 // Versão do cache: incrementada a TODA entrega.
-const CACHE='fdo-v26-2';
+const CACHE='fdo-v26-3';
 const ASSETS=[
   './',
   './index.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
+  './vendor/firebase-app-compat.js',
+  './vendor/firebase-auth-compat.js',
+  './vendor/firebase-database-compat.js',
 ];
 
 self.addEventListener('install',e=>{

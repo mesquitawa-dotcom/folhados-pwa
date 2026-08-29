@@ -1,0 +1,1 @@
+Firebase JavaScript SDK compat 10.13.2, copiado do CDN oficial gstatic para permitir boot offline previsível. Fontes: https://www.gstatic.com/firebasejs/10.13.2/ . O código do aplicativo continua usando a API compat existente.
