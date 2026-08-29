@@ -19,7 +19,14 @@ async function no(label, promise) {
   await assertFails(promise);
   console.log('DENY ' + label);
 }
-function iguais(a,b){return JSON.stringify(a)===JSON.stringify(b);}
+function canon(v){
+  if(Array.isArray(v))return v.map(canon);
+  if(v&&typeof v==='object'){
+    const out={};Object.keys(v).sort().forEach(k=>out[k]=canon(v[k]));return out;
+  }
+  return v;
+}
+function iguais(a,b){return JSON.stringify(canon(a))===JSON.stringify(canon(b));}
 async function syncImutavel(db,path,reg){
   const r=ref(db,path);
   let remoto=(await get(r)).val();
@@ -84,7 +91,7 @@ async function syncImutavel(db,path,reg){
     const auditNovo={id:'aud_2',tipo:'criada',emTs:200,motivo:'novo'};
     const auditNovoSync=await syncImutavel(app,'fdo_v25/receitas_auditoria/aud_2',auditNovo);
     assert.strictEqual(auditNovoSync.igual,true);
-    assert.deepStrictEqual((await get(ref(app,'fdo_v25/receitas_auditoria/aud_2'))).val(),auditNovo);
+    assert(iguais((await get(ref(app,'fdo_v25/receitas_auditoria/aud_2'))).val(),auditNovo));
     console.log('OK   cliente cria histórico ausente sob Rule append-only');
 
     const mov={id:'mov_1',tipo:'entrada',emTs:100,itens:{farinha:10}};
