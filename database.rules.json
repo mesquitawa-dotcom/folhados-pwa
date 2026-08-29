@@ -30,13 +30,58 @@
       ".read": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true",
       ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
     },
+
     "fdo_acessos": {
       ".read": false,
-      ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+      "$id": {
+        ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true && ((!data.exists() && newData.exists()) || (data.exists() && newData.exists() && newData.val() === data.val()))"
+      }
     },
+
     "fdo_v25": {
       ".read": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true",
-      ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+
+      "lotes": {
+        ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+      },
+      "laminacoes": {
+        ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+      },
+      "meta": {
+        ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+      },
+
+      "estoque": {
+        "movimentos": {
+          "$id": {
+            ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true && ((!data.exists() && newData.exists()) || (data.exists() && newData.exists() && newData.val() === data.val()))"
+          }
+        },
+        "contagens": {
+          ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+        },
+        "configuracoes": {
+          ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+        },
+        "meta": {
+          ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+        }
+      },
+
+      "receitas_observacoes": {
+        ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+      },
+      "receitas_definitivas": {
+        ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+      },
+      "receitas_auditoria": {
+        "$id": {
+          ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true && ((!data.exists() && newData.exists()) || (data.exists() && newData.exists() && newData.val() === data.val()))"
+        }
+      },
+      "receitas_meta": {
+        ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+      }
     }
   }
 }
