@@ -737,7 +737,7 @@
     @media(max-width:430px){.rec-full-fer{grid-template-columns:1fr}.rec-full-fer b{grid-column:1}.est-cont-field{grid-template-columns:minmax(0,1fr) 5.6rem}.est-cont-field small{grid-column:2;text-align:right}.est-actions,.rec-mgr,.rec-edit-grid{grid-template-columns:1fr}.rec-mgr .btn-danger{grid-column:1}.rec-arch-actions{grid-template-columns:1fr 1fr}}
 
   </style>
-  <!-- Firebase Realtime Database (compat, namespaced) — CDN, sem build -->
+  <!-- Firebase Realtime Database (compat, namespaced) — SDK local, sem build -->
   <script src="vendor/firebase-app-compat.js"></script>
   <script src="vendor/firebase-auth-compat.js"></script>
   <script src="vendor/firebase-database-compat.js"></script>
@@ -2094,7 +2094,7 @@ function registrarReaplicacaoEstoqueLote(lote){
   ESTOQUE_SYNC.localPush('movimentos',reg);return true;
 }
 function estoqueReconciliarAjustesCancelamento(){
-  let n=0;LS.g('fdo_lotes',[]).forEach(l=>{if(!l||!l.cancelado||l.cancelado.estoqueAcao!=='estornar')return;const c=Number(l.cancelado.emTs)||0,r=Number(l.restaurado&&l.restaurado.emTs)||0;if(r>c){if(registrarReaplicacaoEstoqueLote(l))n++;}else if(registrarEstornoEstoqueLote(l))n++;});return n;
+  let n=0;LS.g('fdo_lotes',[]).forEach(l=>{if(!l||!l.cancelado||l.cancelado.estoqueAcao!=='estornar')return;const c=Number(l.cancelado.emTs)||0,r=Number(l.restaurado&&l.restaurado.emTs)||0;if(r>c){if(registrarEstornoEstoqueLote(l))n++;if(registrarReaplicacaoEstoqueLote(l))n++;}else if(registrarEstornoEstoqueLote(l))n++;});return n;
 }
 let estoqueReconciliando=false;
 function estoqueReconciliarSaidasLotes(){
@@ -3224,20 +3224,12 @@ async function criarLoteSecos(){
 
 function loteAtivo(l){if(!l)return false;const c=Number(l.cancelado&&l.cancelado.emTs)||0,r=Number(l.restaurado&&l.restaurado.emTs)||0;return !c||r>c;}
 function apagarLote(id){
-  if(!OP.pode('apagar')){alert('Você não tem permissão para cancelar baldes.\
-Peça ao administrador.');return;}
+  if(!OP.pode('apagar')){alert('Você não tem permissão para cancelar baldes.\nPeça ao administrador.');return;}
   const todos=LS.g('fdo_lotes',[]),lote=todos.find(l=>l.id===id);if(!lote||!loteAtivo(lote))return;
-  if(!confirm(`Cancelar o Balde #${lote.num}?\
-\
-Ele sai das etapas de produção, mas permanece no histórico e pode ser restaurado.`))return;
+  if(!confirm(`Cancelar o Balde #${lote.num}?\n\nEle sai das etapas de produção, mas permanece no histórico e pode ser restaurado.`))return;
   let estoqueAcao='manter';
   if(estoqueTemMovimento('saida_receita_'+lote.id)){
-    const usados=confirm(`ESTOQUE DO BALDE #${lote.num}\
-\
-Os ingredientes deste balde chegaram a ser utilizados?\
-\
-OK = SIM · manter a baixa no estoque\
-Cancelar = NÃO · foi lançamento por engano e a baixa será estornada`);
+    const usados=confirm(`ESTOQUE DO BALDE #${lote.num}\n\nOs ingredientes deste balde chegaram a ser utilizados?\n\nOK = SIM · manter a baixa no estoque\nCancelar = NÃO · foi lançamento por engano e a baixa será estornada`);
     if(!usados){if(!confirm('Confirmar que os ingredientes NÃO foram utilizados e que a baixa deve ser estornada?'))return;estoqueAcao='estornar';}
   }
   lote.cancelado={em:new Date().toLocaleString('pt-BR'),emTs:Date.now(),op:getOp(),estoqueAcao};LS.s('fdo_lotes',todos);if(estoqueAcao==='estornar')registrarEstornoEstoqueLote(lote);renderHist();
@@ -3245,10 +3237,10 @@ Cancelar = NÃO · foi lançamento por engano e a baixa será estornada`);
 function restaurarLote(id){
   if(!OP.pode('apagar'))return;const todos=LS.g('fdo_lotes',[]),lote=todos.find(l=>l.id===id);if(!lote||loteAtivo(lote))return;
   if(!confirm(`Restaurar o Balde #${lote.num} para a produção?`))return;
-  const reaplicar=!!(lote.cancelado&&lote.cancelado.estoqueAcao==='estornar');lote.restaurado={em:new Date().toLocaleString('pt-BR'),emTs:Date.now(),op:getOp(),estoqueReaplicar:reaplicar};LS.s('fdo_lotes',todos);if(reaplicar)registrarReaplicacaoEstoqueLote(lote);renderHist();
+  const reaplicar=!!(lote.cancelado&&lote.cancelado.estoqueAcao==='estornar');lote.restaurado={em:new Date().toLocaleString('pt-BR'),emTs:Date.now(),op:getOp(),estoqueReaplicar:reaplicar};LS.s('fdo_lotes',todos);if(reaplicar){registrarEstornoEstoqueLote(lote);registrarReaplicacaoEstoqueLote(lote);}renderHist();
 }
 
-// Migra sessões antigas concluídas (fdo_sess) para lotes — só uma vez
+// Migra sessões antigas concluídas// Migra sessões antigas concluídas (fdo_sess) para lotes — só uma vez
 function migrarLotesAntigos(){
   if(LS.g('fdo_migrou_lotes',false)) return;
   const todos=LS.g('fdo_lotes',[]);
@@ -4645,11 +4637,10 @@ const GEMINI_MODEL='gemini-3.6-flash';
 async function perguntarGemini(pergunta){
   const key=getKey();if(!key)return;
   const p=RECEITA[st.step];
-  const ctx=`Passo atual ${p.id}, ${p.grupo}, ${p.nome} ${p.qty}.\
-Pergunta: "${pergunta}"`;
+  const ctx=`Passo atual ${p.id}, ${p.grupo}, ${p.nome} ${p.qty}.\nPergunta: "${pergunta}"`;
   try{
     setDot('off','Consultando...');
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system_instruction:{parts:[{text:montarSystem()}]},contents:[{role:'user',parts:[{text:ctx}]}],generationConfig:{maxOutputTokens:150}})});
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({system_instruction:{parts:[{text:montarSystem()}]},contents:[{role:'user',parts:[{text:ctx}]}],generationConfig:{maxOutputTokens:150}})});
     const data=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error((data&&data.error&&data.error.message)||('HTTP '+r.status));
     const resp=data?.candidates?.[0]?.content?.parts?.[0]?.text||'';
@@ -4662,7 +4653,7 @@ async function testarAssistenteConfig(){
   if(!out||!btn)return;if(!key){out.style.color='var(--red)';out.textContent='Informe a chave Gemini para testar.';return;}
   btn.disabled=true;out.style.color='var(--mut)';out.textContent='Testando '+GEMINI_MODEL+'…';
   try{
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{role:'user',parts:[{text:'Responda somente OK'}]}],generationConfig:{maxOutputTokens:10}})});
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{role:'user',parts:[{text:'Responda somente OK'}]}],generationConfig:{maxOutputTokens:10}})});
     const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error((data&&data.error&&data.error.message)||('HTTP '+r.status));
     out.style.color='var(--grn)';out.textContent='✓ Assistente conectado · '+GEMINI_MODEL;
   }catch(e){out.style.color='var(--red)';out.textContent='⚠ Não foi possível acessar o Assistente. Confira internet e chave API.';}
