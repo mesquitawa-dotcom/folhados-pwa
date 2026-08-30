@@ -37,8 +37,10 @@ jobs:
         run: node tools/test_v26_4.js
       - name: Testar App Check v26.5
         run: node tools/test_v26_5.js
-      - name: Smoke de boot offline em navegador v26.5
-        run: python3 tools/smoke_v26_5.py
+      - name: Testar pós-laminação v26.6
+        run: node tools/test_v26_6.js
+      - name: Smoke de boot offline em navegador v26.6
+        run: python3 tools/smoke_v26_6.py
 
   firebase-rules:
     runs-on: ubuntu-latest
@@ -54,4 +56,4 @@ jobs:
       - name: Instalar ferramentas de teste das Rules
         run: npm install --no-save --no-package-lock @firebase/rules-unit-testing firebase firebase-tools
       - name: Testar Realtime Database Rules no Emulator Suite
-        run: npx firebase emulators:exec --only database --project demo-fdo-rules "node tools/test_database_rules_v26_4.js"
+        run: npx firebase emulators:exec --only database --project demo-fdo-rules "node tools/test_database_rules_v26_6.js"

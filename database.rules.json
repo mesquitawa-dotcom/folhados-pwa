@@ -47,6 +47,12 @@
       "laminacoes": {
         ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
       },
+      "partidas": {
+        ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+      },
+      "formas": {
+        ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+      },
       "meta": {
         ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
       },
