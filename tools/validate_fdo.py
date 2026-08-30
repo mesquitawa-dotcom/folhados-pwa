@@ -10,13 +10,14 @@ errors=[]
 
 def fail(msg): errors.append(msg)
 
-# v26.5 — App Check com reCAPTCHA Enterprise, sem enforcement
+# v26.6 — pós-laminação + preservação v26.5
 for marker in (
-    'atualização v26.5','NOVIDADES v26.5:','vendor/firebase-app-check-compat.js',
+    'atualização v26.6','NOVIDADES v26.6:','fdo_partidas','fdo_formas','function abrirCorteLaminacao','function montarForma',
+    'NOVIDADES v26.5:','vendor/firebase-app-check-compat.js',
     "const APP_CHECK_SITE_KEY='6LcPFJ8tAAAAAFk2yg6aQ5Qi0NNMERW220URnH2A'",'const APP_CHECK={',
     'new firebase.appCheck.ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY)',
     "APP_CHECK.init();FB.db=firebase.database()",'id="appcheck-info"',
-    "versao:'26.5'"
+    "versao:'26.6'"
 ):
     if marker not in html: fail('v26.5 sem marcador: '+marker)
 if not (ROOT/'vendor/firebase-app-check-compat.js').exists(): fail('Firebase App Check local ausente')
@@ -186,6 +187,6 @@ console.log(JSON.stringify({padrao:__padrao,teste:__testeTotal}));
 if errors:
     print('\n'.join('ERRO: '+e for e in errors))
     raise SystemExit(1)
-print('VALIDAÇÃO FDO v26.5 OK')
+print('VALIDAÇÃO FDO v26.6 OK')
 print('Receitas padrão: R1=15464 R2=15690 R3=15544 R4=15564 R5=15714 g')
 print('Receita Teste de referência v25.3: 15448 g')

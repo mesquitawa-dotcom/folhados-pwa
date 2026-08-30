@@ -2,7 +2,15 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — atualização v26.5
+       FOLHADOS D'OURO — atualização v26.6
+       NOVIDADES v26.6:
+       • Pós-laminação: cada lote registra o resultado real do corte em uma ou mais partidas de fatias por produto.
+       • Fluxo frio objetivo: freezer rápido → freezer conservador (-15°C) → descongelamento em geladeira com temperatura opcional.
+       • Produção urgente pode seguir direto da laminação para a modelagem, sem inventar eventos de congelamento.
+       • Modelagem cria formas com capacidade sugerida por produto, editável, e preserva composição de sobras compatíveis.
+       • Partidas e formas sincronizam granularmente no Firebase, entram no backup e recebem numeração visual diária.
+       • Etiqueta própria das fatias usa a infraestrutura Bluetooth existente e pode ser reimpressa depois.
+       • Nenhuma receita, peso, fermento, tempo, snapshot ou registro histórico anterior foi alterado.
        NOVIDADES v26.5:
        • Firebase App Check com reCAPTCHA Enterprise integrado ao cliente, sem enforcement nesta versão.
        • Tokens App Check são renovados automaticamente quando o aparelho está online.
@@ -748,7 +756,11 @@
     .teste-aprovar-btn{margin-top:.55rem;width:100%;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.4);color:var(--grn);font-family:Georgia,serif;font-size:.68rem;font-weight:bold;padding:.6rem .65rem;border-radius:.35rem;cursor:pointer;min-height:2.4rem}
     @media(max-width:430px){.rec-full-fer{grid-template-columns:1fr}.rec-full-fer b{grid-column:1}.est-cont-field{grid-template-columns:minmax(0,1fr) 5.6rem}.est-cont-field small{grid-column:2;text-align:right}.est-actions,.rec-mgr,.rec-edit-grid{grid-template-columns:1fr}.rec-mgr .btn-danger{grid-column:1}.rec-arch-actions{grid-template-columns:1fr 1fr}}
 
-  </style>
+  
+/* v26.6 — pós-laminação: fatias, frio e modelagem */
+.pos-scroll{flex:1;overflow-y:auto;padding:.75rem 1rem 6rem}.pos-card{border:1px solid #3a301e;border-radius:.55rem;background:#151109;padding:.72rem;margin-bottom:.65rem}.pos-title{font-weight:bold;color:var(--gl);font-size:.9rem}.pos-meta{color:var(--mut);font-size:.68rem;line-height:1.4;margin-top:.18rem}.pos-state{display:inline-block;margin-top:.38rem;padding:.18rem .42rem;border-radius:99px;border:1px solid #4d3c1d;color:var(--gold);font-size:.62rem}.pos-actions{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.55rem}.pos-actions button{flex:1 1 8rem;min-height:2.25rem}.pos-cut-row{border:1px solid #3a301e;border-radius:.5rem;padding:.65rem;margin-bottom:.55rem;background:#120f08}.pos-grid{display:grid;grid-template-columns:1.7fr .8fr;gap:.45rem}.pos-hint{font-size:.64rem;color:var(--mut);line-height:1.35;margin-top:.28rem}.pos-summary{border-left:3px solid var(--gold);padding:.5rem .65rem;background:#161106;margin:.55rem 0;border-radius:.25rem}.pos-saldo{font-size:1.15rem;color:var(--gl);font-weight:bold}.pos-forma-comp{font-size:.65rem;color:var(--mut);margin-top:.28rem}.pos-lam-actions{margin-top:.45rem;display:flex;gap:.35rem}.pos-lam-actions button{min-height:2rem}.pos-empty{text-align:center;color:var(--mut);padding:1.4rem .5rem}.pos-section{font-size:.72rem;letter-spacing:.05em;color:var(--gold);margin:.85rem 0 .4rem;text-transform:uppercase}.pos-temp{font-weight:bold;color:var(--gl)}
+
+</style>
   <!-- Firebase Realtime Database (compat, namespaced) — SDK local, sem build -->
   <script src="vendor/firebase-app-compat.js"></script>
   <script src="vendor/firebase-app-check-compat.js"></script>
@@ -817,7 +829,7 @@
   <div class="cfg-sep"></div>
   <div class="cfg-t" style="font-size:1rem">📱 Este aparelho</div>
   <div class="cfg-s" id="device-info" style="font-size:.68rem;line-height:1.45;word-break:break-all">Identificação Firebase: —</div>
-  <div class="cfg-s" style="font-size:.68rem;line-height:1.45">Versão 26.5 · cache fdo-v26-5 · Firebase SDK local · App Check</div>
+  <div class="cfg-s" style="font-size:.68rem;line-height:1.45">Versão 26.6 · cache fdo-v26-6 · Firebase SDK local · App Check</div>
   <div class="cfg-s" id="appcheck-info" style="font-size:.68rem;line-height:1.45">App Check: verificando…</div>
   <div class="cfg-s" id="storage-info" style="font-size:.68rem;line-height:1.45">Armazenamento local: verificando…</div>
   <div class="cfg-sep"></div>
@@ -902,10 +914,10 @@
       <div class="modulo-info"><div class="modulo-nome">Estoque</div><div class="modulo-desc">Entradas, consumo das receitas e conferência semanal</div></div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
-    <div class="modulo inativo">
-      <div class="modulo-icon">✂️</div>
-      <div class="modulo-info"><div class="modulo-nome">Modelagem</div><div class="modulo-desc">Corte, enrolamento e pesagem</div></div>
-      <div class="modulo-badge badge-breve">Em breve</div>
+    <div class="modulo ativo" data-perm="modelagem" onclick="entrarModelagem()">
+      <div class="modulo-icon">🥐</div>
+      <div class="modulo-info"><div class="modulo-nome">Fatias / Modelagem</div><div class="modulo-desc">Congelamento, descongelamento e montagem em formas</div></div>
+      <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
     <div class="modulo ativo" data-perm="fermentacao" onclick="entrarFermentacao()">
       <div class="modulo-icon">🌡️</div>
@@ -1600,6 +1612,40 @@
   </div>
 </div>
 
+
+<!-- ═══ v26.6 — CORTE/FATIAS ao final da laminação ═══ -->
+<div id="s-corte-fatias" class="scr off">
+  <div class="hdr">
+    <div><div class="hdr-brand">Folhados d'Ouro · Laminação</div><div class="hdr-title">Corte / Fatias</div></div>
+    <button class="link-btn" onclick="ir('laminacao')">← Laminação</button>
+  </div>
+  <div class="pos-scroll">
+    <div class="pos-summary" id="corte-lam-resumo"></div>
+    <div class="lam-hint"><b>O que esta massa virou?</b> Informe o produto e a quantidade real. 36/40/44 são apenas sugestões dos cortes usuais e podem ser corrigidas.</div>
+    <div class="pos-section">Novas fatias</div>
+    <div id="corte-linhas"></div>
+    <button class="btn-sec" style="width:100%;margin-bottom:.55rem" onclick="adicionarLinhaCorte()">＋ Adicionar produto</button>
+    <button class="btn-main" style="width:100%" onclick="salvarCorteLaminacao()">✓ Registrar fatias</button>
+    <div class="pos-section">Já registradas nesta laminação</div>
+    <div id="corte-ja-registradas"></div>
+  </div>
+</div>
+
+<!-- ═══ v26.6 — FATIAS / MODELAGEM ═══ -->
+<div id="s-modelagem" class="scr off">
+  <div class="hdr">
+    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Fatias / Modelagem</div></div>
+    <button class="link-btn" onclick="ir('start')">← Início</button>
+  </div>
+  <div class="pos-scroll">
+    <div class="lam-hint">Acompanhe a massa pela rotina real: <b>freezer rápido → conservação → descongelamento → modelagem</b>. Em urgência, use Modelagem direta.</div>
+    <div class="pos-section">Fatias em processo</div>
+    <div id="modelagem-partidas"></div>
+    <div class="pos-section">Formas criadas hoje</div>
+    <div id="modelagem-formas"></div>
+  </div>
+</div>
+
 <!-- ═══ FERMENTAÇÃO — seleção de lote ═══ -->
 <div id="s-fermentacao-lotes" class="scr off">
   <div class="start-top">
@@ -2228,6 +2274,7 @@ function garantirPermissoesV260(){
     if(n==='wagner'){set('estoque',true);set('estoque_entrada',true);set('estoque_contagem',true);set('receita_obs',true);set('receita_editar',true);}
     else if(n==='maycon'){set('estoque',true);set('estoque_entrada',false);set('estoque_contagem',true);set('receita_obs',false);set('receita_editar',false);}
     else{set('estoque',false);set('estoque_entrada',false);set('estoque_contagem',false);set('receita_obs',false);set('receita_editar',false);}
+    set('modelagem',!!o.perms.laminacao);
   });
   if(mudou)OP.setLista(arr);
 }
@@ -2515,6 +2562,8 @@ const FB={
       else if(id==='s-ferm-lotes' && typeof renderFermLotes==='function') renderFermLotes();
       else if(id==='s-fermentacao-lotes' && typeof renderFermLotes==='function') renderFermLotes();
       else if(id==='s-laminacao' && typeof renderLaminacao==='function') renderLaminacao();
+      else if(id==='s-corte-fatias' && typeof renderCorteLaminacao==='function') renderCorteLaminacao();
+      else if(id==='s-modelagem' && typeof renderModelagem==='function') renderModelagem();
       else if(id==='s-login' && typeof renderLogin==='function') renderLogin();
       else if(id==='s-config' && typeof renderOpList==='function') renderOpList();
       else if(id==='s-start' && typeof aplicarPermsStart==='function') aplicarPermsStart();
@@ -2533,6 +2582,7 @@ const OP_PERMS_MOD=[
   {k:'batimento',     icon:'🥣', label:'Bater a Massa'},
   {k:'fermentacao',   icon:'🌡️', label:'Fermentação'},
   {k:'laminacao',     icon:'📐', label:'Laminação'},
+  {k:'modelagem',     icon:'🥐', label:'Fatias / Modelagem'},
   {k:'historico',     icon:'📋', label:'Histórico'},
   {k:'calculadora',   icon:'🧮', label:'Calculadora'},
   {k:'assistente',    icon:'🤖', label:'Assistente IA'},
@@ -2811,6 +2861,8 @@ function ir(id){
   else if(id==='estoque' && typeof renderEstoque==='function')renderEstoque();
   else if(id==='estoque-mov' && typeof renderEstoqueMovimentos==='function')renderEstoqueMovimentos();
   else if(id==='receita-completa' && typeof renderReceitaCompleta==='function')renderReceitaCompleta();
+  else if(id==='corte-fatias' && typeof renderCorteLaminacao==='function')renderCorteLaminacao();
+  else if(id==='modelagem' && typeof renderModelagem==='function')renderModelagem();
 
   document.querySelectorAll('.scr').forEach(s=>s.classList.add('off'));
   document.getElementById('s-'+id).classList.remove('off');
@@ -2864,8 +2916,8 @@ function carregarConfig(){
   if(typeof DEVICE!=='undefined') DEVICE.renderConfig();
 }
 function exportarBackup(){
-  const chaves=['fdo_lotes','fdo_laminacoes','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25','fdo_estoque_movimentos','fdo_estoque_contagens','fdo_estoque_configuracoes','fdo_receitas_observacoes','fdo_receitas_definitivas','fdo_receitas_auditoria','fdo_estoque_outbox_v26','fdo_estoque_inicio_ts_v26'];
-  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.5',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
+  const chaves=['fdo_lotes','fdo_laminacoes','fdo_partidas','fdo_formas','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25','fdo_estoque_movimentos','fdo_estoque_contagens','fdo_estoque_configuracoes','fdo_receitas_observacoes','fdo_receitas_definitivas','fdo_receitas_auditoria','fdo_estoque_outbox_v26','fdo_estoque_inicio_ts_v26'];
+  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.6',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
   chaves.forEach(k=>{ const raw=localStorage.getItem(k); if(raw!==null){ try{dados.dados[k]=JSON.parse(raw);}catch{dados.dados[k]=raw;} } });
   const blob=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
@@ -2930,6 +2982,7 @@ function entrarPorcionamento(){ exigeP('porcionamento', ()=> exigirAcesso(()=>ir
 function entrarBatimento(){ exigeP('batimento', ()=> abrirBatimentoLotes()); }
 function entrarFermentacao(){ exigeP('fermentacao', ()=> abrirFermentacaoLotes()); }
 function entrarLaminacao(){ exigeP('laminacao', ()=> abrirLaminacao()); }
+function entrarModelagem(){ exigeP('modelagem', ()=>{ renderModelagem(); ir('modelagem'); }); }
 // Configurações: senha própria (4567), pedida TODA vez. Exceção: 1ª configuração (sem chave) entra direto.
 function entrarConfig(){
   if(!getKey()){ ir('config'); return; }
@@ -3965,6 +4018,28 @@ function desenharEtiquetaMassas(lote){
   }
   return c;
 }
+
+function desenharEtiquetaPartida(p){
+  const c=document.createElement('canvas');c.width=ETQ_W;c.height=ETQ_H;const x=c.getContext('2d');
+  x.fillStyle='#fff';x.fillRect(0,0,ETQ_W,ETQ_H);x.fillStyle='#000';x.strokeStyle='#000';x.lineWidth=4;x.strokeRect(10,10,ETQ_W-20,ETQ_H-20);x.textAlign='center';
+  let prod=String(p.produtoNome||'FATIAS').toUpperCase();if(prod.length>26)prod=prod.slice(0,26);
+  x.font='bold 42px Arial, sans-serif';x.fillText(prod,ETQ_W/2,70);
+  x.font='bold 34px Arial, sans-serif';x.fillText('FATIAS '+(p.nome||''),ETQ_W/2,120);
+  x.lineWidth=2;x.beginPath();x.moveTo(35,145);x.lineTo(ETQ_W-35,145);x.stroke();
+  x.font='bold 48px Arial, sans-serif';x.fillText((Number(p.qtd)||0)+' UNIDADES',ETQ_W/2,215);
+  x.font='26px Arial, sans-serif';x.fillText('LAM. '+(p.laminacaoNome||'—'),ETQ_W/2,270);
+  const extra=[p.corteCm?('corte '+String(p.corteCm).replace('.',',')+' cm'):'',p.receitaNome||''].filter(Boolean).join(' · ');
+  x.font='22px Arial, sans-serif';x.fillText(extra.slice(0,38),ETQ_W/2,315);
+  x.font='20px Arial, sans-serif';x.fillText(new Date(Number(p.criadoTs)||Date.now()).toLocaleString('pt-BR'),ETQ_W/2,355);
+  return c;
+}
+function abrirEtiquetaPartida(id){
+  const p=posPartidas().find(x=>x.id===id);if(!p){alert('Fatias não encontradas.');return;}
+  st.etqTipo='partida';st.etqPartida=id;const atual=document.querySelector('.scr:not(.off)');st.etqRet=(atual&&atual.id==='s-corte-fatias')?'corte-fatias':'modelagem';
+  etqCanvas=desenharEtiquetaPartida(p);document.getElementById('etq-title').textContent='Etiqueta das Fatias';document.getElementById('etq-img').src=etqCanvas.toDataURL('image/png');marcarPrintMode();document.getElementById('etq-qtd-lbl').style.display='none';document.getElementById('etq-qtds').style.display='none';
+  const d=document.getElementById('etq-diag');if(d){d.style.display='none';d.textContent='';}const sEl=document.getElementById('etq-status');sEl.className='etq-status';sEl.textContent=navigator.bluetooth?'Pronto. Ligue a impressora e toque em Imprimir.':'Para Bluetooth use o Chrome no Android. Você também pode salvar a imagem.';ir('etiqueta');
+}
+
 function abrirEtiqueta(id, tipo){
   const lote=LS.g('fdo_lotes',[]).find(l=>l.id===id);
   if(!lote){ alert('Balde não encontrado.'); return; }
@@ -3988,9 +4063,9 @@ function abrirEtiqueta(id, tipo){
 function fecharEtiqueta(){ ir(st.etqRet||'start'); }
 function baixarEtiqueta(){
   if(!etqCanvas)return;
-  const lote=LS.g('fdo_lotes',[]).find(l=>l.id===st.etqLote);
+  const lote=LS.g('fdo_lotes',[]).find(l=>l.id===st.etqLote),partida=posPartidas().find(p=>p.id===st.etqPartida);
   const a=document.createElement('a');
-  a.download='etiqueta_'+(st.etqTipo==='massas'?'massas':'balde')+'_'+(lote?lote.num:'x')+'.png';
+  a.download=st.etqTipo==='partida'?('etiqueta_fatias_'+(partida?String(partida.nome).replace(/\//g,'-'):'x')+'.png'):('etiqueta_'+(st.etqTipo==='massas'?'massas':'balde')+'_'+(lote?lote.num:'x')+'.png');
   a.href=etqCanvas.toDataURL('image/png'); a.click();
 }
 
@@ -5193,6 +5268,7 @@ function renderLamFeitas(){
         ${btnDel}
       </div>
       <div class="lam-fcard-comp">${x.totalPartes} partes · ${comp}${x.temMassaAnterior?' · <span style="color:var(--red)">contém massa de dia anterior</span>':''}</div>
+      <div class="pos-lam-actions"><button class="link-btn" onclick="abrirCorteLaminacao('${x.id}')">✂️ ${posPartidasDaLam(x.id).length?'Ver / adicionar fatias':'Registrar corte'}</button></div>
     </div>`;
   }).join('');
 }
@@ -5237,6 +5313,7 @@ async function criarLaminacao(){
   renderLaminacao();
   const compFala=composicao.map(c=>`${c.partes} ${c.partes===1?'parte':'partes'} do balde ${c.loteNum}`).join(', ');
   falar(`Lote ${nome} criado. ${total} ${total===1?'parte':'partes'}. ${compFala}.`+(temAnterior?' Atenção: inclui massa de dia anterior.':''));
+  abrirCorteLaminacao(lam.id);
   }finally{st.criandoLam=false;}
 }
 function apagarLaminacao(id){
@@ -5246,11 +5323,77 @@ function apagarLaminacao(id){
   }
   const lams=LS.g('fdo_laminacoes',[]);
   const lam=lams.find(x=>x.id===id); if(!lam) return;
+  if(posPartidasDaLam(id).length){alert('Este lote já possui fatias registradas. Preserve as fatias/formas para manter a rastreabilidade.');return;}
   if(!confirm(`Apagar o lote ${lam.nome}?\n\nAs partes voltam para o estoque dos baldes de origem.`)) return;
   FB.removerRegistro('fdo_laminacoes',id);
   LS.s('fdo_laminacoes',lams.filter(x=>x.id!==id));
   renderLaminacao();
 }
+
+
+// ════════════════════════════════════════════════════════════
+// v26.6 — PÓS-LAMINAÇÃO: FATIAS, FRIO E MODELAGEM
+// Entidades pós-laminação ficam fora de lote.etapas para acompanhar o objeto físico.
+// ════════════════════════════════════════════════════════════
+const POS_PRODUTOS=[
+  {id:'croissant_115',nome:'Croissant · corte 11,5 cm',corteCm:11.5,sugQtd:36,forma:16,hint:'geralmente Croissant G; confirme pelo crescimento'},
+  {id:'croissant_100',nome:'Croissant · corte 10 cm',corteCm:10,sugQtd:40,forma:16,hint:'geralmente Croissant M'},
+  {id:'croissant_090',nome:'Croissant · corte 9 cm',corteCm:9,sugQtd:44,forma:16,hint:'geralmente Croissant Francês'},
+  {id:'croissant_mini',nome:'Croissant Mini',corteCm:null,sugQtd:null,forma:35,hint:''},
+  {id:'pain_chocolat',nome:'Pain au Chocolat',corteCm:null,sugQtd:null,forma:16,hint:''},
+  {id:'new_york_roll',nome:'New York Roll',corteCm:null,sugQtd:null,forma:14,hint:'capacidade pode variar conforme a arrumação'}
+];
+function posProduto(id){return POS_PRODUTOS.find(x=>x.id===id)||null;}
+function posPartidas(){return LS.g('fdo_partidas',[]).filter(x=>x&&!x._deleted);}
+function posFormas(){return LS.g('fdo_formas',[]).filter(x=>x&&!x._deleted);}
+function posPartidasDaLam(id){return posPartidas().filter(p=>p.laminacaoId===id);}
+function posUnidadesUsadas(partidaId){return posFormas().reduce((s,f)=>s+(Array.isArray(f.composicao)?f.composicao.reduce((a,c)=>a+(c.partidaId===partidaId?(Number(c.unidades)||0):0),0):0),0);}
+function posSaldo(p){return Math.max(0,(Number(p&&p.qtd)||0)-posUnidadesUsadas(p&&p.id));}
+function posDia(ts){return dataCurta(Number(ts)||Date.now());}
+function posHora(ts){return ts?new Date(Number(ts)).toLocaleString('pt-BR'):'—';}
+function posEstadoTexto(p){return {cortada:'Cortada · aguardando destino',freezer_rapido:'Freezer rápido',freezer_conservador:'Freezer conservador · -15°C',descongelando:'Descongelando na geladeira',modelagem:'Em modelagem',consumida:'Todas as fatias modeladas'}[p&&p.situacao]||'Fatias registradas';}
+function posCompat(a,b){return !!(a&&b&&a.produtoId===b.produtoId);}
+function posSalvarPartidas(arr){LS.s('fdo_partidas',arr);}
+function posSalvarFormas(arr){LS.s('fdo_formas',arr);}
+function posAtualizarPartida(id,fn){const arr=posPartidas(),p=arr.find(x=>x.id===id);if(!p)return null;fn(p);p.atualizadoTs=Date.now();p.atualizadoEm=new Date(p.atualizadoTs).toLocaleString('pt-BR');p.atualizadoPor=getOp();posSalvarPartidas(arr);return p;}
+function abrirCorteLaminacao(lamId){const lam=LS.g('fdo_laminacoes',[]).find(x=>x.id===lamId);if(!lam){alert('Lote de laminação não encontrado.');return;}st.corteLamId=lamId;st.corteLinhas=[{produtoId:'',qtd:''}];renderCorteLaminacao();ir('corte-fatias');}
+function adicionarLinhaCorte(){st.corteLinhas=Array.isArray(st.corteLinhas)?st.corteLinhas:[];st.corteLinhas.push({produtoId:'',qtd:''});renderCorteLaminacao();}
+function removerLinhaCorte(i){if(!Array.isArray(st.corteLinhas)||st.corteLinhas.length<=1)return;st.corteLinhas.splice(i,1);renderCorteLaminacao();}
+function corteProdutoMudou(i){const sel=document.querySelector('[data-corte-prod="'+i+'"]'),inp=document.querySelector('[data-corte-qtd="'+i+'"]');if(!sel||!inp)return;const pr=posProduto(sel.value);st.corteLinhas[i]={produtoId:sel.value,qtd:(pr&&pr.sugQtd!=null)?String(pr.sugQtd):''};renderCorteLaminacao();}
+function corteQtdMudou(i,v){if(st.corteLinhas&&st.corteLinhas[i])st.corteLinhas[i].qtd=String(v||'').replace(/\D/g,'');}
+function renderCorteLaminacao(){
+  const lam=LS.g('fdo_laminacoes',[]).find(x=>x.id===st.corteLamId),sum=document.getElementById('corte-lam-resumo'),el=document.getElementById('corte-linhas'),ja=document.getElementById('corte-ja-registradas');if(!lam||!sum||!el||!ja)return;
+  sum.innerHTML='<div class="pos-title">Lote '+_escHtml(lam.nome||'—')+' · '+_escHtml(lam.receitaNome||'')+'</div><div class="pos-meta">'+(Number(lam.totalPartes)||0)+' partes laminadas · registre o resultado real do corte</div>';
+  st.corteLinhas=Array.isArray(st.corteLinhas)&&st.corteLinhas.length?st.corteLinhas:[{produtoId:'',qtd:''}];
+  el.innerHTML=st.corteLinhas.map((r,i)=>{const pr=posProduto(r.produtoId),opts='<option value="">Selecione…</option>'+POS_PRODUTOS.map(p=>'<option value="'+p.id+'" '+(p.id===r.produtoId?'selected':'')+'>'+_escHtml(p.nome)+'</option>').join('');return '<div class="pos-cut-row"><div class="pos-grid"><select class="inp" data-corte-prod="'+i+'" onchange="corteProdutoMudou('+i+')">'+opts+'</select><input class="inp" data-corte-qtd="'+i+'" type="number" inputmode="numeric" min="1" value="'+_escHtml(r.qtd||'')+'" placeholder="Qtd" oninput="corteQtdMudou('+i+',this.value)"></div>'+(pr?'<div class="pos-hint">Forma sugerida: '+pr.forma+' un.'+(pr.sugQtd!=null?' · corte costuma render '+pr.sugQtd:'')+(pr.hint?' · '+_escHtml(pr.hint):'')+'</div>':'')+(st.corteLinhas.length>1?'<button class="link-btn" style="margin-top:.35rem" onclick="removerLinhaCorte('+i+')">Remover</button>':'')+'</div>';}).join('');
+  const arr=posPartidasDaLam(lam.id);ja.innerHTML=arr.length?arr.map(p=>'<div class="pos-card"><div class="pos-title">'+_escHtml(p.nome)+' · '+_escHtml(p.produtoNome)+'</div><div class="pos-meta">'+p.qtd+' unidades · '+_escHtml(posEstadoTexto(p))+'</div><div class="pos-actions"><button class="link-btn" onclick="abrirEtiquetaPartida(\''+p.id+'\')">🏷 Imprimir etiqueta</button></div></div>').join(''):'<div class="pos-empty">Nenhuma fatia registrada ainda.</div>';
+}
+async function salvarCorteLaminacao(){
+  const lam=LS.g('fdo_laminacoes',[]).find(x=>x.id===st.corteLamId);if(!lam)return;const linhas=(st.corteLinhas||[]).map(r=>({produto:posProduto(r.produtoId),qtd:parseInt(r.qtd,10)}));if(!linhas.length||linhas.some(x=>!x.produto||!Number.isInteger(x.qtd)||x.qtd<=0)){alert('Selecione o produto e informe uma quantidade maior que zero em todas as linhas.');return;}
+  let arr=posPartidas(),primeira=null;for(const x of linhas){const agora=Date.now(),seq=await FB.proxPosSeq('partida',agora),p={id:FB.novoId('part'),seqDia:seq,nome:posDia(agora)+' · '+seq,criadoTs:agora,criadoEm:new Date(agora).toLocaleString('pt-BR'),atualizadoTs:agora,laminacaoId:lam.id,laminacaoNome:lam.nome,receita:lam.receita,receitaNome:lam.receitaNome||'',testeId:lam.testeId||null,produtoId:x.produto.id,produtoNome:x.produto.nome,corteCm:x.produto.corteCm,qtd:x.qtd,capacidadeForma:x.produto.forma,situacao:'cortada',eventos:{corte:{emTs:agora,em:new Date(agora).toLocaleString('pt-BR'),op:getOp()}},op:getOp(),dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null)};arr.unshift(p);posSalvarPartidas(arr);primeira=primeira||p;arr=posPartidas();}
+  st.corteLinhas=[{produtoId:'',qtd:''}];renderCorteLaminacao();falar('Fatias registradas. Imprima a etiqueta e informe o destino.');if(primeira)abrirEtiquetaPartida(primeira.id);
+}
+function posFreezerRapido(id){posAtualizarPartida(id,p=>{if(p.situacao!=='cortada')return;const t=Date.now();p.situacao='freezer_rapido';p.eventos=p.eventos||{};p.eventos.freezerRapido={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp()};});renderModelagem();}
+function posFreezerConservador(id){posAtualizarPartida(id,p=>{if(p.situacao!=='freezer_rapido')return;const t=Date.now();p.situacao='freezer_conservador';p.eventos=p.eventos||{};p.eventos.freezerConservador={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp(),tempAlvo:-15};});renderModelagem();}
+function posNumero(v){if(v==null||String(v).trim()==='')return null;const n=Number(String(v).replace(',','.'));return Number.isFinite(n)?n:null;}
+function posIniciarDescongelamento(id){const temp=prompt('Temperatura da geladeira de descongelamento (°C). Pode deixar em branco se não puder medir agora:','');const n=posNumero(temp);posAtualizarPartida(id,p=>{if(p.situacao!=='freezer_conservador')return;const t=Date.now();p.situacao='descongelando';p.eventos=p.eventos||{};p.eventos.descongelamentoInicio={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp(),tempAmbiente:n};p.eventos.saidaFreezer={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp()};});renderModelagem();}
+function posModelagemDireta(id){if(!confirm('Seguir direto para a modelagem sem congelamento/descongelamento? O histórico ficará marcado como produção direta/urgente.'))return;posAtualizarPartida(id,p=>{if(p.situacao!=='cortada')return;const t=Date.now();p.situacao='modelagem';p.rota='direta';p.eventos=p.eventos||{};p.eventos.modelagemDireta={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp()};});renderModelagem();}
+function posTempoDescongelando(p){const ini=Number(p&&p.eventos&&p.eventos.descongelamentoInicio&&p.eventos.descongelamentoInicio.emTs)||0;if(!ini)return '';const fim=Number(p&&p.eventos&&p.eventos.modelagemInicio&&p.eventos.modelagemInicio.emTs)||Date.now(),min=Math.max(0,Math.round((fim-ini)/60000)),h=Math.floor(min/60),m=min%60;return h+'h '+String(m).padStart(2,'0')+'min';}
+function posAcaoHtml(p){const id=p.id,s=p.situacao,btn=[];btn.push('<button class="link-btn" onclick="abrirEtiquetaPartida(\''+id+'\')">🏷 Etiqueta</button>');if(s==='cortada'){btn.push('<button class="btn-sec" onclick="posFreezerRapido(\''+id+'\')">❄️ Freezer rápido</button>');btn.push('<button class="btn-sec" onclick="posModelagemDireta(\''+id+'\')">⚡ Modelagem direta</button>');}else if(s==='freezer_rapido')btn.push('<button class="btn-sec" onclick="posFreezerConservador(\''+id+'\')">❄️ Freezer conservador</button>');else if(s==='freezer_conservador')btn.push('<button class="btn-sec" onclick="posIniciarDescongelamento(\''+id+'\')">🧊 Iniciar descongelamento</button>');else if((s==='descongelando'||s==='modelagem')&&posSaldo(p)>0)btn.push('<button class="btn-main" onclick="montarForma(\''+id+'\')">🥐 Montar forma</button>');if(OP.pode('apagar')&&posUnidadesUsadas(id)===0)btn.push('<button class="link-btn" onclick="apagarPartida(\''+id+'\')">🗑</button>');return btn.join('');}
+function renderModelagem(){
+  const el=document.getElementById('modelagem-partidas'),fe=document.getElementById('modelagem-formas');if(!el||!fe)return;const arr=posPartidas().slice().sort((a,b)=>(Number(b.atualizadoTs||b.criadoTs)||0)-(Number(a.atualizadoTs||a.criadoTs)||0));
+  el.innerHTML=arr.length?arr.map(p=>{const saldo=posSaldo(p),des=p.situacao==='descongelando'||(p.eventos&&p.eventos.descongelamentoInicio)?posTempoDescongelando(p):'',temp=p.eventos&&p.eventos.descongelamentoInicio&&p.eventos.descongelamentoInicio.tempAmbiente;return '<div class="pos-card"><div class="pos-title">'+_escHtml(p.nome)+' · '+_escHtml(p.produtoNome)+'</div><div class="pos-meta">Lam. '+_escHtml(p.laminacaoNome||'—')+' · '+p.qtd+' produzidas</div><div class="pos-saldo">'+saldo+' disponíveis</div><div class="pos-state">'+_escHtml(posEstadoTexto(p))+'</div>'+(des?'<div class="pos-meta">Descongelamento: '+des+(temp!=null?' · <span class="pos-temp">'+temp+'°C</span>':' · temperatura não informada')+'</div>':'')+'<div class="pos-actions">'+posAcaoHtml(p)+'</div></div>';}).join(''):'<div class="pos-empty">Nenhuma fatia registrada. Ao concluir uma laminação, registre o corte.</div>';
+  const hoje=posDia(Date.now()),formas=posFormas().filter(f=>posDia(f.criadoTs)===hoje).sort((a,b)=>(Number(b.criadoTs)||0)-(Number(a.criadoTs)||0));fe.innerHTML=formas.length?formas.map(f=>'<div class="pos-card"><div class="pos-title">Forma '+_escHtml(f.nome)+' · '+_escHtml(f.produtoNome)+'</div><div class="pos-meta">'+f.totalUnidades+' unidades · criada '+_escHtml(posHora(f.criadoTs))+'</div><div class="pos-forma-comp">'+(f.composicao||[]).map(c=>c.unidades+'× '+_escHtml(c.partidaNome||c.partidaId)).join(' + ')+'</div>'+(OP.pode('apagar')?'<div class="pos-actions"><button class="link-btn" onclick="apagarForma(\''+f.id+'\')">🗑 Excluir forma</button></div>':'')+'</div>').join(''):'<div class="pos-empty">Nenhuma forma criada hoje.</div>';
+}
+async function montarForma(partidaId){
+  let partes=posPartidas(),p=partes.find(x=>x.id===partidaId);if(!p||posSaldo(p)<=0)return;const compativeis=partes.filter(x=>posCompat(p,x)&&posSaldo(x)>0).sort((a,b)=>a.id===p.id?-1:b.id===p.id?1:(Number(a.criadoTs)||0)-(Number(b.criadoTs)||0)),disp=compativeis.reduce((s,x)=>s+posSaldo(x),0),ref=(posProduto(p.produtoId)||{}).forma||Number(p.capacidadeForma)||16,def=Math.min(ref,disp),entrada=prompt('Quantidade desta forma:',String(def));if(entrada===null)return;const alvo=parseInt(entrada,10);if(!Number.isInteger(alvo)||alvo<=0){alert('Informe uma quantidade maior que zero.');return;}if(alvo>disp){alert('Existem somente '+disp+' unidades compatíveis disponíveis.');return;}
+  let falta=alvo,comp=[];for(const src of compativeis){if(falta<=0)break;const q=Math.min(falta,posSaldo(src));if(q>0){comp.push({partidaId:src.id,partidaNome:src.nome,laminacaoId:src.laminacaoId,laminacaoNome:src.laminacaoNome,unidades:q});falta-=q;}}
+  const agora=Date.now(),seq=await FB.proxPosSeq('forma',agora),forma={id:FB.novoId('forma'),seqDia:seq,nome:posDia(agora)+' · '+seq,produtoId:p.produtoId,produtoNome:p.produtoNome,criadoTs:agora,criadoEm:new Date(agora).toLocaleString('pt-BR'),atualizadoTs:agora,totalUnidades:alvo,capacidadeReferencia:ref,composicao:comp,op:getOp(),dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null)};const caps={};comp.forEach(c=>{const src=partes.find(x=>x.id===c.partidaId);caps[c.partidaId]=Number(src&&src.qtd)||0;});const r=await FB.criarFormaAtomica(forma,caps);if(!r.ok){alert(r.motivo||'As fatias mudaram em outro aparelho. Atualize e tente novamente.');renderModelagem();return;}
+  const formas=posFormas().filter(x=>x.id!==forma.id);formas.unshift(forma);posSalvarFormas(formas);partes=posPartidas();const t=Date.now();comp.forEach(c=>{const src=partes.find(x=>x.id===c.partidaId);if(!src)return;src.eventos=src.eventos||{};if(!src.eventos.modelagemInicio)src.eventos.modelagemInicio={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp()};src.situacao=posSaldo(src)<=0?'consumida':'modelagem';src.atualizadoTs=t;});posSalvarPartidas(partes);falar('Forma '+forma.nome+' criada com '+alvo+' unidades.');renderModelagem();
+}
+function apagarForma(id){if(!OP.pode('apagar'))return;const formas=posFormas(),f=formas.find(x=>x.id===id);if(!f||!confirm('Excluir a forma '+f.nome+'? As unidades voltarão a ficar disponíveis para modelagem.'))return;FB.removerRegistro('fdo_formas',id);posSalvarFormas(formas.filter(x=>x.id!==id));const ps=posPartidas(),t=Date.now();(f.composicao||[]).forEach(c=>{const p=ps.find(x=>x.id===c.partidaId);if(!p)return;const ev=p.eventos||{};p.situacao=ev.descongelamentoInicio?'descongelando':ev.modelagemDireta?'modelagem':ev.freezerConservador?'freezer_conservador':ev.freezerRapido?'freezer_rapido':'cortada';p.atualizadoTs=t;});posSalvarPartidas(ps);renderModelagem();}
+function apagarPartida(id){if(!OP.pode('apagar')||posUnidadesUsadas(id)>0)return;const ps=posPartidas(),p=ps.find(x=>x.id===id);if(!p||!confirm('Excluir '+p.nome+'? Use apenas para lançamento feito por engano.'))return;FB.removerRegistro('fdo_partidas',id);posSalvarPartidas(ps.filter(x=>x.id!==id));renderModelagem();if(st.corteLamId)renderCorteLaminacao();}
+
 
 // ════════════════════════════════════════════════════════════
 // Alerta de bateria fraca: avisa por voz abaixo de 20% e repete a cada 3 min
@@ -5291,21 +5434,21 @@ function monitorarBateria(){
 // Chaves antigas continuam como ponte temporária para aparelhos v24/v25.0.
 // ════════════════════════════════════════════════════════════
 const SYNC25={
-  COL:['fdo_lotes','fdo_laminacoes'], SCALAR:['fdo_operadores','fdo_farinha_lotes_atuais'],
-  OUT:'fdo_sync_outbox_v25', itemJson:{fdo_lotes:{},fdo_laminacoes:{}}, raw:{fdo_lotes:{},fdo_laminacoes:{}}, ready:{fdo_lotes:false,fdo_laminacoes:false},
+  COL:['fdo_lotes','fdo_laminacoes','fdo_partidas','fdo_formas'], LEGACY:['fdo_lotes','fdo_laminacoes'], SCALAR:['fdo_operadores','fdo_farinha_lotes_atuais'],
+  OUT:'fdo_sync_outbox_v25', itemJson:{fdo_lotes:{},fdo_laminacoes:{},fdo_partidas:{},fdo_formas:{}}, raw:{fdo_lotes:{},fdo_laminacoes:{},fdo_partidas:{},fdo_formas:{}}, ready:{fdo_lotes:false,fdo_laminacoes:false,fdo_partidas:false,fdo_formas:false},
   flushing:false, iniciado:false, mirrorTimer:{}, mirrorJson:{},
-  path(k){return k==='fdo_lotes'?'fdo_v25/lotes':'fdo_v25/laminacoes'},
+  path(k){return ({fdo_lotes:'fdo_v25/lotes',fdo_laminacoes:'fdo_v25/laminacoes',fdo_partidas:'fdo_v25/partidas',fdo_formas:'fdo_v25/formas'})[k]||'';},
   key(id){return String(id||'sem_id').replace(/[.#$\[\]\/]/g,'_')},
   clone(v){return v==null?v:JSON.parse(JSON.stringify(v))},
   local(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
   novoId(prefix){let u='';try{if(crypto&&crypto.randomUUID)u=crypto.randomUUID()}catch(e){}if(!u)u=Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);return prefix+'_'+u},
   map(arr){const o={};(Array.isArray(arr)?arr:[]).forEach(x=>{if(x&&x.id)o[this.key(x.id)]=this.clone(x)});return o},
-  arr(k,m){return Object.values(m||{}).filter(x=>x&&x.id&&!x._deleted).map(x=>this.clone(x)).sort((a,b)=>{const ta=Number(k==='fdo_lotes'?a.criadoTs:a.dataTs)||0,tb=Number(k==='fdo_lotes'?b.criadoTs:b.dataTs)||0;return tb-ta})},
-  ts(x){if(!x)return 0;let m=Math.max(Number(x.criadoTs)||0,Number(x.dataTs)||0,Number(x.deletedTs)||0,Number(x.snapshotMigrado&&x.snapshotMigrado.emTs)||0,Number(x.cancelado&&x.cancelado.emTs)||0,Number(x.restaurado&&x.restaurado.emTs)||0);Object.values(x.etapas||{}).forEach(v=>m=Math.max(m,Number(v&&v.emTs)||0));const t=x.teste||null;if(t){m=Math.max(m,Number(t.criadoTs)||0,Number(t.atualizadoTs)||0);(t.observacoes||[]).forEach(v=>m=Math.max(m,Number(v&&v.emTs)||0));}return m},
+  arr(k,m){return Object.values(m||{}).filter(x=>x&&x.id&&!x._deleted).map(x=>this.clone(x)).sort((a,b)=>{const ta=Number(a.criadoTs||a.dataTs)||0,tb=Number(b.criadoTs||b.dataTs)||0;return tb-ta})},
+  ts(x){if(!x)return 0;let m=Math.max(Number(x.criadoTs)||0,Number(x.dataTs)||0,Number(x.atualizadoTs)||0,Number(x.deletedTs)||0,Number(x.snapshotMigrado&&x.snapshotMigrado.emTs)||0,Number(x.cancelado&&x.cancelado.emTs)||0,Number(x.restaurado&&x.restaurado.emTs)||0);Object.values(x.etapas||{}).forEach(v=>m=Math.max(m,Number(v&&v.emTs)||0));Object.values(x.eventos||{}).forEach(v=>m=Math.max(m,Number(v&&v.emTs)||0));const t=x.teste||null;if(t){m=Math.max(m,Number(t.criadoTs)||0,Number(t.atualizadoTs)||0);(t.observacoes||[]).forEach(v=>m=Math.max(m,Number(v&&v.emTs)||0));}return m},
   etapa(a,b){if(!a)return this.clone(b);if(!b)return this.clone(a);return (Number(b.emTs)||0)>=(Number(a.emTs)||0)?{...this.clone(a),...this.clone(b)}:{...this.clone(b),...this.clone(a)}},
   merge(k,a,b){
     if(!a)return this.clone(b); if(!b)return this.clone(a);
-    if(k==='fdo_laminacoes'){
+    if(k!=='fdo_lotes'){
       if(a._deleted||b._deleted){const da=Number(a.deletedTs)||0,db=Number(b.deletedTs)||0;if(a._deleted&&da>=this.ts(b))return this.clone(a);if(b._deleted&&db>=this.ts(a))return this.clone(b)}
       return this.ts(b)>=this.ts(a)?{...this.clone(a),...this.clone(b)}:{...this.clone(b),...this.clone(a)};
     }
@@ -5316,7 +5459,7 @@ const SYNC25={
     const ta=a.teste,tb=b.teste;if(ta||tb){const novo=this.ts(b)>=this.ts(a)?this.clone(tb||ta):this.clone(ta||tb),obs=[],seen=new Set();[...((ta&&ta.observacoes)||[]),...((tb&&tb.observacoes)||[])].forEach(o=>{if(!o)return;const k=o.id||((o.emTs||'')+'|'+(o.texto||''));if(seen.has(k))return;seen.add(k);obs.push(this.clone(o));});obs.sort((x,y)=>(Number(x.emTs)||0)-(Number(y.emTs)||0));base.teste={...(novo||{}),observacoes:obs,atualizadoTs:Math.max(Number(ta&&ta.atualizadoTs)||0,Number(tb&&tb.atualizadoTs)||0,...obs.map(o=>Number(o.emTs)||0))};}
     return base;
   },
-  out(){return LS.g(this.OUT,{fdo_lotes:{},fdo_laminacoes:{}})||{fdo_lotes:{},fdo_laminacoes:{}}},
+  out(){return LS.g(this.OUT,{fdo_lotes:{},fdo_laminacoes:{},fdo_partidas:{},fdo_formas:{}})||{fdo_lotes:{},fdo_laminacoes:{},fdo_partidas:{},fdo_formas:{}}},
   saveOut(o){this.local(this.OUT,o)},
   queue(k,item){if(!item||!item.id)return;const o=this.out();o[k]=o[k]||{};const id=this.key(item.id);o[k][id]=this.merge(k,o[k][id],item);this.saveOut(o)},
   ack(k,id,sent){const o=this.out(),cur=o[k]&&o[k][id];if(cur&&JSON.stringify(cur)===JSON.stringify(sent))delete o[k][id];this.saveOut(o)},
@@ -5341,10 +5484,15 @@ const SYNC25={
     FB.applying=true;this.local(k,this.arr(k,m));FB.applying=false;this.itemJson[k]={};Object.entries(m).forEach(([id,x])=>this.itemJson[k][id]=JSON.stringify(x));this.ready[k]=true;FB.repaint();this.mirror(k);this.flush();
   },
   legacy(k,v){if(!Array.isArray(v))return;const json=JSON.stringify(v);if(this.mirrorJson[k]===json)return;let reassert=false;v.forEach(x=>{if(!x||!x.id)return;const id=this.key(x.id),r=this.raw[k]&&this.raw[k][id];if(r&&r._deleted){reassert=true;return}this.queue(k,this.merge(k,r,x))});if(this.ready[k])FB.status('pending','Aparelho antigo detectado · conciliando…');if(reassert)this.mirror(k);this.flush()},
-  mirror(k){if(!FB.db||!navigator.onLine)return;clearTimeout(this.mirrorTimer[k]);this.mirrorTimer[k]=setTimeout(async()=>{const canon=this.map(LS.g(k,[])),raw=this.raw[k]||{};try{const r=await FB.db.ref(k).transaction(cur=>{const atual=this.map(Array.isArray(cur)?cur:[]),u={...canon};Object.entries(atual).forEach(([id,x])=>{if(raw[id]&&raw[id]._deleted)return;u[id]=this.merge(k,u[id],x)});let arr=this.arr(k,u);if(k==='fdo_lotes'&&typeof loteAtivo==='function')arr=arr.filter(l=>loteAtivo(l)&&receitaCompativelLegado(l));if(k==='fdo_laminacoes')arr=arr.filter(l=>!l.testeId&&(l.receita==='misto'||RECEITAS_PADRAO_IDS.includes(l.receita)));return arr},undefined,false);this.mirrorJson[k]=JSON.stringify(r.snapshot.val()||[])}catch(e){console.warn('[FB25] bridge',k,e)}},450)},
+  mirror(k){if(!this.LEGACY.includes(k)||!FB.db||!navigator.onLine)return;clearTimeout(this.mirrorTimer[k]);this.mirrorTimer[k]=setTimeout(async()=>{const canon=this.map(LS.g(k,[])),raw=this.raw[k]||{};try{const r=await FB.db.ref(k).transaction(cur=>{const atual=this.map(Array.isArray(cur)?cur:[]),u={...canon};Object.entries(atual).forEach(([id,x])=>{if(raw[id]&&raw[id]._deleted)return;u[id]=this.merge(k,u[id],x)});let arr=this.arr(k,u);if(k==='fdo_lotes'&&typeof loteAtivo==='function')arr=arr.filter(l=>loteAtivo(l)&&receitaCompativelLegado(l));if(k==='fdo_laminacoes')arr=arr.filter(l=>!l.testeId&&(l.receita==='misto'||RECEITAS_PADRAO_IDS.includes(l.receita)));return arr},undefined,false);this.mirrorJson[k]=JSON.stringify(r.snapshot.val()||[])}catch(e){console.warn('[FB25] bridge',k,e)}},450)},
   async remove(k,id0){const id=this.key(id0),t={id:id0,_deleted:true,deletedTs:Date.now(),op:typeof getOp==='function'?getOp():''};this.queue(k,t);this.raw[k][id]=t;await this.flush()},
   async proxLoteNum(){const local=Number(LS.g('fdo_lote_seq',0))||0;if(!FB.db||!navigator.onLine){const n=local+1;this.local('fdo_lote_seq',n);FB.status('err','⚠ Número criado offline · sincronizar depois');return {num:n,origem:'offline'}}try{const r=await FB.db.ref('fdo_v25/meta/lote_seq').transaction(cur=>Math.max(Number(cur)||0,local)+1,undefined,false),n=Number(r.snapshot.val())||local+1;this.local('fdo_lote_seq',n);FB.db.ref('fdo_lote_seq').transaction(cur=>Math.max(Number(cur)||0,n),undefined,false).catch(()=>{});return {num:n,origem:'transacao'}}catch(e){const n=local+1;this.local('fdo_lote_seq',n);FB.status('err','⚠ Numeração local · nuvem pendente');return {num:n,origem:'offline'}}},
   async proxLamSeq(ts){const d=new Date(ts),key=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'),local=LS.g('fdo_laminacoes',[]).filter(x=>dataCurta(x.dataTs)===dataCurta(ts)).length;if(!FB.db||!navigator.onLine)return local+1;try{const r=await FB.db.ref('fdo_v25/meta/lam_seq/'+key).transaction(cur=>Math.max(Number(cur)||0,local)+1,undefined,false);return Number(r.snapshot.val())||local+1}catch(e){return local+1}},
+  async proxPosSeq(tipo,ts){const d=new Date(ts),key=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'),coll=tipo==='forma'?'fdo_formas':'fdo_partidas',local=Math.max(0,...LS.g(coll,[]).filter(x=>posDia(x.criadoTs)===posDia(ts)).map(x=>Number(x.seqDia)||0));if(!FB.db||!navigator.onLine)return local+1;try{const r=await FB.db.ref('fdo_v25/meta/'+(tipo==='forma'?'forma_seq/':'partida_seq/')+key).transaction(cur=>Math.max(Number(cur)||0,local)+1,undefined,false);return Number(r.snapshot.val())||local+1}catch(e){return local+1}},
+  async criarFormaAtomica(forma,capacidades){
+    if(!FB.db||!navigator.onLine)return {ok:true,offline:true};const id=this.key(forma.id);let conflito='';
+    try{const r=await FB.db.ref(this.path('fdo_formas')).transaction(cur=>{conflito='';const m=(cur&&typeof cur==='object')?this.clone(cur):{},usados={};Object.values(m).forEach(x=>{if(!x||x._deleted||!Array.isArray(x.composicao))return;x.composicao.forEach(c=>{if(c&&c.partidaId)usados[c.partidaId]=(usados[c.partidaId]||0)+(Number(c.unidades)||0)})});for(const c of (forma.composicao||[])){const cap=Number(capacidades[c.partidaId])||0,ja=Number(usados[c.partidaId])||0,q=Number(c.unidades)||0;if(q<=0||ja+q>cap){conflito='As fatias de '+(c.partidaNome||c.partidaId)+' já foram usadas em outro aparelho.';return}}m[id]=this.merge('fdo_formas',m[id],forma);return m},undefined,false);if(!r.committed)return {ok:false,motivo:conflito||'As fatias selecionadas mudaram em outro aparelho.'};const salvo=r.snapshot.child(id).val();if(salvo)this.itemJson.fdo_formas[id]=JSON.stringify(salvo);return {ok:true,offline:false}}catch(e){console.warn('[FB25] forma atomic',e);return {ok:false,motivo:'Não foi possível confirmar as fatias na nuvem.'}}
+  },
   async criarLaminacaoAtomica(lam,capacidades){
     if(!FB.db||!navigator.onLine)return {ok:true,offline:true};
     const id=this.key(lam.id);let conflito='';
@@ -5364,19 +5512,21 @@ const SYNC25={
   init(){
     if(this.iniciado)return;if(typeof DEVICE!=='undefined'&&!DEVICE.aprovado){FB.status('err','⚠ Aparelho não autorizado');return}this.iniciado=true;
     if(typeof firebase==='undefined'||!firebase.initializeApp){this.iniciado=false;FB.status('local','Salvo neste aparelho · sem nuvem');return}try{if(!firebase.apps.length)firebase.initializeApp(FB_CFG);APP_CHECK.init();FB.db=firebase.database();FB.status(navigator.onLine?'pending':'local',navigator.onLine?'Sincronizando…':'Salvo neste aparelho · sem internet');
-      this.COL.forEach(k=>{FB.db.ref(this.path(k)).on('value',snap=>this.apply(k,snap.val()),e=>{console.warn('[FB25] granular',k,e);FB.status('err','⚠ Nuvem v25 indisponível')});FB.db.ref(k).on('value',snap=>this.legacy(k,snap.val()),e=>console.warn('[FB25] legacy',k,e))});
+      this.COL.forEach(k=>{FB.db.ref(this.path(k)).on('value',snap=>this.apply(k,snap.val()),e=>{console.warn('[FB25] granular',k,e);FB.status('err','⚠ Nuvem v25 indisponível')});if(this.LEGACY.includes(k))FB.db.ref(k).on('value',snap=>this.legacy(k,snap.val()),e=>console.warn('[FB25] legacy',k,e))});
       this.SCALAR.forEach(k=>FB.db.ref(k).on('value',snap=>{const v=snap.val();if(v==null){const l=localStorage.getItem(k);if(l!==null)try{FB.db.ref(k).set(JSON.parse(l))}catch(e){};return}FB.applying=true;this.local(k,v);FB.applying=false;FB.repaint()},e=>console.warn('[FB25] scalar listen',k,e)));
       FB.db.ref('fdo_lote_seq').on('value',snap=>this.absorverSeq(snap.val()));FB.db.ref('fdo_v25/meta/lote_seq').on('value',snap=>{const n=Number(snap.val())||0;if(n>(Number(LS.g('fdo_lote_seq',0))||0))this.local('fdo_lote_seq',n)});FB.db.ref('fdo_v25/meta/lote_seq_reset').on('value',snap=>{const t=Number(snap.val())||0,seen=Number(LS.g('fdo_seq_reset_ts_v25',0))||0;if(t>seen){this.local('fdo_seq_reset_ts_v25',t);this.local('fdo_lote_seq',0)}});FB.db.ref('fdo_v25/meta/schema').transaction(cur=>Math.max(Number(cur)||0,1),undefined,false).catch(()=>{});this.flush();
     }catch(e){this.iniciado=false;console.warn('[FB25] init',e);FB.status('err','⚠ Firebase indisponível')}
   },
-  online(){if(!FB.db)return;FB.status('pending','Internet voltou · sincronizando…');this.flush();this.COL.forEach(k=>this.mirror(k))}
+  online(){if(!FB.db)return;FB.status('pending','Internet voltou · sincronizando…');this.flush();this.LEGACY.forEach(k=>this.mirror(k))}
 };
 FB.init=()=>DEVICE.bootstrap(()=>SYNC25.init());
 FB.push=(k,v)=>SYNC25.push(k,v);
 FB.novoId=p=>SYNC25.novoId(p);
 FB.proxLoteNum=()=>SYNC25.proxLoteNum();
 FB.proxLamSeqDia=ts=>SYNC25.proxLamSeq(ts);
+FB.proxPosSeq=(tipo,ts)=>SYNC25.proxPosSeq(tipo,ts);
 FB.criarLaminacaoAtomica=(lam,capacidades)=>SYNC25.criarLaminacaoAtomica(lam,capacidades);
+FB.criarFormaAtomica=(forma,capacidades)=>SYNC25.criarFormaAtomica(forma,capacidades);
 FB.reiniciarSeq=()=>SYNC25.resetSeq();
 FB.removerRegistro=(k,id)=>SYNC25.remove(k,id);
 FB.aoVoltarOnline=()=>{SYNC25.online();if(typeof ESTOQUE_SYNC!=='undefined')ESTOQUE_SYNC.online();};
