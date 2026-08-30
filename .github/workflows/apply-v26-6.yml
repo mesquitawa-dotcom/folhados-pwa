@@ -1,0 +1,36 @@
+name: Aplicar v26.6 pós-laminação
+
+on:
+  push:
+    branches:
+      - agent/pos-laminacao-v26-6
+    paths:
+      - tools/apply_v26_6.py
+      - .github/workflows/apply-v26-6.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/pos-laminacao-v26-6
+          fetch-depth: 0
+      - name: Aplicar patch cirúrgico v26.6
+        run: python3 tools/apply_v26_6.py
+      - name: Validar aplicação e receitas
+        run: python3 tools/validate_fdo.py
+      - name: Testar pós-laminação v26.6
+        run: node tools/test_v26_6.js
+      - name: Smoke offline v26.6
+        run: python3 tools/smoke_v26_6.py
+      - name: Commitar versão validada
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "v26.6 — fatias, frio e modelagem"
+          git push origin HEAD:agent/pos-laminacao-v26-6
