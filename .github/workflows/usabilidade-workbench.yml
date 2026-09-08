@@ -1,0 +1,37 @@
+name: Bancada temporaria usabilidade v26.6.1
+on:
+  push:
+    branches: ['agent/usabilidade-v26-6-1']
+    paths:
+      - '.github/workflows/usabilidade-workbench.yml'
+      - 'tools/apply_usabilidade_v26_6_1.py'
+permissions:
+  contents: write
+jobs:
+  workbench:
+    if: github.ref == 'refs/heads/agent/usabilidade-v26-6-1'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Aplicar alteracao somente na branch de trabalho
+        if: hashFiles('tools/apply_usabilidade_v26_6_1.py') != ''
+        run: |
+          python3 tools/apply_usabilidade_v26_6_1.py
+      - name: Disponibilizar codigo para verificacao
+        uses: actions/upload-artifact@v4
+        with:
+          name: fdo-usabilidade-workbench
+          path: |
+            index.html
+            sw.js
+            manifest.json
+            database.rules.json
+            firebase.json
+            icon-192.png
+            icon-512.png
+            vendor/
+            tools/
+            Resumo*.md
+          retention-days: 7
