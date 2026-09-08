@@ -2,7 +2,11 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — atualização v26.6
+       FOLHADOS D'OURO — atualização v26.6.1
+       NOVIDADES v26.6.1:
+       • Usabilidade: retorno seguro, lotes no alto, baldes administrativos, etiquetas 1–8.
+       • Primeira laminação em pares; corte retomável; frio e modelagem por próxima ação.
+       • Estruturas antigas e parâmetros de produção preservados.
        NOVIDADES v26.6:
        • Pós-laminação: cada lote registra o resultado real do corte em uma ou mais partidas de fatias por produto.
        • Fluxo frio objetivo: freezer rápido → freezer conservador (-15°C) → descongelamento em geladeira com temperatura opcional.
@@ -760,6 +764,49 @@
 /* v26.6 — pós-laminação: fatias, frio e modelagem */
 .pos-scroll{flex:1;overflow-y:auto;padding:.75rem 1rem 6rem}.pos-card{border:1px solid #3a301e;border-radius:.55rem;background:#151109;padding:.72rem;margin-bottom:.65rem}.pos-title{font-weight:bold;color:var(--gl);font-size:.9rem}.pos-meta{color:var(--mut);font-size:.68rem;line-height:1.4;margin-top:.18rem}.pos-state{display:inline-block;margin-top:.38rem;padding:.18rem .42rem;border-radius:99px;border:1px solid #4d3c1d;color:var(--gold);font-size:.62rem}.pos-actions{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.55rem}.pos-actions button{flex:1 1 8rem;min-height:2.25rem}.pos-cut-row{border:1px solid #3a301e;border-radius:.5rem;padding:.65rem;margin-bottom:.55rem;background:#120f08}.pos-grid{display:grid;grid-template-columns:1.7fr .8fr;gap:.45rem}.pos-hint{font-size:.64rem;color:var(--mut);line-height:1.35;margin-top:.28rem}.pos-summary{border-left:3px solid var(--gold);padding:.5rem .65rem;background:#161106;margin:.55rem 0;border-radius:.25rem}.pos-saldo{font-size:1.15rem;color:var(--gl);font-weight:bold}.pos-forma-comp{font-size:.65rem;color:var(--mut);margin-top:.28rem}.pos-lam-actions{margin-top:.45rem;display:flex;gap:.35rem}.pos-lam-actions button{min-height:2rem}.pos-empty{text-align:center;color:var(--mut);padding:1.4rem .5rem}.pos-section{font-size:.72rem;letter-spacing:.05em;color:var(--gold);margin:.85rem 0 .4rem;text-transform:uppercase}.pos-temp{font-weight:bold;color:var(--gl)}
 
+
+/* v26.6.1 — mesma identidade visual, foco no trabalho atual. */
+.ux-backbar{display:flex;align-items:center;flex-shrink:0;padding:.35rem .7rem;border-bottom:1px solid var(--brd);background:var(--bg);z-index:5;position:sticky;top:0}
+.ux-backbar button{min-height:2rem;padding:.35rem .65rem;font-size:.85rem}
+.ux-compact .start-top{padding:.7rem 1rem .5rem}
+.ux-compact .start-icon,.ux-compact .start-brand{display:none}
+.ux-compact .start-title{font-size:1.2rem}
+.ux-details{border:1px solid var(--gold);border-radius:.5rem;margin:.7rem 0;padding:.65rem}
+.ux-details>summary{cursor:pointer;color:var(--gl);min-height:1.8rem;display:list-item}
+.ux-details[open]>summary{margin-bottom:.65rem}
+.ux-muted{font-size:.78rem;color:var(--mut);line-height:1.45}
+.ux-flow-menu{padding:.8rem;display:flex;flex-direction:column;gap:.8rem;overflow-y:auto}
+.ux-choice{text-align:left;white-space:normal;padding:1rem;min-height:4.5rem;line-height:1.35}
+.ux-choice small{display:block;font-weight:normal;font-size:.85rem;margin-top:.35rem;text-transform:none;letter-spacing:normal}
+.ux-count-row{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin:.65rem 0}
+.ux-count-row label{flex:1;min-width:8rem}
+.ux-count-row .inp{width:4.5rem;text-align:center}
+#nav-secos.show{flex-direction:column;align-items:stretch;gap:.6rem}
+#far-lotes-resumo{overflow-wrap:anywhere;line-height:1.6;margin:.6rem 0}
+#far-lotes-confirm-btn{margin-top:0}
+#etq-qtds{display:grid!important;grid-template-columns:repeat(4,1fr);gap:.4rem}
+#etq-qtds .etq-modo{min-width:0;min-height:2.2rem;font-size:1rem;padding:.5rem}
+.ux-tabs{display:flex;gap:.35rem;flex-wrap:wrap;margin:.5rem 0 .8rem}
+.ux-tabs button{flex:1;min-height:2.4rem;padding:.55rem .35rem;font-family:Georgia,serif;font-size:.82rem;border:1px solid var(--brd);border-radius:.4rem;background:var(--bg3);color:var(--mut);cursor:pointer}
+.ux-tabs button.sel{border:2px solid var(--gold);color:var(--gl)}
+.pos-grid{grid-template-columns:1fr!important}
+.pos-cut-row .inp{width:100%;min-height:2.3rem}
+.pos-actions>.btn-main{width:100%;white-space:normal}
+.ux-result{text-align:center;margin:.8rem 0;font-size:1.05rem;color:var(--gl)}
+.ux-hidden{display:none!important}
+
+/* Textos operacionais legíveis, sem aumentar a altura de cada botão. */
+#s-lam-menu .btn-main,#s-lam-cortes .btn-main,#s-lam-concluida .btn-main,#s-laminacao .btn-main,#s-corte-fatias .btn-main,#s-corte-resultado .btn-main,#s-modelagem .btn-main,#s-etiqueta .btn-main{letter-spacing:.02rem;text-transform:none;line-height:1.3;font-size:1rem;padding:.85rem .65rem}
+#s-lam-concluida .btn-sec,#s-corte-fatias .btn-sec,#s-corte-resultado .btn-sec{min-height:2.5rem;padding:.75rem;border:1px solid var(--gold);border-radius:.4rem;background:var(--bg3);color:var(--gl);font:inherit;cursor:pointer}
+.etq-body>*{flex-shrink:0}
+#etq-qtds{width:100%;max-width:15rem}
+#s-done{overflow-y:auto;justify-content:flex-start;padding:0 1rem 1rem}
+#s-done>*{flex-shrink:0;max-width:100%}
+#s-done>.ux-backbar{align-self:stretch}
+#s-active{overflow-y:auto}
+#s-active>.list{min-height:0}
+
+@media(max-width:400px){.hdr{padding:.6rem}.far-lotes-body{padding:.65rem}.ux-backbar{padding:.2rem .4rem}}
 </style>
   <!-- Firebase Realtime Database (compat, namespaced) — SDK local, sem build -->
   <script src="vendor/firebase-app-compat.js"></script>
@@ -829,7 +876,7 @@
   <div class="cfg-sep"></div>
   <div class="cfg-t" style="font-size:1rem">📱 Este aparelho</div>
   <div class="cfg-s" id="device-info" style="font-size:.68rem;line-height:1.45;word-break:break-all">Identificação Firebase: —</div>
-  <div class="cfg-s" style="font-size:.68rem;line-height:1.45">Versão 26.6 · cache fdo-v26-6 · Firebase SDK local · App Check</div>
+  <div class="cfg-s" style="font-size:.68rem;line-height:1.45">Versão 26.6.1 · cache fdo-v26-6-1 · Firebase SDK local · App Check</div>
   <div class="cfg-s" id="appcheck-info" style="font-size:.68rem;line-height:1.45">App Check: verificando…</div>
   <div class="cfg-s" id="storage-info" style="font-size:.68rem;line-height:1.45">Armazenamento local: verificando…</div>
   <div class="cfg-sep"></div>
@@ -916,7 +963,7 @@
     </div>
     <div class="modulo ativo" data-perm="modelagem" onclick="entrarModelagem()">
       <div class="modulo-icon">🥐</div>
-      <div class="modulo-info"><div class="modulo-nome">Fatias / Modelagem</div><div class="modulo-desc">Congelamento, descongelamento e montagem em formas</div></div>
+      <div class="modulo-info"><div class="modulo-nome">Frio e Modelagem</div><div class="modulo-desc">Congelamento, descongelamento e montagem em formas</div></div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
     <div class="modulo ativo" data-perm="fermentacao" onclick="entrarFermentacao()">
@@ -943,6 +990,7 @@
 </div>
 
 <div id="s-porc-menu" class="scr off">
+  <div id="baldes-pendentes" class="pos-summary ux-hidden"></div>
   <div class="start-top">
     <div class="start-icon">⚖️</div>
     <div class="start-brand">Folhados d'Ouro</div>
@@ -1199,39 +1247,26 @@
   <div class="start-footer"><button class="link-btn" onclick="ir('teste-base')">← Trocar base</button></div>
 </div>
 <!-- ═══ LOTES DAS FARINHAS — confirmação rápida antes dos secos (v24.10) ═══ -->
-<div id="s-farinha-lotes" class="scr off">
-  <div class="start-top">
-    <div class="start-icon">🌾</div>
-    <div class="start-brand">Folhados d'Ouro</div>
-    <div class="start-title">Lotes das Farinhas</div>
-    <div class="start-sub" id="far-lotes-rec">Confirme os lotes em uso</div>
-  </div>
+<div id="s-farinha-lotes" class="scr off ux-compact">
+  <div class="start-top"><div class="start-title">Lotes das Farinhas</div><div class="start-sub" id="far-lotes-rec">Confirme os lotes em uso</div></div>
   <div class="far-lotes-body">
-    <div class="far-lote-card">
-      <div class="far-lote-nome">Farinha francesa · Bagatelle</div>
-      <div class="far-lote-hint">O último lote usado já aparece preenchido.</div>
-      <input id="far-lote-bag" class="inp" type="text" maxlength="40" autocomplete="off" autocapitalize="characters" placeholder="Ex.: lote 12345">
-      <button class="link-btn" style="width:100%;margin-top:.55rem" onclick="farToggleExtra('bag')">+ Entrou outro lote neste balde</button>
-      <div id="far-extra-bag" class="far-extra">
-        <div class="far-lote-hint">Informe o lote que entrou depois. Ele será sugerido como lote atual no próximo porcionamento.</div>
-        <input id="far-lote-bag-extra" class="inp" type="text" maxlength="40" autocomplete="off" autocapitalize="characters" placeholder="Novo lote Bagatelle">
+    <button class="btn-main" id="far-lotes-confirm-btn" onclick="confirmarLotesFarinha()">✓ MESMOS LOTES — COMEÇAR</button>
+    <div id="far-lotes-resumo" aria-live="polite"></div>
+    <details class="ux-details" id="far-lotes-editar"><summary>Alterar lotes</summary>
+      <div class="far-lote-card"><label class="far-lote-nome" for="far-lote-bag">Farinha francesa · Bagatelle</label>
+        <input id="far-lote-bag" class="inp" type="text" maxlength="40" autocomplete="off" autocapitalize="characters" placeholder="Lote Bagatelle" oninput="farResumoRapido()">
+        <button class="link-btn" style="width:100%;margin-top:.55rem" onclick="farToggleExtra('bag')">+ Entrou outro lote neste balde</button>
+        <div id="far-extra-bag" class="far-extra"><div class="far-lote-hint">O lote novo será sugerido no próximo porcionamento.</div>
+          <input id="far-lote-bag-extra" class="inp" type="text" maxlength="40" autocomplete="off" autocapitalize="characters" placeholder="Novo lote Bagatelle" oninput="farResumoRapido()"></div>
       </div>
-    </div>
-    <div class="far-lote-card">
-      <div class="far-lote-nome">Farinha Italiana 00</div>
-      <div class="far-lote-hint">O último lote usado já aparece preenchido.</div>
-      <input id="far-lote-ita" class="inp" type="text" maxlength="40" autocomplete="off" autocapitalize="characters" placeholder="Ex.: lote 070">
-      <button class="link-btn" style="width:100%;margin-top:.55rem" onclick="farToggleExtra('ita')">+ Entrou outro lote neste balde</button>
-      <div id="far-extra-ita" class="far-extra">
-        <div class="far-lote-hint">Informe o lote que entrou depois. Ele será sugerido como lote atual no próximo porcionamento.</div>
-        <input id="far-lote-ita-extra" class="inp" type="text" maxlength="40" autocomplete="off" autocapitalize="characters" placeholder="Novo lote Italiana 00">
+      <div class="far-lote-card"><label class="far-lote-nome" for="far-lote-ita">Farinha Italiana 00</label>
+        <input id="far-lote-ita" class="inp" type="text" maxlength="40" autocomplete="off" autocapitalize="characters" placeholder="Lote Italiana 00" oninput="farResumoRapido()">
+        <button class="link-btn" style="width:100%;margin-top:.55rem" onclick="farToggleExtra('ita')">+ Entrou outro lote neste balde</button>
+        <div id="far-extra-ita" class="far-extra"><div class="far-lote-hint">O lote novo será sugerido no próximo porcionamento.</div>
+          <input id="far-lote-ita-extra" class="inp" type="text" maxlength="40" autocomplete="off" autocapitalize="characters" placeholder="Novo lote Italiana 00" oninput="farResumoRapido()"></div>
       </div>
-    </div>
-    <button class="btn-main" id="far-lotes-confirm-btn" onclick="confirmarLotesFarinha()">✓ Confirmar lotes e começar</button>
-    <div class="far-lotes-note">Normalmente basta conferir os dois números e tocar no botão. Só altere quando abrir farinha de outro lote.</div>
-  </div>
-  <div class="start-footer">
-    <button class="link-btn" onclick="voltarLotesFarinha()">← Trocar receita</button>
+    </details>
+    <div class="far-lotes-note">Confira os números acima. Altere somente quando entrar farinha de outro lote.</div>
   </div>
 </div>
 
@@ -1314,7 +1349,10 @@
     <button class="nbtn next" onclick="avancar()">Próximo →</button>
   </div>
   <div class="nav-secos" id="nav-secos">
-    <button class="nbtn next secos-continuar" onclick="finalizarSecos()">Finalizar e gerar balde →</button>
+    <div id="baldes-admin-controle" class="ux-hidden"><div class="ux-count-row"><label for="baldes-qtd">Quantidade de baldes</label><input class="inp" id="baldes-qtd" type="number" inputmode="numeric" min="1" step="1" value="1" oninput="atualizarQuantidadeBaldes()"></div><div class="ux-muted">Cada balde terá seu próprio número e baixa no estoque.</div></div>
+    <button class="nbtn next secos-continuar" id="secos-finalizar-btn" onclick="finalizarSecos()">Finalizar e gerar balde →</button>
+    <button class="link-btn" id="baldes-admin-btn" onclick="autorizarVariosBaldes()">Administrador · gerar vários baldes</button>
+    <button class="nbtn" onclick="voltarPasso()">← Revisar último passo</button>
   </div>
   <div class="list" id="lista"></div>
   <div class="ai" id="ai-box" style="display:none">
@@ -1332,8 +1370,8 @@
   <div class="done-lote-big" id="done-lote">BALDE #—</div>
   <div id="done-mark" style="font-size:.9rem;color:var(--gold);text-align:center;font-weight:bold;letter-spacing:.05rem">✍️ Marque este número na massa</div>
   <div class="done-tot" id="done-tot"></div>
-  <button class="btn-main" id="done-etq-btn" style="width:auto;padding:1rem 2rem;margin-top:.6rem" onclick="abrirEtiqueta(st.ultimoLoteId)">🏷 Etiqueta do balde</button>
-  <button class="link-btn" id="done-etq-massas-btn" style="width:auto;padding:.8rem 2rem" onclick="abrirEtiqueta(st.ultimoLoteId,'massas')">🏷 Etiqueta das massas (4×)</button>
+  <button class="btn-main" id="done-etq-btn" style="width:auto;padding:1rem 2rem;margin-top:.6rem" onclick="abrirEtiquetasBaldes('balde')">🏷 Etiqueta do balde</button>
+  <button class="link-btn" id="done-etq-massas-btn" style="width:auto;padding:.8rem 2rem" onclick="abrirEtiquetasBaldes('massas')">🏷 Etiqueta das massas (4×)</button>
   <button class="link-btn" id="done-voltar-porc-btn" style="width:auto;padding:.8rem 2rem;display:none" onclick="ir('porc-menu')">↩ Voltar sem imprimir</button>
   <button class="link-btn" style="width:auto;padding:.8rem 2rem" onclick="ir('start')">← Início</button>
 </div>
@@ -1593,20 +1631,19 @@
     <div class="etq-preview-box">
       <img id="etq-img" class="etq-preview" alt="Pré-visualização da etiqueta">
     </div>
-    <div class="etq-modo-lbl">Linguagem da impressora (se não imprimir, troque e teste)</div>
+    <div id="etq-grupo" class="ux-hidden"><label for="etq-balde-sel">Imprimir para</label><select class="inp" id="etq-balde-sel" onchange="etqSelecionarBalde(this.value)"></select><div class="ux-muted" id="etq-previa-info"></div></div>
+    <div class="etq-modo-lbl" id="etq-qtd-lbl">Quantidade de etiquetas</div>
+    <div id="etq-qtds"><button class="etq-modo" data-qtd="1" onclick="setEtqMassasQtd(1)">1</button><button class="etq-modo" data-qtd="2" onclick="setEtqMassasQtd(2)">2</button><button class="etq-modo" data-qtd="3" onclick="setEtqMassasQtd(3)">3</button><button class="etq-modo" data-qtd="4" onclick="setEtqMassasQtd(4)">4</button><button class="etq-modo" data-qtd="5" onclick="setEtqMassasQtd(5)">5</button><button class="etq-modo" data-qtd="6" onclick="setEtqMassasQtd(6)">6</button><button class="etq-modo" data-qtd="7" onclick="setEtqMassasQtd(7)">7</button><button class="etq-modo" data-qtd="8" onclick="setEtqMassasQtd(8)">8</button></div>
+    <div id="etq-qtd-resumo" class="ux-muted" aria-live="polite"></div>
+    <div class="etq-status" id="etq-status"></div>
+    <button class="btn-main" id="etq-print-btn" onclick="imprimirBluetooth()">🖨 Imprimir na MDK-022 (Bluetooth)</button>
+    <details class="ux-details"><summary>Configurações da impressão</summary>    <div class="etq-modo-lbl">Linguagem da impressora (se não imprimir, troque e teste)</div>
     <div class="etq-modos" id="etq-modos">
       <button class="etq-modo" data-modo="escpos" onclick="setPrintMode('escpos')">ESC/POS<small>padrão</small></button>
       <button class="etq-modo" data-modo="tspl" onclick="setPrintMode('tspl')">TSPL<small>etiqueta</small></button>
       <button class="etq-modo" data-modo="cpcl" onclick="setPrintMode('cpcl')">CPCL<small>etiqueta</small></button>
     </div>
-    <div class="etq-modo-lbl" id="etq-qtd-lbl" style="display:none">Quantidade de etiquetas</div>
-    <div class="etq-modos" id="etq-qtds" style="display:none">
-      <button class="etq-modo" data-qtd="1" onclick="setEtqMassasQtd(1)">1 etiqueta</button>
-      <button class="etq-modo" data-qtd="2" onclick="setEtqMassasQtd(2)">2 etiquetas</button>
-    </div>
-    <div class="etq-status" id="etq-status"></div>
-    <button class="btn-main" id="etq-print-btn" onclick="imprimirBluetooth()">🖨 Imprimir na MDK-022 (Bluetooth)</button>
-    <button class="link-btn" style="width:100%" onclick="imprimirTeste()">🧪 Teste rápido (imprime uma linha)</button>
+<button class="link-btn" style="width:100%" onclick="imprimirTeste()">🧪 Teste rápido (imprime uma linha)</button></details>
     <button class="link-btn" style="width:100%" onclick="baixarEtiqueta()">💾 Salvar imagem da etiqueta</button>
     <div class="etq-diag" id="etq-diag" style="display:none"></div>
   </div>
@@ -1615,34 +1652,23 @@
 
 <!-- ═══ v26.6 — CORTE/FATIAS ao final da laminação ═══ -->
 <div id="s-corte-fatias" class="scr off">
-  <div class="hdr">
-    <div><div class="hdr-brand">Folhados d'Ouro · Laminação</div><div class="hdr-title">Corte / Fatias</div></div>
-    <button class="link-btn" onclick="ir('laminacao')">← Laminação</button>
-  </div>
-  <div class="pos-scroll">
-    <div class="pos-summary" id="corte-lam-resumo"></div>
-    <div class="lam-hint"><b>O que esta massa virou?</b> Informe o produto e a quantidade real. 36/40/44 são apenas sugestões dos cortes usuais e podem ser corrigidas.</div>
-    <div class="pos-section">Novas fatias</div>
-    <div id="corte-linhas"></div>
-    <button class="btn-sec" style="width:100%;margin-bottom:.55rem" onclick="adicionarLinhaCorte()">＋ Adicionar produto</button>
-    <button class="btn-main" style="width:100%" onclick="salvarCorteLaminacao()">✓ Registrar fatias</button>
-    <div class="pos-section">Já registradas nesta laminação</div>
-    <div id="corte-ja-registradas"></div>
+  <div class="hdr"><div><div class="hdr-brand">Folhados d'Ouro · Laminação final</div><div class="hdr-title">Corte / Fatias</div></div></div>
+  <div class="pos-scroll"><div class="pos-summary" id="corte-lam-resumo"></div>
+    <div id="corte-formulario"><div class="lam-hint">Escolha o produto e informe a quantidade real.</div><div id="corte-linhas"></div>
+      <button class="link-btn" style="width:100%;margin-bottom:.6rem" onclick="adicionarLinhaCorte()">＋ Adicionar outro produto</button>
+      <button class="btn-main" style="width:100%" onclick="salvarCorteLaminacao()">✓ Registrar fatias</button>
+    </div>
+    <button class="btn-sec" id="corte-concluir-btn" style="width:100%;margin-top:.8rem" onclick="concluirCorteLaminacao()">✓ Toda esta massa já foi cortada</button>
+    <details class="ux-details"><summary>Fatias já registradas / etiquetas</summary><div id="corte-ja-registradas"></div></details>
   </div>
 </div>
 
 <!-- ═══ v26.6 — FATIAS / MODELAGEM ═══ -->
 <div id="s-modelagem" class="scr off">
-  <div class="hdr">
-    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Fatias / Modelagem</div></div>
-    <button class="link-btn" onclick="ir('start')">← Início</button>
-  </div>
+  <div class="hdr"><div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Frio e Modelagem</div></div></div>
   <div class="pos-scroll">
-    <div class="lam-hint">Acompanhe a massa pela rotina real: <b>freezer rápido → conservação → descongelamento → modelagem</b>. Em urgência, use Modelagem direta.</div>
-    <div class="pos-section">Fatias em processo</div>
-    <div id="modelagem-partidas"></div>
-    <div class="pos-section">Formas criadas hoje</div>
-    <div id="modelagem-formas"></div>
+    <div class="ux-tabs"><button class="btn-sec" data-pos-filtro="frio" onclick="posFiltrar('frio')">Frio</button><button class="btn-sec" data-pos-filtro="modelagem" onclick="posFiltrar('modelagem')">Modelagem</button><button class="btn-sec" data-pos-filtro="formas" onclick="posFiltrar('formas')">Formas</button></div>
+    <div id="modelagem-partidas"></div><div id="modelagem-formas"></div>
   </div>
 </div>
 
@@ -1701,20 +1727,25 @@
 
 <!-- ═══ LAMINAÇÃO — agrupa partes de massa batida e forma o lote ═══ -->
 <div id="s-laminacao" class="scr off">
-  <div class="hdr">
-    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Laminação</div></div>
-    <button class="link-btn" onclick="ir('start')">← Voltar</button>
-  </div>
-  <div class="lam-scroll">
-    <div class="lam-hint">Toque <b>+</b> nas partes de cada balde. Um lote = <b>mesma receita, mesma data da massa e mesma fermentação</b>.</div>
-    <div id="lam-disp-list"></div>
-    <div class="lam-sec-lbl">Lotes criados</div>
-    <div id="lam-feitas-list"></div>
-  </div>
-  <div class="lam-bar" id="lam-bar" style="display:none">
-    <div class="lam-bar-info">Selecionado: <b id="lam-sel-tot">0</b> partes <span id="lam-sel-aviso"></span></div>
-    <button class="btn-main" onclick="criarLaminacao()">Criar lote ✓</button>
-  </div>
+  <div class="hdr"><div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Primeira laminação</div></div></div>
+  <div class="lam-scroll"><div class="lam-hint">Escolha <b>duas massas</b> para fazer <b>uma massa com manteiga</b>.</div><div id="lam-disp-list"></div></div>
+  <div class="lam-bar" id="lam-bar" style="display:none"><div class="lam-bar-info"><b id="lam-sel-tot">0</b> de 2 massas <span id="lam-sel-aviso"></span></div><button class="btn-main" id="lam-concluir-btn" onclick="criarLaminacao()">Concluir primeira laminação ✓</button></div>
+</div>
+<div id="s-lam-menu" class="scr off">
+  <div class="hdr"><div class="hdr-title">Laminação</div></div>
+  <div class="ux-flow-menu"><button class="btn-main ux-choice" onclick="abrirPrimeiraLaminacao()">1 · Primeira laminação<small>Escolher duas massas e colocar manteiga.</small></button><button class="btn-main ux-choice" onclick="abrirLaminacaoFinal()">2 · Laminação final — Corte/Fatias<small>Usar as massas já laminadas, inclusive de outro dia.</small></button></div>
+</div>
+<div id="s-lam-cortes" class="scr off">
+  <div class="hdr"><div class="hdr-title">Massas para Corte/Fatias</div></div>
+  <div class="lam-scroll"><div class="lam-hint">Escolha a massa que vai cortar agora.</div><div id="lam-feitas-list"></div><details class="ux-details"><summary>Cortes concluídos</summary><div id="lam-cortes-concluidos"></div></details></div>
+</div>
+<div id="s-lam-concluida" class="scr off">
+  <div class="hdr"><div class="hdr-title">Primeira laminação concluída</div></div>
+  <div class="ux-flow-menu"><div id="lam-resultado" class="ux-result"></div><div class="ux-muted">O corte pode ser feito depois. Esta massa ficará em Corte/Fatias.</div><button class="btn-main" onclick="abrirPrimeiraLaminacao()">Laminar outra massa</button><button class="btn-sec" onclick="abrirCorteLaminacao(st.ultimaLamId)">Ir para Corte/Fatias</button></div>
+</div>
+<div id="s-corte-resultado" class="scr off">
+  <div class="hdr"><div class="hdr-title">Fatias registradas</div></div>
+  <div class="pos-scroll"><div class="lam-hint">Imprima as etiquetas e registre o destino real das fatias.</div><div id="corte-resultado-list"></div><button class="btn-main" style="width:100%;margin-top:.8rem" onclick="concluirCorteLaminacao()">✓ Toda esta massa já foi cortada</button><button class="link-btn" style="width:100%;margin-top:.6rem" onclick="ir('corte-fatias')">Continuar cortando esta massa</button></div>
 </div>
 
 <script>
@@ -2563,6 +2594,8 @@ const FB={
       else if(id==='s-fermentacao-lotes' && typeof renderFermLotes==='function') renderFermLotes();
       else if(id==='s-laminacao' && typeof renderLaminacao==='function') renderLaminacao();
       else if(id==='s-corte-fatias' && typeof renderCorteLaminacao==='function') renderCorteLaminacao();
+      else if(id==='s-lam-cortes')renderLamFeitas();
+      else if(id==='s-corte-resultado')renderResultadoCorte();
       else if(id==='s-modelagem' && typeof renderModelagem==='function') renderModelagem();
       else if(id==='s-login' && typeof renderLogin==='function') renderLogin();
       else if(id==='s-config' && typeof renderOpList==='function') renderOpList();
@@ -2582,7 +2615,7 @@ const OP_PERMS_MOD=[
   {k:'batimento',     icon:'🥣', label:'Bater a Massa'},
   {k:'fermentacao',   icon:'🌡️', label:'Fermentação'},
   {k:'laminacao',     icon:'📐', label:'Laminação'},
-  {k:'modelagem',     icon:'🥐', label:'Fatias / Modelagem'},
+  {k:'modelagem',     icon:'🥐', label:'Frio e Modelagem'},
   {k:'historico',     icon:'📋', label:'Histórico'},
   {k:'calculadora',   icon:'🧮', label:'Calculadora'},
   {k:'assistente',    icon:'🤖', label:'Assistente IA'},
@@ -2854,6 +2887,8 @@ const GEO={
 };
 
 function ir(id){
+  if(!document.getElementById('s-'+id))return;
+  uxRegistrarTela(id);
   if(id==='receitas' && typeof renderReceitasPorcionamento==='function')renderReceitasPorcionamento();
   else if(id==='teste-base' && typeof renderTesteBase==='function')renderTesteBase();
   else if(id==='receitas-arquivadas' && typeof renderReceitasArquivadas==='function')renderReceitasArquivadas();
@@ -2866,6 +2901,10 @@ function ir(id){
 
   document.querySelectorAll('.scr').forEach(s=>s.classList.add('off'));
   document.getElementById('s-'+id).classList.remove('off');
+  uxPrepararVoltar(id);
+  if(id==='lam-cortes')renderLamFeitas();
+  if(id==='corte-resultado')renderResultadoCorte();
+  if(id==='porc-menu')mostrarGeracaoPendente();
   if(id==='history') renderHist();
   if(id==='hist-batimentos') renderHistBatimentos();
   if(id==='config') carregarConfig();
@@ -2916,8 +2955,8 @@ function carregarConfig(){
   if(typeof DEVICE!=='undefined') DEVICE.renderConfig();
 }
 function exportarBackup(){
-  const chaves=['fdo_lotes','fdo_laminacoes','fdo_partidas','fdo_formas','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25','fdo_estoque_movimentos','fdo_estoque_contagens','fdo_estoque_configuracoes','fdo_receitas_observacoes','fdo_receitas_definitivas','fdo_receitas_auditoria','fdo_estoque_outbox_v26','fdo_estoque_inicio_ts_v26'];
-  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.6',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
+  const chaves=['fdo_lotes','fdo_laminacoes','fdo_partidas','fdo_formas','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25','fdo_estoque_movimentos','fdo_estoque_contagens','fdo_estoque_configuracoes','fdo_receitas_observacoes','fdo_receitas_definitivas','fdo_receitas_auditoria','fdo_estoque_outbox_v26','fdo_estoque_inicio_ts_v26','fdo_baldes_pendentes_v2661'];
+  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.6.1',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
   chaves.forEach(k=>{ const raw=localStorage.getItem(k); if(raw!==null){ try{dados.dados[k]=JSON.parse(raw);}catch{dados.dados[k]=raw;} } });
   const blob=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
@@ -3057,7 +3096,9 @@ function cancelarPin(){
     if(st.loginFiltro==='bypass'){ st.loginFiltro=''; ir('geo'); return; }
     st.loginFiltro=''; ir('login'); return;
   }
-  ir('start');
+  const ret=st.pinRet;st.pinRet=null;
+  if(ret&&ret!=='pin'&&ret!=='config'){ir(ret);return;}
+  destinoBoot();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -4021,46 +4062,25 @@ function desenharEtiquetaMassas(lote){
 
 function desenharEtiquetaPartida(p){
   const c=document.createElement('canvas');c.width=ETQ_W;c.height=ETQ_H;const x=c.getContext('2d');
-  x.fillStyle='#fff';x.fillRect(0,0,ETQ_W,ETQ_H);x.fillStyle='#000';x.strokeStyle='#000';x.lineWidth=4;x.strokeRect(10,10,ETQ_W-20,ETQ_H-20);x.textAlign='center';
-  let prod=String(p.produtoNome||'FATIAS').toUpperCase();if(prod.length>26)prod=prod.slice(0,26);
-  x.font='bold 42px Arial, sans-serif';x.fillText(prod,ETQ_W/2,70);
-  x.font='bold 34px Arial, sans-serif';x.fillText('FATIAS '+(p.nome||''),ETQ_W/2,120);
-  x.lineWidth=2;x.beginPath();x.moveTo(35,145);x.lineTo(ETQ_W-35,145);x.stroke();
-  x.font='bold 48px Arial, sans-serif';x.fillText((Number(p.qtd)||0)+' UNIDADES',ETQ_W/2,215);
-  x.font='26px Arial, sans-serif';x.fillText('LAM. '+(p.laminacaoNome||'—'),ETQ_W/2,270);
-  const extra=[p.corteCm?('corte '+String(p.corteCm).replace('.',',')+' cm'):'',p.receitaNome||''].filter(Boolean).join(' · ');
-  x.font='22px Arial, sans-serif';x.fillText(extra.slice(0,38),ETQ_W/2,315);
-  x.font='20px Arial, sans-serif';x.fillText(new Date(Number(p.criadoTs)||Date.now()).toLocaleString('pt-BR'),ETQ_W/2,355);
+  x.fillStyle='#fff';x.fillRect(0,0,ETQ_W,ETQ_H);x.fillStyle='#000';x.strokeStyle='#000';x.textAlign='center';
+  const prod=(p.testeId?'TESTE · ':'')+String(p.produtoNome||'Fatias'),data=new Date(Number(p.criadoTs)).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}),info='Fatias '+(p.nome||'—')+' · '+data,fh=ETQ_H/4,max=ETQ_W-24;
+  function linha(txt,alvo,y){let tam=alvo;while(tam>20){x.font='bold '+tam+'px Arial, sans-serif';if(x.measureText(txt).width<=max)break;tam--;}x.font='bold '+tam+'px Arial, sans-serif';x.fillText(txt,ETQ_W/2,y,max);}
+  for(let i=0;i<4;i++){const y=i*fh;linha(prod,34,y+43);linha(info,28,y+81);if(i<3){x.lineWidth=2;x.beginPath();x.moveTo(0,y+fh);x.lineTo(ETQ_W,y+fh);x.stroke();}}
   return c;
 }
 function abrirEtiquetaPartida(id){
   const p=posPartidas().find(x=>x.id===id);if(!p){alert('Fatias não encontradas.');return;}
-  st.etqTipo='partida';st.etqPartida=id;const atual=document.querySelector('.scr:not(.off)');st.etqRet=(atual&&atual.id==='s-corte-fatias')?'corte-fatias':'modelagem';
-  etqCanvas=desenharEtiquetaPartida(p);document.getElementById('etq-title').textContent='Etiqueta das Fatias';document.getElementById('etq-img').src=etqCanvas.toDataURL('image/png');marcarPrintMode();document.getElementById('etq-qtd-lbl').style.display='none';document.getElementById('etq-qtds').style.display='none';
-  const d=document.getElementById('etq-diag');if(d){d.style.display='none';d.textContent='';}const sEl=document.getElementById('etq-status');sEl.className='etq-status';sEl.textContent=navigator.bluetooth?'Pronto. Ligue a impressora e toque em Imprimir.':'Para Bluetooth use o Chrome no Android. Você também pode salvar a imagem.';ir('etiqueta');
+  if(uxOcupado())return;st.etqTipo='partida';st.etqPartida=id;st.etqLote=null;st.etqGrupoIds=[];st.etqSelecao='todos';st.etqRet=uxTelaAtual()||'modelagem';
+  etqCanvas=desenharEtiquetaPartida(p);document.getElementById('etq-title').textContent='Etiquetas das Fatias · 4 faixas';prepararEtiquetaUI();ir('etiqueta');
 }
 
-function abrirEtiqueta(id, tipo){
-  const lote=LS.g('fdo_lotes',[]).find(l=>l.id===id);
-  if(!lote){ alert('Balde não encontrado.'); return; }
-  st.etqLote=id; st.etqTipo=(tipo==='massas')?'massas':'balde';
-  const atual=document.querySelector('.scr:not(.off)');
-  st.etqRet = (atual&&atual.id==='s-history')?'history':((atual&&atual.id==='s-done')?'done':'start');
-  etqCanvas = (st.etqTipo==='massas') ? desenharEtiquetaMassas(lote) : desenharEtiqueta(lote);
-  const tEl=document.getElementById('etq-title'); if(tEl) tEl.textContent=(st.etqTipo==='massas')?'Etiqueta das Massas':'Etiqueta do Balde';
-  document.getElementById('etq-img').src=etqCanvas.toDataURL('image/png');
-  marcarPrintMode();
-  // Seletor "1 ou 2 etiquetas" só aparece na etiqueta das massas
-  const ehMassas=(st.etqTipo==='massas');
-  document.getElementById('etq-qtd-lbl').style.display=ehMassas?'':'none';
-  document.getElementById('etq-qtds').style.display=ehMassas?'flex':'none';
-  if(ehMassas) marcarEtqMassasQtd();
-  const d=document.getElementById('etq-diag'); if(d){ d.style.display='none'; d.textContent=''; }
-  const sEl=document.getElementById('etq-status'); sEl.className='etq-status';
-  sEl.textContent = navigator.bluetooth ? 'Pronto. Ligue a impressora e toque em Imprimir.' : 'Para Bluetooth use o Chrome no Android. Você também pode salvar a imagem e imprimir pelo app da impressora.';
-  ir('etiqueta');
+function abrirEtiqueta(id,tipo){
+  if(uxOcupado())return;
+  const lote=LS.g('fdo_lotes',[]).find(l=>l.id===id);if(!lote){alert('Balde não encontrado.');return;}
+  st.etqLote=id;st.etqPartida=null;st.etqTipo=tipo==='massas'?'massas':'balde';st.etqGrupoIds=[];st.etqSelecao='todos';st.etqRet=uxTelaAtual()||'start';
+  etqCanvas=st.etqTipo==='massas'?desenharEtiquetaMassas(lote):desenharEtiqueta(lote);document.getElementById('etq-title').textContent=st.etqTipo==='massas'?'Etiqueta das Massas':'Etiqueta do Balde';prepararEtiquetaUI();ir('etiqueta');
 }
-function fecharEtiqueta(){ ir(st.etqRet||'start'); }
+function fecharEtiqueta(){if(uxOcupado()){uxAvisarOcupado();return;}ir(st.etqRet&&st.etqRet!=='etiqueta'?st.etqRet:'start');}
 function baixarEtiqueta(){
   if(!etqCanvas)return;
   const lote=LS.g('fdo_lotes',[]).find(l=>l.id===st.etqLote),partida=posPartidas().find(p=>p.id===st.etqPartida);
@@ -4075,9 +4095,14 @@ function setPrintMode(m){ LS.s('fdo_print_mode',(m==='tspl'||m==='cpcl')?m:'escp
 function marcarPrintMode(){ const cur=getPrintMode(); document.querySelectorAll('#etq-modos .etq-modo').forEach(b=>{ b.classList.toggle('sel', b.dataset.modo===cur); }); }
 
 // ── Quantidade de etiquetas das massas (persistida). Padrão 2. ──
-function getEtqMassasQtd(){ const n=parseInt(LS.g('fdo_etq_massas_qtd',2),10); return (n===1)?1:2; }
-function setEtqMassasQtd(n){ n=(parseInt(n,10)===1)?1:2; LS.s('fdo_etq_massas_qtd',n); marcarEtqMassasQtd(); }
-function marcarEtqMassasQtd(){ const cur=getEtqMassasQtd(); document.querySelectorAll('#etq-qtds .etq-modo').forEach(b=>{ b.classList.toggle('sel', parseInt(b.dataset.qtd,10)===cur); }); }
+function getEtqMassasQtd(){const n=Number(LS.g(etqQuantidadeChave(),st.etqTipo==='massas'?2:1));return Number.isInteger(n)&&n>=1&&n<=8?n:1;}
+function setEtqMassasQtd(n){if(st.imprimindo)return;n=Number(n);if(!Number.isInteger(n)||n<1||n>8)return;LS.s(etqQuantidadeChave(),n);marcarEtqMassasQtd();}
+function marcarEtqMassasQtd(){
+  const n=getEtqMassasQtd();document.querySelectorAll('#etq-qtds .etq-modo').forEach(b=>{b.classList.toggle('sel',Number(b.dataset.qtd)===n);b.setAttribute('aria-pressed',String(Number(b.dataset.qtd)===n));});
+  const lotes=etqLotesSelecionados(),q=Math.max(1,lotes.length),faixas=st.etqTipo==='massas'||st.etqTipo==='partida';
+  document.getElementById('etq-qtd-lbl').textContent=faixas?(q>1?'Etiquetas grandes por balde':'Quantidade de etiquetas grandes'):(q>1?'Etiquetas por balde':'Quantidade de etiquetas');
+  document.getElementById('etq-qtd-resumo').textContent=q>1?(n+' por balde × '+q+' baldes = '+(n*q)+' etiquetas'+(faixas?' grandes · '+(n*q*4)+' identificações menores':'')):(n+' etiqueta'+(n===1?'':'s')+(faixas?' grande'+(n===1?'':'s')+' = '+(n*4)+' identificações menores':''));
+}
 
 // Canvas -> raster 1-bit. invert=false → bit 1 = PRETO (ESC/POS, CPCL); invert=true → bit 1 = BRANCO (TSPL BITMAP)
 function rasterMono(invert){
@@ -4188,15 +4213,15 @@ async function btConectarEnviar(dados, setS){
   }
 }
 async function imprimirBluetooth(){
-  const sEl=document.getElementById('etq-status');
-  const setS=(t,cls)=>{ sEl.textContent=t; sEl.className='etq-status'+(cls?(' '+cls):''); };
-  if(!etqCanvas){ setS('Etiqueta não carregada.','err'); return; }
-  // 1 ou 2 etiquetas só faz sentido para "etiqueta das massas"; balde sempre imprime 1.
-  const copias=(st.etqTipo==='massas')?getEtqMassasQtd():1;
-  await btConectarEnviar(encodeEtiqueta(getPrintMode(),copias), setS);
+  if(st.imprimindo)return;const sEl=document.getElementById('etq-status'),setS=(t,cls)=>{sEl.textContent=t;sEl.className='etq-status'+(cls?' '+cls:'');};
+  if(!etqCanvas){setS('Etiqueta não carregada.','err');return;}
+  st.imprimindo=true;document.getElementById('etq-print-btn').disabled=true;
+  try{await btConectarEnviar(etqPayloadSelecionado(),setS);}finally{st.imprimindo=false;document.getElementById('etq-print-btn').disabled=false;}
 }
 // Teste rápido: envia um payload mínimo (uma linha) na linguagem selecionada
 async function imprimirTeste(){
+  if(st.imprimindo)return;st.imprimindo=true;
+  try{
   const sEl=document.getElementById('etq-status');
   const setS=(t,cls)=>{ sEl.textContent=t; sEl.className='etq-status'+(cls?(' '+cls):''); };
   const enc=new TextEncoder(); const modo=getPrintMode(); let dados;
@@ -4204,6 +4229,7 @@ async function imprimirTeste(){
   else if(modo==='cpcl') dados=enc.encode('! 0 200 200 120 1\r\nTEXT 4 0 30 30 TESTE FdO\r\nFORM\r\nPRINT\r\n');
   else dados=enc.encode('\x1B\x40\x1B\x61\x01TESTE FdO\n\n\n');
   await btConectarEnviar(dados, setS);
+  }finally{st.imprimindo=false;}
 }
 
 // ════════════════════════════════════════════════════════════
@@ -4415,6 +4441,8 @@ function abrirLotesFarinha(){
   const sub=document.getElementById('far-lotes-rec'); if(sub)sub.textContent=r.nome+' · confirme antes de pesar';
   const btn=document.getElementById('far-lotes-confirm-btn');
   if(btn)btn.textContent=(bagPrincipal&&itaPrincipal)?'✓ MESMOS LOTES — COMEÇAR':'✓ CONFIRMAR LOTES E COMEÇAR';
+  document.getElementById('far-lotes-editar').open=!(bagPrincipal&&itaPrincipal);
+  st.farLotesInicio=[bagPrincipal,itaPrincipal,bagExtra,itaExtra];farResumoRapido();
   ir('farinha-lotes');
 }
 function confirmarLotesFarinha(){
@@ -4422,8 +4450,8 @@ function confirmarLotesFarinha(){
   const ita=normalizarLoteFarinha(document.getElementById('far-lote-ita').value);
   const bag2=normalizarLoteFarinha(document.getElementById('far-lote-bag-extra').value);
   const ita2=normalizarLoteFarinha(document.getElementById('far-lote-ita-extra').value);
-  if(!bag){ alert('Informe o lote da farinha Bagatelle.'); document.getElementById('far-lote-bag').focus(); return; }
-  if(!ita){ alert('Informe o lote da farinha Italiana 00.'); document.getElementById('far-lote-ita').focus(); return; }
+  if(!bag){ document.getElementById('far-lotes-editar').open=true;alert('Informe o lote da farinha Bagatelle.'); document.getElementById('far-lote-bag').focus(); return; }
+  if(!ita){ document.getElementById('far-lotes-editar').open=true;alert('Informe o lote da farinha Italiana 00.'); document.getElementById('far-lote-ita').focus(); return; }
   st.farinhasLotes={
     bagatelle:{principal:bag,adicional:bag2||null},
     italiana00:{principal:ita,adicional:ita2||null}
@@ -4543,6 +4571,8 @@ function setTemp(t){
 // PORCIONAMENTO DE SECOS — farinhas, fermento, açúcar, sal e manteiga (gera o lote)
 function iniciarSecos(){
   if(!getKey()){ir('config');return;}
+  if(geracaoBaldesPendente()){ir('porc-menu');alert('Há baldes aguardando conclusão neste aparelho. Retome a geração antes de iniciar outra.');return;}
+  st.antesSecos=uxTelaAtual();
   st.subModulo='secos';
   const r=receitaAtualObj();
   RECEITA = r.passosSecos;
@@ -4552,6 +4582,7 @@ function iniciarSecos(){
   st.modo='normal';
   st.baldeSecos=1;
   st.sessionStart=Date.now();
+  st.secosFinalizado=false;st.adminBaldes=null;st.qtdBaldes=1;st.grupoBaldesId=null;st.ultimosLotesIds=[];
   ir('active');
   mostrarPerguntaSecos(false);
   renderLista();
@@ -4577,6 +4608,7 @@ function iniciarLiquidos(id){
   st.done=new Set();
   st.modo='normal';
   st.sessionStart=Date.now();
+  st.secosFinalizado=false;st.adminBaldes=null;st.qtdBaldes=1;st.grupoBaldesId=null;st.ultimosLotesIds=[];
   ir('active');
   mostrarPerguntaSecos(false);
   renderLista();
@@ -4854,11 +4886,14 @@ function irPasso(n){st.step=Math.max(0,Math.min(n,RECEITA.length-1));atualizarUI
 // "Voltar": no PRIMEIRO passo, sai para o menu inicial (sem salvar sessão);
 // nos demais passos, volta um passo normalmente.
 function voltarPasso(){
+  if(uxOcupado()){uxAvisarOcupado();return;}
+  if(st.secosFinalizado){ir('porc-menu');return;}
+  if(st.modo==='pos_secos'){st.modo='normal';mostrarPerguntaSecos(false);irPasso(RECEITA.length-1);return;}
   if(st.step===0){
-    pararVoz(); liberarWakeLock();
-    st.sessionStart=0; st.modo='normal'; st.baldeSecos=1; st.liqLote=null; st.receitaExecucao=null; limparTesteAtivo();
-    mostrarPerguntaSecos(false);
-    ir('start');
+    pararVoz();liberarWakeLock();
+    if(st.subModulo==='liquidos'){renderLiquidosLotes();ir('liquidos-lotes');}
+    else if(st.receita==='teste'){abrirLotesFarinha();}
+    else {ir(st.antesSecos||'farinha-lotes');}
     return;
   }
   irPasso(st.step-1);
@@ -4943,6 +4978,7 @@ function mostrarPerguntaSecos(mostrar, texto){
     cx.classList.add('show');
     nNor.style.display='none';
     nSec.classList.add('show');
+    atualizarQuantidadeBaldes();
     // libera espaço para os botões caberem na tela
     if(cur) cur.style.display='none';
     if(gb) gb.style.display='none';
@@ -4992,12 +5028,17 @@ function renderLista(){
 
 // PORCIONAMENTO DE SECOS concluído → cria o lote, mostra a etiqueta
 async function finalizarSecos(){
-  if(st.criandoLote)return;st.criandoLote=true;
-  try{
-    salvarSessao(true);const lote=await criarLoteSecos();st.ultimoLoteId=lote.id;
-    pararVoz();liberarWakeLock();st.sessionStart=0;st.modo='normal';mostrarPerguntaSecos(false);
-    const tot=formatPeso(totalReceitaFull(st.receita));document.getElementById('done-emoji').textContent='✅';document.getElementById('done-title').textContent='Secos Concluídos!';document.getElementById('done-lote').textContent='BALDE #'+lote.num;document.getElementById('done-mark').style.display='';document.getElementById('done-mark').textContent='✍️ Marque este número na massa';document.getElementById('done-etq-btn').style.display='';document.getElementById('done-etq-massas-btn').style.display='';document.getElementById('done-voltar-porc-btn').style.display='';document.getElementById('done-tot').innerHTML=`<div class="done-conf">Total da massa (secos + líquidos)</div><div class="done-val">${tot}</div>`;falar(`Porcionamento de secos concluído. Balde número ${lote.num}.`);setTimeout(()=>ir('done'),1500);
-  }finally{st.criandoLote=false;}
+  if(st.criandoLote||st.secosFinalizado||!OP.pode('porcionamento'))return;
+  if(st.subModulo!=='secos'||st.modo!=='pos_secos'||!st.sessionStart)return;
+  let grupo=geracaoBaldesPendente();
+  const qtd=grupo?grupo.qtd:Number(st.qtdBaldes==null?1:st.qtdBaldes);
+  if(!Number.isSafeInteger(qtd)||qtd<1){alert('Informe uma quantidade inteira de baldes, maior que zero.');return;}
+  if(qtd>1&&!baldesAdminPode(grupo)){alert('A geração de vários baldes exige autorização do administrador.');return;}
+  if(!grupo){
+    if(qtd>1&&!confirm('Gerar '+qtd+' baldes independentes com esta mesma especificação?\n\nConfirme que TODOS esses baldes foram preparados. Cada um terá seu próprio número e baixa no estoque. O tempo desta sessão será registrado como conjunto, não como tempo individual.'))return;
+    grupo=prepararGrupoBaldes(qtd);guardarGrupoBaldes(grupo);
+  }
+  await executarGrupoBaldes(grupo);
 }
 
 // PORCIONAMENTO DE LÍQUIDOS concluído → grava no lote, SEM etiqueta
@@ -5179,7 +5220,7 @@ function lotesComPartes(){ return LS.g('fdo_lotes',[]).filter(l=>loteAtivo(l)&&l
 function dataCurta(ts){ const d=new Date(ts); return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}); }
 // Próxima sequência do dia para a nomenclatura DD/MM · N
 async function proxLamSeqDia(ts){return FB.proxLamSeqDia(ts);}
-function abrirLaminacao(){ st.lamSel={}; renderLaminacao(); ir('laminacao'); falar('Laminação. Escolha as partes dos baldes. Cada lote tem a mesma receita, a mesma data da massa e a mesma fermentação.'); }
+function abrirLaminacao(){if(!OP.pode('laminacao'))return;ir('lam-menu');falar('Laminação. Escolha primeira laminação ou corte e fatias.');}
 // ── Compatibilidade de um balde para agrupar em UM lote de laminação ──
 // Um lote só junta baldes com a MESMA receita + a MESMA data da massa (dia do
 // batimento) + a MESMA fermentação (temperatura + fermento g + horas). Massas
@@ -5209,6 +5250,7 @@ function lamLock(){
 }
 function lamAjustar(loteId, delta){
   const l=LS.g('fdo_lotes',[]).find(x=>x.id===loteId); if(!l) return;
+  if(delta>0 && lamTotalSel()>=2){falar('Duas massas já selecionadas. Conclua esta primeira laminação.');return;}
   if(delta>0){ const lock=lamLock(); if(lock && lamChave(l)!==lock){ falar('Esse balde não combina. Um lote precisa da mesma receita, da mesma data da massa e da mesma fermentação.'); return; } }
   const disp=lotePartesDisp(l);
   let novo=(Number(st.lamSel[loteId])||0)+delta;
@@ -5231,7 +5273,7 @@ function renderLaminacao(){
       const rec=l.receitaNome||l.rotulo||'—';
       const fdesc=lamFermDesc(l);
       const travado = lock!=null && lamChave(l)!==lock;
-      const sub = travado ? 'não combina — receita, data ou fermentação diferente' : `${rec} · ${dia}${fdesc?(' · '+fdesc):''} · ${disp} ${disp===1?'parte':'partes'}`;
+      const sub = travado ? 'não combina — receita, data ou fermentação diferente' : `${rec} · ${dia}${fdesc?(' · '+fdesc):''} · ${disp} ${disp===1?'massa disponível':'massas disponíveis'}`;
       return `<div class="lam-card ${sel>0?'sel':''} ${travado?'lock':''}">
         <div class="lam-card-main">
           <div class="lam-card-num">Balde #${l.num}</div>
@@ -5251,33 +5293,22 @@ function renderLaminacao(){
   const temAnterior=Object.keys(st.lamSel||{}).some(id=>{ const l=lotes.find(x=>x.id===id); return l&&lamDiaMassa(l)!==hoje; });
   document.getElementById('lam-sel-aviso').innerHTML = temAnterior ? '<span style="color:var(--red)">· inclui massa de dia anterior</span>' : '';
   document.getElementById('lam-bar').style.display = tot>0 ? 'flex' : 'none';
-  renderLamFeitas();
+  document.getElementById('lam-concluir-btn').disabled=tot!==2;
 }
 function renderLamFeitas(){
-  const lams=LS.g('fdo_laminacoes',[]);
-  const el=document.getElementById('lam-feitas-list');
-  if(!lams.length){ el.innerHTML='<div class="lam-empty">Nenhum lote criado ainda.</div>'; return; }
-  const podeApagar = OP.pode('apagar');
-  el.innerHTML=lams.map(x=>{
-    const comp=(x.composicao||[]).map(c=>`${c.partes}× Balde #${c.loteNum} (${c.dataLote})`).join(' + ');
-    const btnDel = podeApagar ? `<button class="lote-del" onclick="apagarLaminacao('${x.id}')" title="Apagar lote">🗑</button>` : '';
-    return `<div class="lam-fcard">
-      <div class="lam-fcard-top">
-        <span class="lam-fcard-num">${x.nome}</span>
-        <span class="lam-fcard-rec">${x.receitaNome||''}</span>
-        ${btnDel}
-      </div>
-      <div class="lam-fcard-comp">${x.totalPartes} partes · ${comp}${x.temMassaAnterior?' · <span style="color:var(--red)">contém massa de dia anterior</span>':''}</div>
-      <div class="pos-lam-actions"><button class="link-btn" onclick="abrirCorteLaminacao('${x.id}')">✂️ ${posPartidasDaLam(x.id).length?'Ver / adicionar fatias':'Registrar corte'}</button></div>
-    </div>`;
-  }).join('');
+  const arr=LS.g('fdo_laminacoes',[]),el=document.getElementById('lam-feitas-list'),fim=document.getElementById('lam-cortes-concluidos');if(!el||!fim)return;
+  function card(x){const feito=corteConcluido(x),comp=(x.composicao||[]).map(c=>c.partes+'× Balde #'+c.loteNum+' ('+c.dataLote+')').join(' + ');return '<div class="lam-fcard"><div class="pos-title">'+_escHtml(lamNomeOperacional(x))+'</div><div class="pos-meta">'+_escHtml(x.receitaNome||'')+' · '+_escHtml(posHora(x.dataTs))+'</div><button class="btn-main" style="width:100%;margin-top:.65rem" onclick="abrirCorteLaminacao(\''+x.id+'\')">'+(feito?'Consultar corte / etiquetas':'Cortar esta massa')+'</button><details class="ux-details"><summary>Detalhes</summary><div class="ux-muted">'+_escHtml(comp)+(x.temMassaAnterior?' · contém massa de dia anterior':'')+'</div>'+(OP.pode('apagar')&&!posPartidasDaLam(x.id).length?'<button class="link-btn" onclick="apagarLaminacao(\''+x.id+'\')">Excluir lançamento por engano</button>':'')+'</details></div>';}
+  const pend=arr.filter(x=>!corteConcluido(x)),concl=arr.filter(corteConcluido);
+  el.innerHTML=pend.length?pend.map(card).join(''):'<div class="pos-empty">Nenhuma massa aguardando corte.</div>';
+  fim.innerHTML=concl.length?concl.map(card).join(''):'<div class="pos-empty">Nenhum corte concluído.</div>';
 }
 async function criarLaminacao(){
-  if(st.criandoLam)return;st.criandoLam=true;
+  if(st.criandoLam)return;st.criandoLam=true;const operador=uxOperador();
   try{
   const sel=st.lamSel||{};
+  if(!OP.pode('laminacao'))return;
   const total=lamTotalSel();
-  if(total<=0){ falar('Selecione ao menos uma parte para criar o lote.'); return; }
+  if(total!==2){ falar('Selecione exatamente duas massas para fazer uma massa com manteiga.'); return; }
   const todos=LS.g('fdo_lotes',[]);
   const hoje=dataCurta(Date.now());
   const chaves=new Set(), receitas=new Set(), composicao=[]; let temAnterior=false;
@@ -5292,6 +5323,7 @@ async function criarLaminacao(){
     l.etapas=l.etapas||{};if(!l.etapas.laminacao || !l.etapas.laminacao.feito){l.etapas.laminacao={feito:true,em:new Date().toLocaleString('pt-BR'),emTs:Date.now(),op:getOp()};}
   });
   if(!composicao.length){ falar('Nenhuma parte válida selecionada.'); return; }
+  if(composicao.reduce((n,c)=>n+c.partes,0)!==2||composicao.some(c=>c.partes>lotePartesDisp(todos.find(l=>l.id===c.loteId)))){alert('As massas disponíveis mudaram. Revise a seleção.');return;}
   if(chaves.size>1){ falar('Não pode misturar. Um lote precisa da mesma receita, da mesma data da massa e da mesma fermentação. Remova os baldes que não combinam.'); return; }
   const agora=new Date();
   const seqDia=await proxLamSeqDia(agora.getTime());
@@ -5302,18 +5334,23 @@ async function criarLaminacao(){
     id:FB.novoId('lam'), nome, seqDia, data:agora.toLocaleString('pt-BR'), dataTs:agora.getTime(),
     dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),
     receita, receitaNome, testeId, composicao, totalPartes:total, temMassaAnterior:temAnterior, op:getOp(),
+    modeloFisico:'duas_massas_v1', massasComManteiga:1,
     etapas:{laminacao:{feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(), op:getOp()}}
   };
+  if(uxOperador()!==operador||!OP.pode('laminacao')){alert('Operador alterado. Confira a seleção antes de registrar.');return;}
   const capacidades={};composicao.forEach(c=>{const l=todos.find(x=>x.id===c.loteId),b=l&&l.etapas&&l.etapas.batimento;capacidades[c.loteId]=Number(b&&b.partes)||0});
   const reserva=await FB.criarLaminacaoAtomica(lam,capacidades);
   if(!reserva.ok){st.lamSel={};renderLaminacao();alert(reserva.motivo||'As partes mudaram em outro aparelho. Revise a seleção.');falar('As partes mudaram em outro aparelho. Revise a seleção.');return;}
   const lams=LS.g('fdo_laminacoes',[]).filter(x=>x.id!==lam.id); lams.unshift(lam); LS.s('fdo_laminacoes',lams);
-  LS.s('fdo_lotes',todos);
+  const atualizados=LS.g('fdo_lotes',[]);
+  composicao.forEach(c=>{const l=atualizados.find(x=>x.id===c.loteId);if(!l)return;l.etapas=l.etapas||{};if(!l.etapas.laminacao||!l.etapas.laminacao.feito)l.etapas.laminacao=clonarReceita(lam.etapas.laminacao);});
+  LS.s('fdo_lotes',atualizados);
   st.lamSel={};
   renderLaminacao();
   const compFala=composicao.map(c=>`${c.partes} ${c.partes===1?'parte':'partes'} do balde ${c.loteNum}`).join(', ');
-  falar(`Lote ${nome} criado. ${total} ${total===1?'parte':'partes'}. ${compFala}.`+(temAnterior?' Atenção: inclui massa de dia anterior.':''));
-  abrirCorteLaminacao(lam.id);
+  falar(`Primeira laminação concluída. Massa com manteiga ${nome}.`+(temAnterior?' Atenção: inclui massa de dia anterior.':''));
+  st.ultimaLamId=lam.id;document.getElementById('lam-resultado').textContent='Massa com manteiga '+nome+' · '+receitaNome;
+  ir('lam-concluida');
   }finally{st.criandoLam=false;}
 }
 function apagarLaminacao(id){
@@ -5327,7 +5364,7 @@ function apagarLaminacao(id){
   if(!confirm(`Apagar o lote ${lam.nome}?\n\nAs partes voltam para o estoque dos baldes de origem.`)) return;
   FB.removerRegistro('fdo_laminacoes',id);
   LS.s('fdo_laminacoes',lams.filter(x=>x.id!==id));
-  renderLaminacao();
+  renderLaminacao();renderLamFeitas();
 }
 
 
@@ -5356,44 +5393,337 @@ function posCompat(a,b){return !!(a&&b&&a.produtoId===b.produtoId);}
 function posSalvarPartidas(arr){LS.s('fdo_partidas',arr);}
 function posSalvarFormas(arr){LS.s('fdo_formas',arr);}
 function posAtualizarPartida(id,fn){const arr=posPartidas(),p=arr.find(x=>x.id===id);if(!p)return null;fn(p);p.atualizadoTs=Date.now();p.atualizadoEm=new Date(p.atualizadoTs).toLocaleString('pt-BR');p.atualizadoPor=getOp();posSalvarPartidas(arr);return p;}
-function abrirCorteLaminacao(lamId){const lam=LS.g('fdo_laminacoes',[]).find(x=>x.id===lamId);if(!lam){alert('Lote de laminação não encontrado.');return;}st.corteLamId=lamId;st.corteLinhas=[{produtoId:'',qtd:''}];renderCorteLaminacao();ir('corte-fatias');}
+function abrirCorteLaminacao(lamId){
+  if(!OP.pode('laminacao'))return;
+  const lam=LS.g('fdo_laminacoes',[]).find(x=>x.id===lamId);if(!lam){alert('Laminação não encontrada.');return;}
+  st.corteRascunhos=st.corteRascunhos||{};
+  if(st.corteLamId&&Array.isArray(st.corteLinhas))st.corteRascunhos[st.corteLamId]=st.corteLinhas;
+  st.corteLamId=lamId;st.corteLinhas=st.corteRascunhos[lamId]||[{produtoId:'',qtd:''}];st.cortePlano=null;ir('corte-fatias');
+}
 function adicionarLinhaCorte(){st.corteLinhas=Array.isArray(st.corteLinhas)?st.corteLinhas:[];st.corteLinhas.push({produtoId:'',qtd:''});renderCorteLaminacao();}
 function removerLinhaCorte(i){if(!Array.isArray(st.corteLinhas)||st.corteLinhas.length<=1)return;st.corteLinhas.splice(i,1);renderCorteLaminacao();}
 function corteProdutoMudou(i){const sel=document.querySelector('[data-corte-prod="'+i+'"]'),inp=document.querySelector('[data-corte-qtd="'+i+'"]');if(!sel||!inp)return;const pr=posProduto(sel.value);st.corteLinhas[i]={produtoId:sel.value,qtd:(pr&&pr.sugQtd!=null)?String(pr.sugQtd):''};renderCorteLaminacao();}
-function corteQtdMudou(i,v){if(st.corteLinhas&&st.corteLinhas[i])st.corteLinhas[i].qtd=String(v||'').replace(/\D/g,'');}
+function corteQtdMudou(i,v){if(st.corteLinhas&&st.corteLinhas[i])st.corteLinhas[i].qtd=String(v||'');const el=document.getElementById('corte-linhas');if(el)el.dataset.rascunho=JSON.stringify(st.corteLinhas);}
 function renderCorteLaminacao(){
   const lam=LS.g('fdo_laminacoes',[]).find(x=>x.id===st.corteLamId),sum=document.getElementById('corte-lam-resumo'),el=document.getElementById('corte-linhas'),ja=document.getElementById('corte-ja-registradas');if(!lam||!sum||!el||!ja)return;
-  sum.innerHTML='<div class="pos-title">Lote '+_escHtml(lam.nome||'—')+' · '+_escHtml(lam.receitaNome||'')+'</div><div class="pos-meta">'+(Number(lam.totalPartes)||0)+' partes laminadas · registre o resultado real do corte</div>';
+  const concluido=corteConcluido(lam);sum.innerHTML='<div class="pos-title">'+_escHtml(lamNomeOperacional(lam))+'</div><div class="pos-meta">'+_escHtml(lam.receitaNome||'')+(concluido?' · corte concluído':'')+'</div>'+(concluido&&OP.pode('apagar')?'<button class="link-btn" onclick="reabrirCorteLaminacao()">Reabrir corte registrado por engano</button>':'');
+  document.getElementById('corte-formulario').classList.toggle('ux-hidden',concluido);
+  const bot=document.getElementById('corte-concluir-btn');bot.classList.toggle('ux-hidden',concluido);bot.disabled=!posPartidasDaLam(lam.id).length;
   st.corteLinhas=Array.isArray(st.corteLinhas)&&st.corteLinhas.length?st.corteLinhas:[{produtoId:'',qtd:''}];
-  el.innerHTML=st.corteLinhas.map((r,i)=>{const pr=posProduto(r.produtoId),opts='<option value="">Selecione…</option>'+POS_PRODUTOS.map(p=>'<option value="'+p.id+'" '+(p.id===r.produtoId?'selected':'')+'>'+_escHtml(p.nome)+'</option>').join('');return '<div class="pos-cut-row"><div class="pos-grid"><select class="inp" data-corte-prod="'+i+'" onchange="corteProdutoMudou('+i+')">'+opts+'</select><input class="inp" data-corte-qtd="'+i+'" type="number" inputmode="numeric" min="1" value="'+_escHtml(r.qtd||'')+'" placeholder="Qtd" oninput="corteQtdMudou('+i+',this.value)"></div>'+(pr?'<div class="pos-hint">Forma sugerida: '+pr.forma+' un.'+(pr.sugQtd!=null?' · corte costuma render '+pr.sugQtd:'')+(pr.hint?' · '+_escHtml(pr.hint):'')+'</div>':'')+(st.corteLinhas.length>1?'<button class="link-btn" style="margin-top:.35rem" onclick="removerLinhaCorte('+i+')">Remover</button>':'')+'</div>';}).join('');
-  const arr=posPartidasDaLam(lam.id);ja.innerHTML=arr.length?arr.map(p=>'<div class="pos-card"><div class="pos-title">'+_escHtml(p.nome)+' · '+_escHtml(p.produtoNome)+'</div><div class="pos-meta">'+p.qtd+' unidades · '+_escHtml(posEstadoTexto(p))+'</div><div class="pos-actions"><button class="link-btn" onclick="abrirEtiquetaPartida(\''+p.id+'\')">🏷 Imprimir etiqueta</button></div></div>').join(''):'<div class="pos-empty">Nenhuma fatia registrada ainda.</div>';
+  const sig=JSON.stringify(st.corteLinhas);
+  if(el.dataset.rascunho!==sig){
+    el.innerHTML=st.corteLinhas.map((r,i)=>{const pr=posProduto(r.produtoId),opts='<option value="">Selecione o produto…</option>'+POS_PRODUTOS.map(p=>'<option value="'+p.id+'" '+(p.id===r.produtoId?'selected':'')+'>'+_escHtml(p.nome)+'</option>').join('');return '<div class="pos-cut-row"><div class="pos-grid"><label>Produto<select class="inp" data-corte-prod="'+i+'" onchange="corteProdutoMudou('+i+')">'+opts+'</select></label><label>Quantidade real<input class="inp" data-corte-qtd="'+i+'" type="number" inputmode="numeric" min="1" step="1" value="'+_escHtml(r.qtd||'')+'" placeholder="Quantidade" oninput="corteQtdMudou('+i+',this.value)"></label></div>'+(pr&&pr.sugQtd!=null?'<div class="pos-hint">'+pr.sugQtd+' é apenas sugestão. Confira a quantidade real.</div>':'')+(st.corteLinhas.length>1?'<button class="link-btn" onclick="removerLinhaCorte('+i+')">Remover produto</button>':'')+'</div>';}).join('');el.dataset.rascunho=sig;
+  }
+  const arr=posPartidasDaLam(lam.id);ja.innerHTML=arr.length?arr.map(p=>'<div class="pos-card"><div class="pos-title">Fatias '+_escHtml(p.nome)+' · '+_escHtml(p.produtoNome)+'</div><div class="pos-meta">'+p.qtd+' unidades · '+_escHtml(posEstadoTexto(p))+'</div><button class="link-btn" onclick="abrirEtiquetaPartida(\''+p.id+'\')">Imprimir etiqueta</button></div>').join(''):'<div class="pos-empty">Nenhuma fatia registrada ainda.</div>';
 }
 async function salvarCorteLaminacao(){
-  const lam=LS.g('fdo_laminacoes',[]).find(x=>x.id===st.corteLamId);if(!lam)return;const linhas=(st.corteLinhas||[]).map(r=>({produto:posProduto(r.produtoId),qtd:parseInt(r.qtd,10)}));if(!linhas.length||linhas.some(x=>!x.produto||!Number.isInteger(x.qtd)||x.qtd<=0)){alert('Selecione o produto e informe uma quantidade maior que zero em todas as linhas.');return;}
-  let arr=posPartidas(),primeira=null;for(const x of linhas){const agora=Date.now(),seq=await FB.proxPosSeq('partida',agora),p={id:FB.novoId('part'),seqDia:seq,nome:posDia(agora)+' · '+seq,criadoTs:agora,criadoEm:new Date(agora).toLocaleString('pt-BR'),atualizadoTs:agora,laminacaoId:lam.id,laminacaoNome:lam.nome,receita:lam.receita,receitaNome:lam.receitaNome||'',testeId:lam.testeId||null,produtoId:x.produto.id,produtoNome:x.produto.nome,corteCm:x.produto.corteCm,qtd:x.qtd,capacidadeForma:x.produto.forma,situacao:'cortada',eventos:{corte:{emTs:agora,em:new Date(agora).toLocaleString('pt-BR'),op:getOp()}},op:getOp(),dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null)};arr.unshift(p);posSalvarPartidas(arr);primeira=primeira||p;arr=posPartidas();}
-  st.corteLinhas=[{produtoId:'',qtd:''}];renderCorteLaminacao();falar('Fatias registradas. Imprima a etiqueta e informe o destino.');if(primeira)abrirEtiquetaPartida(primeira.id);
+  if(st.salvandoCorte||!OP.pode('laminacao'))return;
+  const lam=LS.g('fdo_laminacoes',[]).find(x=>x.id===st.corteLamId);if(!lam||corteConcluido(lam))return;
+  const linhas=(st.corteLinhas||[]).map(r=>({produto:posProduto(r.produtoId),qtd:Number(r.qtd)}));
+  if(!linhas.length||linhas.some(x=>!x.produto||!Number.isSafeInteger(x.qtd)||x.qtd<=0)){alert('Selecione o produto e informe uma quantidade inteira maior que zero em todas as linhas.');return;}
+  st.salvandoCorte=true;const operador=uxOperador();
+  try{
+    const assinatura=JSON.stringify(linhas);
+    if(st.cortePlano&&JSON.stringify(st.cortePlano.linhas)!==assinatura){
+      if(st.cortePlano.registros.some(p=>posPartidas().some(x=>x.id===p.id)))throw new Error('Há fatias deste registro já salvas. Retome com o preenchimento original e consulte as etiquetas antes de adicionar outras.');
+      st.cortePlano=null;
+    }
+    if(!st.cortePlano)st.cortePlano={lamId:lam.id,registros:[],linhas:clonarReceita(linhas)};
+    const plano=st.cortePlano;if(plano.lamId!==lam.id)throw new Error('Seleção de massa alterada.');
+    for(let i=plano.registros.length;i<plano.linhas.length;i++){
+      const x=plano.linhas[i],agora=Date.now(),seq=await FB.proxPosSeq('partida',agora);
+      plano.registros.push({id:FB.novoId('part'),seqDia:seq,nome:posDia(agora)+' · '+seq,criadoTs:agora,criadoEm:new Date(agora).toLocaleString('pt-BR'),atualizadoTs:agora,laminacaoId:lam.id,laminacaoNome:lam.nome,receita:lam.receita,receitaNome:lam.receitaNome||'',testeId:lam.testeId||null,produtoId:x.produto.id,produtoNome:x.produto.nome,corteCm:x.produto.corteCm,qtd:x.qtd,capacidadeForma:x.produto.forma,situacao:'cortada',eventos:{corte:{emTs:agora,em:new Date(agora).toLocaleString('pt-BR'),op:getOp()}},op:getOp(),dispositivo:DEVICE.audit()});
+    }
+    if(uxOperador()!==operador||!OP.pode('laminacao'))throw new Error('Operador alterado. Confira o acesso antes de registrar.');
+    const atual=LS.g('fdo_laminacoes',[]).find(x=>x.id===lam.id);if(!atual||corteConcluido(atual))throw new Error('O corte foi concluído ou a massa mudou em outro aparelho.');
+    const arr=posPartidas();plano.registros.forEach(p=>{if(!arr.some(x=>x.id===p.id))arr.unshift(p);});posSalvarPartidas(arr);
+    st.corteResultadoIds=plano.registros.map(x=>x.id);st.corteLinhas=[{produtoId:'',qtd:''}];st.corteRascunhos=st.corteRascunhos||{};st.corteRascunhos[lam.id]=st.corteLinhas;st.cortePlano=null;
+    ir('corte-resultado');falar('Fatias registradas. Imprima as etiquetas e informe o destino.');
+  }catch(e){alert('Não foi possível concluir o registro. Os registros já salvos não serão duplicados ao retomar.\n'+(e.message||''));}
+  finally{st.salvandoCorte=false;}
 }
-function posFreezerRapido(id){posAtualizarPartida(id,p=>{if(p.situacao!=='cortada')return;const t=Date.now();p.situacao='freezer_rapido';p.eventos=p.eventos||{};p.eventos.freezerRapido={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp()};});renderModelagem();}
-function posFreezerConservador(id){posAtualizarPartida(id,p=>{if(p.situacao!=='freezer_rapido')return;const t=Date.now();p.situacao='freezer_conservador';p.eventos=p.eventos||{};p.eventos.freezerConservador={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp(),tempAlvo:-15};});renderModelagem();}
+function posFreezerRapido(id){if(!OP.pode('modelagem'))return;posAtualizarPartida(id,p=>{if(p.situacao!=='cortada')return;const t=Date.now();p.situacao='freezer_rapido';p.eventos=p.eventos||{};p.eventos.freezerRapido={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp()};});posReexibir();}
+function posFreezerConservador(id){if(!OP.pode('modelagem'))return;posAtualizarPartida(id,p=>{if(p.situacao!=='freezer_rapido')return;const t=Date.now();p.situacao='freezer_conservador';p.eventos=p.eventos||{};p.eventos.freezerConservador={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp(),tempAlvo:-15};});posReexibir();}
 function posNumero(v){if(v==null||String(v).trim()==='')return null;const n=Number(String(v).replace(',','.'));return Number.isFinite(n)?n:null;}
-function posIniciarDescongelamento(id){const temp=prompt('Temperatura da geladeira de descongelamento (°C). Pode deixar em branco se não puder medir agora:','');const n=posNumero(temp);posAtualizarPartida(id,p=>{if(p.situacao!=='freezer_conservador')return;const t=Date.now();p.situacao='descongelando';p.eventos=p.eventos||{};p.eventos.descongelamentoInicio={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp(),tempAmbiente:n};p.eventos.saidaFreezer={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp()};});renderModelagem();}
-function posModelagemDireta(id){if(!confirm('Seguir direto para a modelagem sem congelamento/descongelamento? O histórico ficará marcado como produção direta/urgente.'))return;posAtualizarPartida(id,p=>{if(p.situacao!=='cortada')return;const t=Date.now();p.situacao='modelagem';p.rota='direta';p.eventos=p.eventos||{};p.eventos.modelagemDireta={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp()};});renderModelagem();}
+function posIniciarDescongelamento(id){
+  if(!OP.pode('modelagem'))return;const p=posPartidas().find(x=>x.id===id);if(!p||p.situacao!=='freezer_conservador')return;
+  const temp=prompt('Temperatura da geladeira de descongelamento (°C). Pode deixar em branco se não puder medir agora:','');
+  if(temp===null)return;const n=posNumero(temp);if(String(temp).trim()!==''&&n===null){alert('Informe uma temperatura válida ou deixe em branco.');return;}
+  posAtualizarPartida(id,p=>{if(p.situacao!=='freezer_conservador')return;const t=Date.now();p.situacao='descongelando';p.eventos=p.eventos||{};p.eventos.descongelamentoInicio={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp(),tempAmbiente:n};p.eventos.saidaFreezer={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp()};});posReexibir();
+}
+function posModelagemDireta(id){if(!OP.pode('modelagem'))return;if(!confirm('Seguir direto para a modelagem sem congelamento/descongelamento? O histórico ficará marcado como produção direta/urgente.'))return;posAtualizarPartida(id,p=>{if(p.situacao!=='cortada')return;const t=Date.now();p.situacao='modelagem';p.rota='direta';p.eventos=p.eventos||{};p.eventos.modelagemDireta={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp()};});posReexibir();}
 function posTempoDescongelando(p){const ini=Number(p&&p.eventos&&p.eventos.descongelamentoInicio&&p.eventos.descongelamentoInicio.emTs)||0;if(!ini)return '';const fim=Number(p&&p.eventos&&p.eventos.modelagemInicio&&p.eventos.modelagemInicio.emTs)||Date.now(),min=Math.max(0,Math.round((fim-ini)/60000)),h=Math.floor(min/60),m=min%60;return h+'h '+String(m).padStart(2,'0')+'min';}
-function posAcaoHtml(p){const id=p.id,s=p.situacao,btn=[];btn.push('<button class="link-btn" onclick="abrirEtiquetaPartida(\''+id+'\')">🏷 Etiqueta</button>');if(s==='cortada'){btn.push('<button class="btn-sec" onclick="posFreezerRapido(\''+id+'\')">❄️ Freezer rápido</button>');btn.push('<button class="btn-sec" onclick="posModelagemDireta(\''+id+'\')">⚡ Modelagem direta</button>');}else if(s==='freezer_rapido')btn.push('<button class="btn-sec" onclick="posFreezerConservador(\''+id+'\')">❄️ Freezer conservador</button>');else if(s==='freezer_conservador')btn.push('<button class="btn-sec" onclick="posIniciarDescongelamento(\''+id+'\')">🧊 Iniciar descongelamento</button>');else if((s==='descongelando'||s==='modelagem')&&posSaldo(p)>0)btn.push('<button class="btn-main" onclick="montarForma(\''+id+'\')">🥐 Montar forma</button>');if(OP.pode('apagar')&&posUnidadesUsadas(id)===0)btn.push('<button class="link-btn" onclick="apagarPartida(\''+id+'\')">🗑</button>');return btn.join('');}
+function posAcaoHtml(p){
+  const id=p.id,estado=p.situacao;let principal='',sec='';
+  if(OP.pode('modelagem')&&posSaldo(p)>0){
+    if(estado==='cortada'){principal='<button class="btn-main" onclick="posFreezerRapido(\''+id+'\')">Registrar entrada no freezer rápido</button>';sec='<button class="link-btn" onclick="posModelagemDireta(\''+id+'\')">Produção urgente · modelagem direta</button>';}
+    else if(estado==='freezer_rapido')principal='<button class="btn-main" onclick="posFreezerConservador(\''+id+'\')">Transferir ao freezer conservador</button>';
+    else if(estado==='freezer_conservador')principal='<button class="btn-main" onclick="posIniciarDescongelamento(\''+id+'\')">Retirar para descongelar</button>';
+    else if(estado==='descongelando')principal='<button class="btn-main" onclick="posIniciarModelagem(\''+id+'\')">Conferir e iniciar modelagem</button>';
+    else if(estado==='modelagem')principal='<button class="btn-main" onclick="montarForma(\''+id+'\')">Registrar forma</button>';
+  }
+  return principal+'<button class="link-btn" onclick="abrirEtiquetaPartida(\''+id+'\')">🏷 Etiquetas</button><details class="ux-details" style="width:100%"><summary>Detalhes / outras ações</summary><div class="ux-muted">Origem: '+_escHtml(p.laminacaoNome||'—')+' · '+_escHtml(p.receitaNome||'')+'<br>Produzidas: '+p.qtd+' · '+_escHtml(posHora(p.criadoTs))+'</div>'+sec+(OP.pode('apagar')&&posUnidadesUsadas(id)===0?'<button class="link-btn" onclick="apagarPartida(\''+id+'\')">Excluir lançamento por engano</button>':'')+'</details>';
+}
 function renderModelagem(){
-  const el=document.getElementById('modelagem-partidas'),fe=document.getElementById('modelagem-formas');if(!el||!fe)return;const arr=posPartidas().slice().sort((a,b)=>(Number(b.atualizadoTs||b.criadoTs)||0)-(Number(a.atualizadoTs||a.criadoTs)||0));
-  el.innerHTML=arr.length?arr.map(p=>{const saldo=posSaldo(p),des=p.situacao==='descongelando'||(p.eventos&&p.eventos.descongelamentoInicio)?posTempoDescongelando(p):'',temp=p.eventos&&p.eventos.descongelamentoInicio&&p.eventos.descongelamentoInicio.tempAmbiente;return '<div class="pos-card"><div class="pos-title">'+_escHtml(p.nome)+' · '+_escHtml(p.produtoNome)+'</div><div class="pos-meta">Lam. '+_escHtml(p.laminacaoNome||'—')+' · '+p.qtd+' produzidas</div><div class="pos-saldo">'+saldo+' disponíveis</div><div class="pos-state">'+_escHtml(posEstadoTexto(p))+'</div>'+(des?'<div class="pos-meta">Descongelamento: '+des+(temp!=null?' · <span class="pos-temp">'+temp+'°C</span>':' · temperatura não informada')+'</div>':'')+'<div class="pos-actions">'+posAcaoHtml(p)+'</div></div>';}).join(''):'<div class="pos-empty">Nenhuma fatia registrada. Ao concluir uma laminação, registre o corte.</div>';
-  const hoje=posDia(Date.now()),formas=posFormas().filter(f=>posDia(f.criadoTs)===hoje).sort((a,b)=>(Number(b.criadoTs)||0)-(Number(a.criadoTs)||0));fe.innerHTML=formas.length?formas.map(f=>'<div class="pos-card"><div class="pos-title">Forma '+_escHtml(f.nome)+' · '+_escHtml(f.produtoNome)+'</div><div class="pos-meta">'+f.totalUnidades+' unidades · criada '+_escHtml(posHora(f.criadoTs))+'</div><div class="pos-forma-comp">'+(f.composicao||[]).map(c=>c.unidades+'× '+_escHtml(c.partidaNome||c.partidaId)).join(' + ')+'</div>'+(OP.pode('apagar')?'<div class="pos-actions"><button class="link-btn" onclick="apagarForma(\''+f.id+'\')">🗑 Excluir forma</button></div>':'')+'</div>').join(''):'<div class="pos-empty">Nenhuma forma criada hoje.</div>';
+  const el=document.getElementById('modelagem-partidas'),fe=document.getElementById('modelagem-formas');if(!el||!fe)return;
+  const filtro=st.posFiltro||'frio';document.querySelectorAll('[data-pos-filtro]').forEach(b=>b.classList.toggle('sel',b.dataset.posFiltro===filtro));
+  el.classList.toggle('ux-hidden',filtro==='formas');fe.classList.toggle('ux-hidden',filtro!=='formas');
+  const arr=posPartidas().filter(p=>posSaldo(p)>0&&(filtro==='modelagem'?['descongelando','modelagem'].includes(p.situacao):['cortada','freezer_rapido','freezer_conservador'].includes(p.situacao))).sort((a,b)=>(Number(a.criadoTs)||0)-(Number(b.criadoTs)||0));
+  el.innerHTML=arr.length?arr.map(posCardOperacional).join(''):'<div class="pos-empty">'+(filtro==='modelagem'?'Nenhuma fatia em descongelamento ou modelagem.':'Nenhuma fatia aguardando movimentação no frio.')+'</div>';
+  const formas=posFormas().slice().sort((a,b)=>(Number(b.criadoTs)||0)-(Number(a.criadoTs)||0));
+  fe.innerHTML=formas.length?formas.map(f=>'<div class="pos-card"><div class="pos-title">Forma '+_escHtml(f.nome)+' · '+_escHtml(f.produtoNome)+'</div><div class="pos-saldo">'+f.totalUnidades+' unidades</div><div class="pos-meta">'+_escHtml(posHora(f.criadoTs))+'</div><details class="ux-details"><summary>Detalhes</summary><div class="ux-muted">'+(f.composicao||[]).map(c=>c.unidades+'× Fatias '+_escHtml(c.partidaNome||c.partidaId)).join(' + ')+'</div>'+(OP.pode('apagar')?'<button class="link-btn" onclick="apagarForma(\''+f.id+'\')">Excluir lançamento por engano</button>':'')+'</details></div>').join(''):'<div class="pos-empty">Nenhuma forma registrada.</div>';
 }
 async function montarForma(partidaId){
-  let partes=posPartidas(),p=partes.find(x=>x.id===partidaId);if(!p||posSaldo(p)<=0)return;const compativeis=partes.filter(x=>posCompat(p,x)&&posSaldo(x)>0).sort((a,b)=>a.id===p.id?-1:b.id===p.id?1:(Number(a.criadoTs)||0)-(Number(b.criadoTs)||0)),disp=compativeis.reduce((s,x)=>s+posSaldo(x),0),ref=(posProduto(p.produtoId)||{}).forma||Number(p.capacidadeForma)||16,def=Math.min(ref,disp),entrada=prompt('Quantidade desta forma:',String(def));if(entrada===null)return;const alvo=parseInt(entrada,10);if(!Number.isInteger(alvo)||alvo<=0){alert('Informe uma quantidade maior que zero.');return;}if(alvo>disp){alert('Existem somente '+disp+' unidades compatíveis disponíveis.');return;}
+  if(st.criandoForma||!OP.pode('modelagem'))return;
+  let partes=posPartidas(),p=partes.find(x=>x.id===partidaId);if(!posProntaModelar(p))return;
+  const compativeis=partes.filter(x=>posCompat(p,x)&&posProntaModelar(x)).sort((a,b)=>a.id===p.id?-1:b.id===p.id?1:(Number(a.criadoTs)||0)-(Number(b.criadoTs)||0));
+  const disp=compativeis.reduce((n,x)=>n+posSaldo(x),0),ref=(posProduto(p.produtoId)||{}).forma||Number(p.capacidadeForma)||16;
+  const entrada=prompt('Quantidade desta forma:',String(Math.min(ref,disp)));if(entrada===null)return;
+  const alvo=Number(entrada);if(!Number.isSafeInteger(alvo)||alvo<=0){alert('Informe uma quantidade inteira maior que zero.');return;}if(alvo>disp){alert('Existem somente '+disp+' unidades liberadas para modelagem.');return;}
   let falta=alvo,comp=[];for(const src of compativeis){if(falta<=0)break;const q=Math.min(falta,posSaldo(src));if(q>0){comp.push({partidaId:src.id,partidaNome:src.nome,laminacaoId:src.laminacaoId,laminacaoNome:src.laminacaoNome,unidades:q});falta-=q;}}
-  const agora=Date.now(),seq=await FB.proxPosSeq('forma',agora),forma={id:FB.novoId('forma'),seqDia:seq,nome:posDia(agora)+' · '+seq,produtoId:p.produtoId,produtoNome:p.produtoNome,criadoTs:agora,criadoEm:new Date(agora).toLocaleString('pt-BR'),atualizadoTs:agora,totalUnidades:alvo,capacidadeReferencia:ref,composicao:comp,op:getOp(),dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null)};const caps={};comp.forEach(c=>{const src=partes.find(x=>x.id===c.partidaId);caps[c.partidaId]=Number(src&&src.qtd)||0;});const r=await FB.criarFormaAtomica(forma,caps);if(!r.ok){alert(r.motivo||'As fatias mudaram em outro aparelho. Atualize e tente novamente.');renderModelagem();return;}
-  const formas=posFormas().filter(x=>x.id!==forma.id);formas.unshift(forma);posSalvarFormas(formas);partes=posPartidas();const t=Date.now();comp.forEach(c=>{const src=partes.find(x=>x.id===c.partidaId);if(!src)return;src.eventos=src.eventos||{};if(!src.eventos.modelagemInicio)src.eventos.modelagemInicio={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp()};src.situacao=posSaldo(src)<=0?'consumida':'modelagem';src.atualizadoTs=t;});posSalvarPartidas(partes);falar('Forma '+forma.nome+' criada com '+alvo+' unidades.');renderModelagem();
+  if(comp.length>1&&!confirm('Esta forma usará:\n'+comp.map(c=>c.unidades+' unidades das Fatias '+c.partidaNome).join('\n')+'\n\nConfirme que são exatamente as fatias usadas nesta forma.'))return;
+  st.criandoForma=true;const operador=uxOperador();
+  try{
+    const agora=Date.now(),seq=await FB.proxPosSeq('forma',agora);partes=posPartidas();
+    if(operador!==uxOperador()||!OP.pode('modelagem')||comp.some(c=>{const src=partes.find(x=>x.id===c.partidaId);return !posProntaModelar(src)||posSaldo(src)<c.unidades;})){alert('As fatias disponíveis mudaram. Confira antes de registrar a forma.');return;}
+    const forma={id:FB.novoId('forma'),seqDia:seq,nome:posDia(agora)+' · '+seq,produtoId:p.produtoId,produtoNome:p.produtoNome,criadoTs:agora,criadoEm:new Date(agora).toLocaleString('pt-BR'),atualizadoTs:agora,totalUnidades:alvo,capacidadeReferencia:ref,composicao:comp,op:getOp(),dispositivo:DEVICE.audit()};
+    const caps={};comp.forEach(c=>{caps[c.partidaId]=Number(partes.find(x=>x.id===c.partidaId).qtd)||0;});
+    const r=await FB.criarFormaAtomica(forma,caps);if(!r.ok){alert(r.motivo||'As fatias mudaram em outro aparelho. Atualize e tente novamente.');return;}
+    const formas=posFormas().filter(x=>x.id!==forma.id);formas.unshift(forma);posSalvarFormas(formas);partes=posPartidas();const t=Date.now();
+    comp.forEach(c=>{const src=partes.find(x=>x.id===c.partidaId);if(!src)return;src.eventos=src.eventos||{};if(!src.eventos.modelagemInicio)src.eventos.modelagemInicio={emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp()};src.situacao=posSaldo(src)<=0?'consumida':'modelagem';src.atualizadoTs=t;});posSalvarPartidas(partes);
+    falar('Forma '+forma.nome+' criada com '+alvo+' unidades.');renderModelagem();
+  }finally{st.criandoForma=false;}
 }
-function apagarForma(id){if(!OP.pode('apagar'))return;const formas=posFormas(),f=formas.find(x=>x.id===id);if(!f||!confirm('Excluir a forma '+f.nome+'? As unidades voltarão a ficar disponíveis para modelagem.'))return;FB.removerRegistro('fdo_formas',id);posSalvarFormas(formas.filter(x=>x.id!==id));const ps=posPartidas(),t=Date.now();(f.composicao||[]).forEach(c=>{const p=ps.find(x=>x.id===c.partidaId);if(!p)return;const ev=p.eventos||{};p.situacao=ev.descongelamentoInicio?'descongelando':ev.modelagemDireta?'modelagem':ev.freezerConservador?'freezer_conservador':ev.freezerRapido?'freezer_rapido':'cortada';p.atualizadoTs=t;});posSalvarPartidas(ps);renderModelagem();}
-function apagarPartida(id){if(!OP.pode('apagar')||posUnidadesUsadas(id)>0)return;const ps=posPartidas(),p=ps.find(x=>x.id===id);if(!p||!confirm('Excluir '+p.nome+'? Use apenas para lançamento feito por engano.'))return;FB.removerRegistro('fdo_partidas',id);posSalvarPartidas(ps.filter(x=>x.id!==id));renderModelagem();if(st.corteLamId)renderCorteLaminacao();}
+function apagarForma(id){if(!OP.pode('apagar'))return;const formas=posFormas(),f=formas.find(x=>x.id===id);if(!f||!confirm('Excluir a forma '+f.nome+'? As unidades voltarão a ficar disponíveis para modelagem.'))return;FB.removerRegistro('fdo_formas',id);posSalvarFormas(formas.filter(x=>x.id!==id));const ps=posPartidas(),t=Date.now();(f.composicao||[]).forEach(c=>{const p=ps.find(x=>x.id===c.partidaId);if(!p)return;const ev=p.eventos||{};p.situacao=(ev.modelagemInicio||ev.modelagemDireta)?'modelagem':ev.descongelamentoInicio?'descongelando':ev.modelagemDireta?'modelagem':ev.freezerConservador?'freezer_conservador':ev.freezerRapido?'freezer_rapido':'cortada';p.atualizadoTs=t;});posSalvarPartidas(ps);renderModelagem();}
+function apagarPartida(id){if(!OP.pode('apagar')||posUnidadesUsadas(id)>0)return;const ps=posPartidas(),p=ps.find(x=>x.id===id);if(!p||!confirm('Excluir '+p.nome+'? Use apenas para lançamento feito por engano.'))return;FB.removerRegistro('fdo_partidas',id);posSalvarPartidas(ps.filter(x=>x.id!==id));if(!posPartidasDaLam(p.laminacaoId).length)marcarCorte(p.laminacaoId,false);posReexibir();if(st.corteLamId)renderCorteLaminacao();}
 
+
+
+// v26.6.1 — Navegação: retorno visual e Android não desfazem uma gravação.
+const UX_NAV={pilha:[],operador:null,saindo:false};
+function uxTelaAtual(){const e=document.querySelector('.scr:not(.off)');return e?e.id.replace(/^s-/,''):'';}
+function uxOperador(){const a=OP.atual();return a?a.id:'legado';}
+function uxBloqueada(id){return ['device','geo','geo-perm','geo-loading','login'].includes(id);}
+function uxOcupado(){return !!(st.criandoLote||st.criandoLam||st.salvandoCorte||st.criandoForma||st.imprimindo);}
+function uxAvisarOcupado(){falar('Operação em andamento. Aguarde a confirmação antes de voltar.');}
+function uxRegistrarTela(id){
+  const atual=uxTelaAtual(),op=uxOperador();
+  if(UX_NAV.operador!==op){UX_NAV.pilha=[];st.adminBaldes=null;UX_NAV.operador=op;}
+  if(id==='pin'&&atual!=='pin')st.pinRet=atual;
+  if(uxBloqueada(id)){UX_NAV.pilha=[];st.adminBaldes=null;return;}
+  if(id===atual)return;
+  if(id==='start'){UX_NAV.pilha=[];return;}
+  const i=UX_NAV.pilha.lastIndexOf(id);
+  if(i>=0)UX_NAV.pilha=UX_NAV.pilha.slice(0,i);
+  else if(atual&&!uxBloqueada(atual)&&atual!=='pin'&&!(id==='done'&&atual==='active'))UX_NAV.pilha.push(atual);
+  if(UX_NAV.pilha.length>30)UX_NAV.pilha.shift();
+}
+function uxPrepararVoltar(id){
+  const el=document.getElementById('s-'+id);if(!el||id==='start'||uxBloqueada(id)||id==='pin')return;
+  if(el.querySelector('[data-ux-voltar]'))return;
+  const existente=Array.from(el.querySelectorAll('.hdr button')).find(b=>/←/.test(b.textContent));
+  if(existente){existente.setAttribute('data-ux-voltar','1');existente.onclick=voltarTela;existente.textContent='← Voltar';return;}
+  const bar=document.createElement('div');bar.className='ux-backbar';
+  const btn=document.createElement('button');btn.className='link-btn';btn.textContent='← Voltar';btn.setAttribute('data-ux-voltar','1');btn.onclick=voltarTela;bar.appendChild(btn);el.insertBefore(bar,el.firstChild);
+  el.querySelectorAll('.start-footer button').forEach(b=>{if(/←/.test(b.textContent))b.classList.add('ux-hidden');});
+}
+function voltarTela(){
+  if(_storageFalhaMostrada)return;
+  if(uxOcupado()){uxAvisarOcupado();return;}
+  const lembrete=document.getElementById('estoque-lembrete-bg');if(lembrete&&lembrete.classList.contains('on')){estoqueLembreteFechar();return;}
+  const atual=uxTelaAtual();if(uxBloqueada(atual))return;
+  if(atual==='active'){voltarPasso();return;}
+  if(atual==='pin'){cancelarPin();return;}
+  if(atual==='batimento'){batSair('batimento-lotes');return;}
+  if(atual==='etiqueta'){fecharEtiqueta();return;}
+  if(atual==='calc'){calcVoltar();return;}
+  if(atual==='receita-edit'){voltarEditorReceita();return;}
+  if(atual==='receita-auditoria'){voltarAuditoriaReceita();return;}
+  if(atual==='config'){destinoBoot();return;}
+  const fixos={done:st.subModulo==='liquidos'?'liquidos-lotes':'porc-menu','lam-menu':'start',laminacao:'lam-menu','lam-cortes':'lam-menu','lam-concluida':'lam-menu','corte-fatias':'lam-cortes','corte-resultado':'corte-fatias',modelagem:'start'};
+  let alvo=fixos[atual]||UX_NAV.pilha.pop()||'start';
+  if(alvo==='active'&&(!st.sessionStart||st.secosFinalizado))alvo='porc-menu';
+  if(alvo==='config'){entrarConfig();return;}
+  if(uxBloqueada(alvo)||alvo==='pin'){destinoBoot();return;}
+  ir(alvo);
+}
+function uxInstalarHistorico(){
+  // Uma sentinela, não uma rota reexecutável: nunca restaurar uma tela protegida via history.state.
+  try{history.replaceState({fdoNav:0},'',location.href);history.pushState({fdoNav:1},'',location.href);}catch(e){return;}
+  window.addEventListener('popstate',()=>{
+    if(UX_NAV.saindo)return;
+    const atual=uxTelaAtual();
+    if((atual==='start'||uxBloqueada(atual))&&!_storageFalhaMostrada&&!uxOcupado()){
+      const modal=document.getElementById('estoque-lembrete-bg');
+      if(!(modal&&modal.classList.contains('on'))){UX_NAV.saindo=true;history.back();return;}
+    }
+    history.pushState({fdoNav:1},'',location.href);voltarTela();
+  });
+}
+function farResumoRapido(){
+  const ids=['far-lote-bag','far-lote-ita','far-lote-bag-extra','far-lote-ita-extra'],v=ids.map(id=>normalizarLoteFarinha(document.getElementById(id).value));
+  document.getElementById('far-lotes-resumo').innerHTML='<b>Bagatelle:</b> '+_escHtml(v[0]||'não informado')+(v[2]?' → '+_escHtml(v[2]):'')+'<br><b>Italiana 00:</b> '+_escHtml(v[1]||'não informado')+(v[3]?' → '+_escHtml(v[3]):'');
+  const mudou=JSON.stringify(v)!==JSON.stringify(st.farLotesInicio||[]);
+  document.getElementById('far-lotes-confirm-btn').textContent=(v[0]&&v[1]&&!mudou)?'✓ MESMOS LOTES — COMEÇAR':'✓ CONFIRMAR LOTES E COMEÇAR';
+}
+
+// O PIN administrativo é o já existente das Configurações; autorização só em memória.
+function baldesAdminPode(grupo){
+  const a=st.adminBaldes;if(!a||a.operador!==uxOperador())return false;
+  return grupo?a.grupoId===grupo.id||(a.sessao===grupo.sessaoStart&&a.sessao===st.sessionStart):a.sessao===st.sessionStart&&!!st.sessionStart;
+}
+function autorizarVariosBaldes(retomar){
+  if(!OP.pode('porcionamento')||uxOcupado())return;
+  const g=retomar?geracaoBaldesPendente():null;
+  if(!g&&(st.modo!=='pos_secos'||st.subModulo!=='secos'||!st.sessionStart))return;
+  const origem=uxTelaAtual(),operador=uxOperador(),sessao=st.sessionStart;
+  st.pinTipo='config';st.pinBuf='';
+  st.pinAlvo=()=>{
+    if(uxOperador()!==operador){destinoBoot();return;}
+    st.adminBaldes={operador,sessao,grupoId:g?g.id:null};
+    ir(origem);atualizarQuantidadeBaldes();
+    if(g)executarGrupoBaldes(g);
+  };
+  document.getElementById('pin-err').textContent='';document.getElementById('pin-title').textContent='Gerar vários baldes';document.getElementById('pin-sub').textContent='Autorização do administrador · senha das Configurações';renderPinPad();atualizarPinDots();ir('pin');
+}
+function atualizarQuantidadeBaldes(){
+  const autorizado=baldesAdminPode(null),inp=document.getElementById('baldes-qtd');
+  if(!autorizado){st.qtdBaldes=1;if(inp)inp.value='1';}else st.qtdBaldes=Number(inp.value);
+  document.getElementById('baldes-admin-controle').classList.toggle('ux-hidden',!autorizado);
+  document.getElementById('baldes-admin-btn').classList.toggle('ux-hidden',autorizado);
+  const n=st.qtdBaldes,ok=Number.isSafeInteger(n)&&n>0,btn=document.getElementById('secos-finalizar-btn');
+  btn.disabled=!ok;btn.textContent=ok&&n>1?'Finalizar e gerar '+n+' baldes →':'Finalizar e gerar balde →';
+}
+function guardarGrupoBaldes(g){try{localStorage.setItem('fdo_baldes_pendentes_v2661',JSON.stringify(g));}catch(e){storageFalhou(e,'fdo_baldes_pendentes_v2661');throw e;}}
+function geracaoBaldesPendente(){const g=LS.g('fdo_baldes_pendentes_v2661',null);return g&&!g.concluido?g:null;}
+function prepararGrupoBaldes(qtd){
+  const r=clonarReceita(receitaAtualObj()),t=Date.now(),id=FB.novoId('baldes');
+  return {id,qtd,sessaoStart:st.sessionStart,criadoTs:t,op:getOp(),operadorId:uxOperador(),receita:st.receita,receitaSnapshot:r,teste:st.receita==='teste'?clonarReceita(st.testeMeta):null,dispositivo:DEVICE.audit(),
+    parametros:{temp:st.temp,fermento_g:st.fermento,fermento_horas:st.fermentoHoras,farinhas_lotes:clonarReceita(st.farinhasLotes),total_g:totalReceitaFull(st.receita),peso_secos_g:pesoBaldeSecosAtual(),concluidos:st.done.size,total:RECEITA.length,dur:Math.round((t-st.sessionStart)/60000)},
+    itens:Array.from({length:qtd},()=>({id:FB.novoId('lote'),seq:null})),concluido:false};
+}
+function montarBaldeDoGrupo(g,item,indice){
+  const t=g.criadoTs,em=new Date(t).toLocaleString('pt-BR'),p=clonarReceita(g.parametros);
+  const lote={id:item.id,num:item.seq.num,numOrigem:item.seq.origem,dispositivo:g.dispositivo,receita:g.receita,receitaNome:g.receitaSnapshot.nome,rotulo:g.receitaSnapshot.rotulo,criado:em,criadoTs:t,receitaSnapshot:clonarReceita(g.receitaSnapshot),etapas:{porcionamento_secos:{...p,feito:true,em,emTs:t,op:g.op,baldes_secos:1}}};
+  if(g.teste)lote.teste=clonarReceita(g.teste);
+  if(g.qtd>1){lote.etapas.porcionamento_secos.dur=null;lote.producaoConjunta={id:g.id,indice:indice+1,total:g.qtd,tempoSessaoMin:g.parametros.dur,autorizadoPor:g.op};}
+  return lote;
+}
+async function executarGrupoBaldes(g){
+  if(st.criandoLote||!OP.pode('porcionamento')||(g.qtd>1&&!baldesAdminPode(g)))return;
+  st.criandoLote=true;const operador=uxOperador();
+  try{
+    for(let i=0;i<g.itens.length;i++){
+      if(uxOperador()!==operador||(g.qtd>1&&!baldesAdminPode(g)))throw new Error('Operador alterado. Retome com autorização administrativa.');
+      const item=g.itens[i];let lote=LS.g('fdo_lotes',[]).find(x=>x.id===item.id);
+      if(!lote){
+        if(!item.seq){item.seq=await proxLoteNum();guardarGrupoBaldes(g);}
+        if(uxOperador()!==operador||(g.qtd>1&&!baldesAdminPode(g)))throw new Error('Autorização alterada durante a geração.');
+        lote=montarBaldeDoGrupo(g,item,i);const todos=LS.g('fdo_lotes',[]);
+        if(!todos.some(x=>x.id===lote.id)){todos.unshift(lote);LS.s('fdo_lotes',todos);}
+      }
+      registrarSaidaEstoqueLote(lote); // movimento com ID determinístico: retomar não repete a baixa.
+    }
+    const hist=LS.g('fdo_sess',[]);
+    if(!hist.some(x=>x.grupoBaldesId===g.id)){
+      hist.unshift({grupoBaldesId:g.id,data:new Date(g.criadoTs).toLocaleString('pt-BR'),modulo:'Porcionamento '+g.receitaSnapshot.rotulo+' · Secos',op:g.op,temp:g.parametros.temp,baldes_secos:g.qtd,total_g:g.parametros.total_g,concluidos:g.parametros.concluidos,total:g.parametros.total,dur:g.parametros.dur,ok:true});LS.s('fdo_sess',hist.slice(0,60));
+    }
+    g.concluido=true;guardarGrupoBaldes(g);mostrarBaldesGerados(g);
+  }catch(e){
+    const salvos=g.itens.filter(x=>LS.g('fdo_lotes',[]).some(l=>l.id===x.id)).length;
+    alert(salvos+' de '+g.qtd+' baldes salvos. A geração pode ser retomada no Porcionamento sem duplicar os números já criados.\n\n'+(e.message||'Falha de gravação.'));
+  }finally{st.criandoLote=false;}
+}
+function mostrarBaldesGerados(g){
+  const lotes=g.itens.map(x=>LS.g('fdo_lotes',[]).find(l=>l.id===x.id)).filter(Boolean);
+  st.secosFinalizado=true;st.ultimosLotesIds=lotes.map(l=>l.id);st.ultimoLoteId=lotes[0].id;st.grupoBaldesId=g.id;
+  pararVoz();liberarWakeLock();st.sessionStart=0;st.modo='normal';mostrarPerguntaSecos(false);
+  document.getElementById('done-emoji').textContent='✅';document.getElementById('done-title').textContent='Secos Concluídos!';
+  const num=document.getElementById('done-lote');num.textContent=lotes.length===1?'BALDE #'+lotes[0].num:lotes.map(l=>'#'+l.num).join(' · ');num.style.fontSize=lotes.length===1?'':'1.2rem';num.style.overflowWrap='anywhere';
+  const mark=document.getElementById('done-mark');mark.style.display='';mark.textContent=lotes.length===1?'✍️ Marque este número na massa':'Identifique cada balde com seu próprio número';
+  ['done-etq-btn','done-etq-massas-btn','done-voltar-porc-btn'].forEach(id=>document.getElementById(id).style.display='');
+  document.getElementById('done-tot').innerHTML='<div class="done-conf">Total da massa por balde (secos + líquidos)</div><div class="done-val">'+formatPeso(g.parametros.total_g)+'</div>';
+  ir('done');falar(lotes.length===1?'Porcionamento de secos concluído. Balde número '+lotes[0].num+'.':lotes.length+' baldes registrados. Cada balde tem seu próprio número.');
+}
+function mostrarGeracaoPendente(){
+  const tela=document.getElementById('s-porc-menu');let el=document.getElementById('baldes-pendentes');
+  if(!el){el=document.createElement('div');el.id='baldes-pendentes';el.className='pos-summary';tela.insertBefore(el,tela.children[1]||null);}
+  const g=geracaoBaldesPendente();el.classList.toggle('ux-hidden',!g);
+  if(g){const n=g.itens.filter(x=>LS.g('fdo_lotes',[]).some(l=>l.id===x.id)).length;el.innerHTML='<b>Geração a concluir: '+n+' de '+g.qtd+' baldes salvos</b><div class="ux-muted">Retomar preserva os números já criados.</div><button class="btn-main" onclick="retomarGeracaoBaldes()">Retomar geração</button>';}
+}
+function retomarGeracaoBaldes(){const g=geracaoBaldesPendente();if(!g||!OP.pode('porcionamento'))return;if(g.qtd>1){autorizarVariosBaldes(true);return;}executarGrupoBaldes(g);}
+
+// Primeira laminação: novos registros representam exatamente 2 massas → 1 com manteiga.
+function abrirPrimeiraLaminacao(){if(!OP.pode('laminacao'))return;st.lamSel=st.lamSel||{};renderLaminacao();ir('laminacao');falar('Escolha duas massas para fazer uma massa com manteiga.');}
+function abrirLaminacaoFinal(){if(!OP.pode('laminacao'))return;ir('lam-cortes');}
+function lamNomeOperacional(l){return (l.modeloFisico==='duas_massas_v1'?'Massa com manteiga ':'Laminação ')+(l.nome||'—');}
+function corteConcluido(l){return !!(l&&l.etapas&&l.etapas.corte&&l.etapas.corte.feito===true);}
+function marcarCorte(id,feito){
+  const arr=LS.g('fdo_laminacoes',[]),l=arr.find(x=>x.id===id);if(!l)return;
+  const t=Date.now(),evento={feito,emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp()};l.etapas=l.etapas||{};l.etapas.corte=evento;l.corteEventos=Array.isArray(l.corteEventos)?l.corteEventos:[];l.corteEventos.push(evento);l.atualizadoTs=t;LS.s('fdo_laminacoes',arr);
+}
+function concluirCorteLaminacao(){
+  if(uxOcupado()||!OP.pode('laminacao'))return;
+  const l=LS.g('fdo_laminacoes',[]).find(x=>x.id===st.corteLamId);if(!l||corteConcluido(l))return;
+  if((st.corteLinhas||[]).some(r=>r.produtoId||String(r.qtd||'').trim())){alert('Registre as fatias preenchidas antes de concluir o corte.');return;}
+  if(!posPartidasDaLam(l.id).length){alert('Registre as fatias antes de concluir o corte.');return;}
+  if(!confirm('Toda a massa '+l.nome+' já foi cortada e todas as fatias foram registradas?\n\nSe ainda falta cortar, toque em Cancelar.'))return;
+  marcarCorte(l.id,true);ir('lam-cortes');falar('Corte concluído. As fatias continuam disponíveis em Frio e Modelagem.');
+}
+function reabrirCorteLaminacao(){if(!OP.pode('apagar')||uxOcupado())return;const l=LS.g('fdo_laminacoes',[]).find(x=>x.id===st.corteLamId);if(!l||!confirm('Reabrir o corte de '+l.nome+'? As fatias e formas já registradas serão preservadas.'))return;marcarCorte(l.id,false);renderCorteLaminacao();}
+function renderResultadoCorte(){
+  const el=document.getElementById('corte-resultado-list');if(!el)return;
+  const ids=st.corteResultadoIds||[],arr=posPartidas().filter(p=>ids.includes(p.id));el.innerHTML=arr.map(posCardOperacional).join('');
+}
+function posReexibir(){const atual=uxTelaAtual();if(atual==='corte-resultado')renderResultadoCorte();else if(atual==='corte-fatias')renderCorteLaminacao();else renderModelagem();}
+function posFiltrar(filtro){st.posFiltro=['frio','modelagem','formas'].includes(filtro)?filtro:'frio';renderModelagem();}
+function posProntaModelar(p){return !!(p&&p.situacao==='modelagem'&&posSaldo(p)>0);}
+function posIniciarModelagem(id){
+  if(!OP.pode('modelagem'))return;const p=posPartidas().find(x=>x.id===id);if(!p||p.situacao!=='descongelando')return;
+  if(!confirm('Confira as Fatias '+p.nome+'. Estão prontas para modelar?\n\nO aplicativo não decide isso apenas pelo tempo decorrido.'))return;
+  posAtualizarPartida(id,p=>{if(p.situacao!=='descongelando')return;const t=Date.now();p.situacao='modelagem';p.eventos=p.eventos||{};p.eventos.modelagemInicio=p.eventos.modelagemInicio||{emTs:t,em:new Date(t).toLocaleString('pt-BR'),op:getOp()};});posReexibir();
+}
+function posCardOperacional(p){
+  const des=p.eventos&&p.eventos.descongelamentoInicio?posTempoDescongelando(p):'',temp=p.eventos&&p.eventos.descongelamentoInicio&&p.eventos.descongelamentoInicio.tempAmbiente;
+  return '<div class="pos-card"><div class="pos-title">Fatias '+_escHtml(p.nome)+' · '+_escHtml(p.produtoNome)+(p.testeId?' · TESTE':'')+'</div><div class="pos-saldo">'+posSaldo(p)+' disponíveis</div><div class="pos-state">'+_escHtml(posEstadoTexto(p))+'</div>'+(des?'<div class="pos-meta">Descongelamento: '+des+(temp!=null?' · '+temp+'°C':' · temperatura não informada')+'</div>':'')+'<div class="pos-actions">'+posAcaoHtml(p)+'</div></div>';
+}
+
+// A impressão só lê dados; cada balde do grupo gera o próprio payload.
+function etqQuantidadeChave(){return st.etqTipo==='massas'?'fdo_etq_massas_qtd':st.etqTipo==='partida'?'fdo_etq_fatias_qtd':'fdo_etq_baldes_qtd';}
+function etqLotesSelecionados(){
+  if(st.etqTipo==='partida')return [];
+  const ids=st.etqGrupoIds&&st.etqGrupoIds.length?st.etqGrupoIds:[st.etqLote],todos=LS.g('fdo_lotes',[]);
+  return ids.filter(id=>st.etqSelecao==='todos'||!st.etqSelecao||st.etqSelecao===id).map(id=>todos.find(l=>l.id===id)).filter(Boolean);
+}
+function prepararEtiquetaUI(){
+  document.getElementById('etq-img').src=etqCanvas.toDataURL('image/png');marcarPrintMode();marcarEtqMassasQtd();
+  const g=document.getElementById('etq-grupo');g.classList.toggle('ux-hidden',!(st.etqGrupoIds&&st.etqGrupoIds.length>1));
+  const diag=document.getElementById('etq-diag');if(diag){diag.style.display='none';diag.textContent='';}
+  const status=document.getElementById('etq-status');status.className='etq-status';status.textContent=navigator.bluetooth?'Pronto. Ligue a impressora e toque em Imprimir.':'Para Bluetooth use o Chrome no Android. Você também pode salvar a imagem.';
+}
+function abrirEtiquetasBaldes(tipo){
+  if(uxOcupado())return;const ids=st.secosFinalizado&&st.ultimosLotesIds&&st.ultimosLotesIds.length?st.ultimosLotesIds.slice():[st.ultimoLoteId];
+  abrirEtiqueta(ids[0],tipo);if(uxTelaAtual()!=='etiqueta')return;st.etqGrupoIds=ids;st.etqSelecao='todos';
+  const todos=LS.g('fdo_lotes',[]),sel=document.getElementById('etq-balde-sel');sel.innerHTML='<option value="todos">Todos os '+ids.length+' baldes</option>'+ids.map(id=>{const l=todos.find(x=>x.id===id);return l?'<option value="'+_escHtml(id)+'">Balde #'+l.num+'</option>':'';}).join('');
+  etqSelecionarBalde('todos');prepararEtiquetaUI();
+}
+function etqSelecionarBalde(id){
+  if(st.imprimindo)return;st.etqSelecao=id;const lotes=etqLotesSelecionados();if(!lotes.length)return;
+  st.etqLote=lotes[0].id;etqCanvas=st.etqTipo==='massas'?desenharEtiquetaMassas(lotes[0]):desenharEtiqueta(lotes[0]);document.getElementById('etq-img').src=etqCanvas.toDataURL('image/png');
+  document.getElementById('etq-previa-info').textContent='Prévia: Balde #'+lotes[0].num+(lotes.length>1?'. A impressão usará o número próprio de cada um dos '+lotes.length+' baldes.':'');marcarEtqMassasQtd();
+}
+function etqPayloadSelecionado(){
+  const previa=etqCanvas,n=getEtqMassasQtd(),modo=getPrintMode(),lotes=etqLotesSelecionados();
+  try{
+    if(st.etqTipo==='partida')return encodeEtiqueta(modo,n);
+    if(!lotes.length)throw new Error('Nenhum balde selecionado para impressão.');
+    const partes=lotes.map(l=>{etqCanvas=st.etqTipo==='massas'?desenharEtiquetaMassas(l):desenharEtiqueta(l);return encodeEtiqueta(modo,n);});
+    const out=new Uint8Array(partes.reduce((t,p)=>t+p.length,0));let offset=0;partes.forEach(p=>{out.set(p,offset);offset+=p.length;});return out;
+  }finally{etqCanvas=previa;}
+}
+
+document.addEventListener('click',function(e){if(uxOcupado()&&e.target.closest('button,a,[onclick]')){e.preventDefault();e.stopImmediatePropagation();uxAvisarOcupado();}},true);
+uxInstalarHistorico();
 
 // ════════════════════════════════════════════════════════════
 // Alerta de bateria fraca: avisa por voz abaixo de 20% e repete a cada 3 min
@@ -5488,7 +5818,13 @@ const SYNC25={
   async remove(k,id0){const id=this.key(id0),t={id:id0,_deleted:true,deletedTs:Date.now(),op:typeof getOp==='function'?getOp():''};this.queue(k,t);this.raw[k][id]=t;await this.flush()},
   async proxLoteNum(){const local=Number(LS.g('fdo_lote_seq',0))||0;if(!FB.db||!navigator.onLine){const n=local+1;this.local('fdo_lote_seq',n);FB.status('err','⚠ Número criado offline · sincronizar depois');return {num:n,origem:'offline'}}try{const r=await FB.db.ref('fdo_v25/meta/lote_seq').transaction(cur=>Math.max(Number(cur)||0,local)+1,undefined,false),n=Number(r.snapshot.val())||local+1;this.local('fdo_lote_seq',n);FB.db.ref('fdo_lote_seq').transaction(cur=>Math.max(Number(cur)||0,n),undefined,false).catch(()=>{});return {num:n,origem:'transacao'}}catch(e){const n=local+1;this.local('fdo_lote_seq',n);FB.status('err','⚠ Numeração local · nuvem pendente');return {num:n,origem:'offline'}}},
   async proxLamSeq(ts){const d=new Date(ts),key=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'),local=LS.g('fdo_laminacoes',[]).filter(x=>dataCurta(x.dataTs)===dataCurta(ts)).length;if(!FB.db||!navigator.onLine)return local+1;try{const r=await FB.db.ref('fdo_v25/meta/lam_seq/'+key).transaction(cur=>Math.max(Number(cur)||0,local)+1,undefined,false);return Number(r.snapshot.val())||local+1}catch(e){return local+1}},
-  async proxPosSeq(tipo,ts){const d=new Date(ts),key=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'),coll=tipo==='forma'?'fdo_formas':'fdo_partidas',local=Math.max(0,...LS.g(coll,[]).filter(x=>posDia(x.criadoTs)===posDia(ts)).map(x=>Number(x.seqDia)||0));if(!FB.db||!navigator.onLine)return local+1;try{const r=await FB.db.ref('fdo_v25/meta/'+(tipo==='forma'?'forma_seq/':'partida_seq/')+key).transaction(cur=>Math.max(Number(cur)||0,local)+1,undefined,false);return Number(r.snapshot.val())||local+1}catch(e){return local+1}},
+  async proxPosSeq(tipo,ts){
+    const d=new Date(ts),key=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'),coll=tipo==='forma'?'fdo_formas':'fdo_partidas',counter='fdo_pos_seq_v2661_'+tipo+'_'+key;
+    const local=Math.max(Number(LS.g(counter,0))||0,...LS.g(coll,[]).filter(x=>{const t=new Date(x.criadoTs);return t.getFullYear()===d.getFullYear()&&t.getMonth()===d.getMonth()&&t.getDate()===d.getDate();}).map(x=>Number(x.seqDia)||0));
+    let n=local+1;
+    if(FB.db&&navigator.onLine){try{const r=await FB.db.ref('fdo_v25/meta/'+(tipo==='forma'?'forma_seq/':'partida_seq/')+key).transaction(cur=>Math.max(Number(cur)||0,local)+1,undefined,false);n=Number(r.snapshot.val())||n;}catch(e){}}
+    this.local(counter,n);return n;
+  },
   async criarFormaAtomica(forma,capacidades){
     if(!FB.db||!navigator.onLine)return {ok:true,offline:true};const id=this.key(forma.id);let conflito='';
     try{const r=await FB.db.ref(this.path('fdo_formas')).transaction(cur=>{conflito='';const m=(cur&&typeof cur==='object')?this.clone(cur):{},usados={};Object.values(m).forEach(x=>{if(!x||x._deleted||!Array.isArray(x.composicao))return;x.composicao.forEach(c=>{if(c&&c.partidaId)usados[c.partidaId]=(usados[c.partidaId]||0)+(Number(c.unidades)||0)})});for(const c of (forma.composicao||[])){const cap=Number(capacidades[c.partidaId])||0,ja=Number(usados[c.partidaId])||0,q=Number(c.unidades)||0;if(q<=0||ja+q>cap){conflito='As fatias de '+(c.partidaNome||c.partidaId)+' já foram usadas em outro aparelho.';return}}m[id]=this.merge('fdo_formas',m[id],forma);return m},undefined,false);if(!r.committed)return {ok:false,motivo:conflito||'As fatias selecionadas mudaram em outro aparelho.'};const salvo=r.snapshot.child(id).val();if(salvo)this.itemJson.fdo_formas[id]=JSON.stringify(salvo);return {ok:true,offline:false}}catch(e){console.warn('[FB25] forma atomic',e);return {ok:false,motivo:'Não foi possível confirmar as fatias na nuvem.'}}

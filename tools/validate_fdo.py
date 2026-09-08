@@ -17,7 +17,7 @@ for marker in (
     "const APP_CHECK_SITE_KEY='6LcPFJ8tAAAAAFk2yg6aQ5Qi0NNMERW220URnH2A'",'const APP_CHECK={',
     'new firebase.appCheck.ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY)',
     "APP_CHECK.init();FB.db=firebase.database()",'id="appcheck-info"',
-    "versao:'26.6'"
+    "versao:'26.6.1'"
 ):
     if marker not in html: fail('v26.5 sem marcador: '+marker)
 if not (ROOT/'vendor/firebase-app-check-compat.js').exists(): fail('Firebase App Check local ausente')
@@ -146,10 +146,10 @@ else:
         if rel and not (ROOT/rel).exists(): fail('Asset do Service Worker ausente: '+asset)
 
 # 5) Cache deve acompanhar a versão indicada no cabeçalho
-vm=re.search(r"atualização v(\d+)\.(\d+)",html)
+vm=re.search(r"atualização v(\d+)\.(\d+)(?:\.(\d+))?",html)
 cm=re.search(r"const CACHE=['\"]([^'\"]+)['\"]",sw)
 if vm and cm:
-    expected_cache=f'fdo-v{vm.group(1)}-{vm.group(2)}'
+    expected_cache='fdo-v'+'-'.join(x for x in vm.groups() if x is not None)
     if cm.group(1)!=expected_cache: fail(f'Cache {cm.group(1)} não corresponde à versão {expected_cache}')
 else: fail('Não foi possível identificar versão/cache')
 
@@ -187,6 +187,6 @@ console.log(JSON.stringify({padrao:__padrao,teste:__testeTotal}));
 if errors:
     print('\n'.join('ERRO: '+e for e in errors))
     raise SystemExit(1)
-print('VALIDAÇÃO FDO v26.6 OK')
+print('VALIDAÇÃO FDO v26.6.1 OK')
 print('Receitas padrão: R1=15464 R2=15690 R3=15544 R4=15564 R5=15714 g')
 print('Receita Teste de referência v25.3: 15448 g')
