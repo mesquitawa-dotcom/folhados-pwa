@@ -55,7 +55,7 @@ def new_page(browser,src=None,stored=None):
   if src is not None:
    path=ROOT/'_test_baseline_usabilidade.html';path.write_text(src);page.goto(URL+path.name,wait_until='domcontentloaded');path.unlink()
   else:page.goto(URL+'index.html',wait_until='domcontentloaded')
- page.wait_for_function("document.querySelector('.scr:not(.off)')?.id==='s-start'",timeout=10000)
+ page.wait_for_function("DEVICE.bootLiberado===true && document.querySelector('.scr:not(.off)')?.id==='s-start'",timeout=15000)
  page.evaluate("FB.db=null; falar=()=>{}; falarForcado=()=>{}; iniciarVoz=()=>{}; pedirWakeLock=()=>{}; pararVoz=()=>{};")
  return page
 
@@ -117,7 +117,7 @@ try:
    saved=js(q,"Object.fromEntries(Array.from({length:localStorage.length},(_,i)=>{const k=localStorage.key(i);return [k,localStorage.getItem(k)]}))")
    q=new_page(browser,stored=saved)
   else:
-   q.reload(wait_until='domcontentloaded');q.wait_for_function("uxTelaAtual()==='start'");js(q,"FB.db=null;falar=()=>{};falarForcado=()=>{};iniciarVoz=()=>{};pedirWakeLock=()=>{};pararVoz=()=>{};")
+   q.reload(wait_until='domcontentloaded');q.wait_for_function("DEVICE.bootLiberado===true && uxTelaAtual()==='start'",timeout=15000);js(q,"FB.db=null;falar=()=>{};falarForcado=()=>{};iniciarVoz=()=>{};pedirWakeLock=()=>{};pararVoz=()=>{};")
   js(q,"ir('porc-menu');retomarGeracaoBaldes()")
   check('Retomada de múltiplos pede nova autorização',state(q)['screen']=='pin')
   js(q,"st.pinBuf='99881';verificarPin()")
