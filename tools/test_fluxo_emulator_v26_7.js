@@ -1,11 +1,12 @@
 // Executar exclusivamente no Firebase Emulator; dados sintéticos, sem produção real.
 const fs=require('fs'),assert=require('assert');
 const {initializeTestEnvironment,assertFails}=require('@firebase/rules-unit-testing');
-const {ref,set,get,runTransaction}=require('firebase/database');
+const {ref,set,get,onValue,runTransaction}=require('firebase/database');
 const {load,form,plan}=require('./fluxo_v26_7_test_helper');
 const A=load();let count=0;
 function ok(label,cond){assert(cond,label);console.log('OK '+(++count)+' '+label);}
 (async()=>{
+ const stops=[];
  const env=await initializeTestEnvironment({projectId:'demo-fdo-rules',database:{rules:fs.readFileSync('database.rules.json','utf8')}});
  try{
   await env.clearDatabase();
@@ -20,8 +21,11 @@ function ok(label,cond){assert(cond,label);console.log('OK '+(++count)+' '+label
   });
   const db1=env.authenticatedContext('teste-a').database(),db2=env.authenticatedContext('teste-b').database();
   const r1=ref(db1,'fdo_v25/formas'),r2=ref(db2,'fdo_v25/formas');
-  await Promise.all([get(r1),get(r2)]);
-  function tx(r,p){return runTransaction(r,cur=>{try{return JSON.parse(JSON.stringify(A.fluxoAplicarPlano(cur,p)));}catch{return undefined;}},{applyLocally:false});}
+  // Espelha SYNC25.init: cada aparelho mantém o listener da coleção ativo.
+  // get() sozinho não conserva o cache usado pela primeira chamada da transação.
+  function watch(r){return new Promise((resolve,reject)=>{let first=true;stops.push(onValue(r,s=>{if(first){first=false;resolve(s);}},reject));});}
+  await Promise.all([watch(r1),watch(r2)]);
+  function tx(r,p){return runTransaction(r,cur=>{try{return JSON.parse(JSON.stringify(A.fluxoAplicarPlano(cur,p)));}catch(e){console.log('Transação não aplicada:',e.message);return undefined;}},{applyLocally:false});}
   const races=await Promise.all([tx(r1,plan('entradaArmario',['f19'],11000,{operacaoId:'a-ultima-vaga'})),tx(r2,plan('entradaArmario',['f20'],11000,{operacaoId:'b-ultima-vaga'}))]);
   ok('somente um aparelho obtém a última vaga',races.filter(x=>x.committed).length===1);
   let current=(await get(r1)).val();ok('capacidade final nunca excede 20',A.fluxoOcupacao(1,Object.values(current))===20);
@@ -40,5 +44,5 @@ function ok(label,cond){assert(cond,label);console.log('OK '+(++count)+' '+label
   ok('registro legado no balde não é modificado',(await get(ref(db1,'fdo_v25/lotes/balde-antigo/etapas/fermentacao/emTs'))).val()===999);
   await assertFails(set(ref(env.unauthenticatedContext().database(),'fdo_v25/formas/f0'),form('f0')));ok('Rules continuam negando gravação sem autorização',true);
   console.log('TESTE EMULATOR FLUXO v26.7 OK — '+count+' verificações');
- }finally{await env.cleanup();}
+ }finally{stops.forEach(stop=>stop());await env.cleanup();}
 })().catch(e=>{console.error(e);process.exit(1);});
