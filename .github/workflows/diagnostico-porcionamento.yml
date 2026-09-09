@@ -1,0 +1,25 @@
+name: Diagnóstico isolado do porcionamento
+on:
+  push:
+    branches: ['agent/corrigir-porcionamento-v26-6-2']
+    paths: ['.github/workflows/diagnostico-porcionamento.yml']
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Exportar somente código das duas versões publicadas
+        run: |
+          mkdir -p /tmp/fdo-diagnostico
+          git archive --format=zip c09b652ad079a02b5bb93fac31d71d61669edde3 > /tmp/fdo-diagnostico/v26-6-1.zip
+          git archive --format=zip 04e3a34f6aba6436859a51b9c2c0e6216942492d > /tmp/fdo-diagnostico/v26-6.zip
+          git diff 04e3a34f6aba6436859a51b9c2c0e6216942492d c09b652ad079a02b5bb93fac31d71d61669edde3 -- index.html > /tmp/fdo-diagnostico/mudancas.diff
+      - uses: actions/upload-artifact@v4
+        with:
+          name: diagnostico-porcionamento-fontes
+          path: /tmp/fdo-diagnostico/
+          retention-days: 7
