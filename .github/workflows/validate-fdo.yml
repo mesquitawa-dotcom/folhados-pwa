@@ -39,6 +39,8 @@ jobs:
         run: node tools/test_v26_5.js
       - name: Testar pós-laminação v26.6
         run: node tools/test_v26_6.js
+      - name: Testar fluxo por formas, capacidade e sincronização v26.7
+        run: node tools/test_fluxo_v26_7.js
       - name: Smoke de boot offline em navegador v26.6
         run: python3 tools/smoke_v26_6.py
 
@@ -66,6 +68,12 @@ jobs:
         run: |
           git show c09b652ad079a02b5bb93fac31d71d61669edde3:index.html > /tmp/fdo-base-v26-6-1.html
           python tools/test_porcionamento_v26_6_2.py --baseline /tmp/fdo-base-v26-6-1.html
+      - name: Testar sequenciamento, rastreio, receita e telas v26.7
+        env:
+          FDO_TEST_ARTIFACT_DIR: /tmp/fdo-usabilidade-tests/fluxo
+        run: |
+          git show 3472acaff69bb4b09cd44f61e0bd27d0231f7726:index.html > /tmp/fdo-base-v26-6-2.html
+          python tools/test_fluxo_v26_7.py --baseline /tmp/fdo-base-v26-6-2.html
       - name: Guardar evidências e telas de teste
         if: always()
         uses: actions/upload-artifact@v4
@@ -88,4 +96,4 @@ jobs:
       - name: Instalar ferramentas de teste das Rules
         run: npm install --no-save --no-package-lock @firebase/rules-unit-testing firebase firebase-tools
       - name: Testar Realtime Database Rules no Emulator Suite
-        run: npx firebase emulators:exec --only database --project demo-fdo-rules "node tools/test_database_rules_v26_6.js"
+        run: npx firebase emulators:exec --only database --project demo-fdo-rules "node tools/test_database_rules_v26_6.js && node tools/test_fluxo_emulator_v26_7.js"
