@@ -1,0 +1,22 @@
+name: Preparar revisão v26.7
+on:
+  push:
+    branches: [agent/fluxo-formas-rastreabilidade-v26-7]
+    paths: [.github/workflows/preparar-v26-7.yml]
+permissions:
+  contents: read
+jobs:
+  fonte:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 3472acaff69bb4b09cd44f61e0bd27d0231f7726
+          persist-credentials: false
+      - name: Arquivar apenas o código versionado de base
+        run: git archive --format=zip HEAD -o /tmp/fdo-base-v26-6-2.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fdo-base-v26-6-2
+          path: /tmp/fdo-base-v26-6-2.zip
+          retention-days: 7
