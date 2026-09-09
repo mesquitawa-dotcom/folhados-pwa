@@ -60,6 +60,12 @@ jobs:
         run: |
           git show 04e3a34f6aba6436859a51b9c2c0e6216942492d:index.html > /tmp/fdo-base-v26-6.html
           python tools/test_usabilidade_v26_6_1.py --baseline /tmp/fdo-base-v26-6.html
+      - name: Testar avanço do porcionamento em telas pequenas v26.6.2
+        env:
+          FDO_TEST_ARTIFACT_DIR: /tmp/fdo-usabilidade-tests/porcionamento
+        run: |
+          git show c09b652ad079a02b5bb93fac31d71d61669edde3:index.html > /tmp/fdo-base-v26-6-1.html
+          python tools/test_porcionamento_v26_6_2.py --baseline /tmp/fdo-base-v26-6-1.html
       - name: Guardar evidências e telas de teste
         if: always()
         uses: actions/upload-artifact@v4
