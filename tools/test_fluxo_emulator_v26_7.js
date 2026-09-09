@@ -25,6 +25,15 @@ function ok(label,cond){assert(cond,label);console.log('OK '+(++count)+' '+label
   // get() sozinho não conserva o cache usado pela primeira chamada da transação.
   function watch(r){return new Promise((resolve,reject)=>{let first=true;stops.push(onValue(r,s=>{if(first){first=false;resolve(s);}},reject));});}
   await Promise.all([watch(r1),watch(r2)]);
+  // A confirmação em A não significa que o listener de B já recebeu a alteração.
+  // Aguarda o evento observado, sem sleeps nem retry que possa esconder falha.
+  function observado(r,aceita,descricao){return new Promise((resolve,reject)=>{
+   let stop,done=false;
+   function fim(erro,s){if(done)return;done=true;clearTimeout(timer);if(stop)stop();erro?reject(erro):resolve(s);}
+   const timer=setTimeout(()=>fim(new Error('Sincronização não observada: '+descricao)),10000);
+   stop=onValue(r,s=>{if(aceita(s.val()))fim(null,s);},e=>fim(e));
+   if(done)stop(); // O primeiro callback pode ser síncrono, vindo do cache.
+  });}
   function tx(r,p){return runTransaction(r,cur=>{try{return JSON.parse(JSON.stringify(A.fluxoAplicarPlano(cur,p)));}catch(e){console.log('Transação não aplicada:',e.message);return undefined;}},{applyLocally:false});}
   const races=await Promise.all([tx(r1,plan('entradaArmario',['f19'],11000,{operacaoId:'a-ultima-vaga'})),tx(r2,plan('entradaArmario',['f20'],11000,{operacaoId:'b-ultima-vaga'}))]);
   ok('somente um aparelho obtém a última vaga',races.filter(x=>x.committed).length===1);
@@ -32,10 +41,10 @@ function ok(label,cond){assert(cond,label);console.log('OK '+(++count)+' '+label
   const loser=A.fluxoEstadoForma(current.f19)==='pronta_fermentar'?'f19':'f20';
   const second=await tx(r2,plan('entradaArmario',[loser],12000));ok('outro aparelho vê armário cheio e não grava',!second.committed);
   const leave=await tx(r1,plan('saidaArmario',['f0','f1'],20000));ok('saída real parcial libera duas vagas',leave.committed&&A.fluxoOcupacao(1,Object.values(leave.snapshot.val()))===18);
-  await get(r2);const enter=await tx(r2,plan('entradaArmario',[loser],21000));ok('vaga liberada pode ser ocupada no segundo aparelho',enter.committed&&A.fluxoOcupacao(1,Object.values(enter.snapshot.val()))===19);
+  await observado(r2,m=>m&&['f0','f1'].every(id=>m[id]?.eventos?.saidaArmario?.emTs===20000),'retirada parcial no aparelho B');const enter=await tx(r2,plan('entradaArmario',[loser],21000));ok('vaga liberada pode ser ocupada no segundo aparelho',enter.committed&&A.fluxoOcupacao(1,Object.values(enter.snapshot.val()))===19);
   const bad=await tx(r1,plan('assamentoInicio',['f0','f2'],22000));ok('grupo com etapa divergente não avança parcialmente',!bad.committed&&!((await get(r1)).val().f0.eventos||{}).assamentoInicio);
   const bp=plan('assamentoInicio',['f0','f1'],23000),bake=await tx(r1,bp);ok('assamento inicia com as formas retiradas',bake.committed);
-  await get(r2);const repeat=await tx(r2,bp);ok('retry de outra conexão é idempotente',repeat.committed&&repeat.snapshot.val().f0.eventos.assamentoInicio.emTs===23000);
+  await observado(r2,m=>m&&['f0','f1'].every(id=>m[id]?.eventos?.assamentoInicio?.operacaoId===bp.operacaoId),'início do forno no aparelho B');const repeat=await tx(r2,bp);ok('retry de outra conexão é idempotente',repeat.committed&&repeat.snapshot.val().f0.eventos.assamentoInicio.emTs===23000);
   const end=await tx(r2,plan('assamentoFim',['f0','f1'],24000));ok('assamento finalizado nos mesmos IDs',end.committed&&A.fluxoEstadoForma(end.snapshot.val().f0)==='assada');
   // Uma fila antiga com timestamp maior precisa preservar as etapas confirmadas.
   const stale={...form('f0'),atualizadoTs:99000};
