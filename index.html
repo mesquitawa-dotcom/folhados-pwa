@@ -2,7 +2,12 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — atualização v26.6.2
+       FOLHADOS D'OURO — atualização v26.7
+       NOVIDADES v26.7:
+       • Fermentação em formas, armários com até 20 formas e assamento manual rastreável.
+       • Painel dos estágios e Histórico de massas laminadas, fatias e formas, com origens e destinos.
+       • Ocupação confirmada online em transação; consulta e etapas anteriores seguem offline.
+       • Registros legados e todos os parâmetros de receitas preservados.
        NOVIDADES v26.6.2:
        • Corrige o botão de avanço cortado na previsão do porcionamento em telas menores.
        • Cabeçalho compacto, previsão rolável e Definir Fermento sempre acessível no rodapé.
@@ -814,6 +819,32 @@
 #s-active>.list{min-height:0}
 
 @media(max-width:400px){.hdr{padding:.6rem}.far-lotes-body{padding:.65rem}.ux-backbar{padding:.2rem .4rem}}
+/* v26.7 — fluxo legível no celular; ações fora da área rolável. */
+.fluxo-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.35rem;padding:.35rem .7rem;flex-shrink:0}
+.fluxo-tabs .btn-sec{flex:1 1 7rem;min-height:2.4rem;padding:.55rem .35rem;border:1px solid var(--gold);border-radius:.4rem;background:var(--bg3);color:var(--gl);font:inherit;font-size:.82rem;line-height:1.25;cursor:pointer}
+.fluxo-tabs .sel{background:var(--gold);color:var(--bg)}
+.fluxo-bot{flex-shrink:0;display:flex;flex-direction:column;gap:.35rem;padding:.55rem .7rem;font-size:.8rem;line-height:1.3}
+.fluxo-bot .btn-main{width:100%;margin:0}
+.hdr.ux-compact .hdr-brand{display:none}
+.fluxo-selecao{display:flex;align-items:flex-start;gap:.55rem;padding:.7rem .5rem;min-height:2.5rem;cursor:pointer;border:1px solid var(--bdr);border-radius:.45rem;margin:.5rem 0;background:var(--bg2);font-size:.85rem;line-height:1.4;overflow-wrap:anywhere}
+.fluxo-selecao input{flex-shrink:0;width:1.15rem;height:1.15rem;margin:.15rem 0 0;accent-color:var(--gold)}
+.fluxo-selecao:has(input:checked){border-color:var(--gold)}
+.fluxo-selecao strong{display:block;color:var(--gl)}
+.fluxo-aviso{color:var(--red);font-size:.8rem;line-height:1.4;margin-top:.5rem}
+.fluxo-home{width:calc(100% - 1.4rem);margin:.15rem .7rem .4rem;padding:.55rem;border:1px solid var(--gold);border-radius:.4rem;background:var(--bg3);color:var(--gl);font:inherit;font-size:.9rem;cursor:pointer;flex-shrink:0}
+.fluxo-card-acoes{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem}
+.fluxo-card-acoes .btn-main{width:100%}
+.fluxo-link{display:block;width:100%;text-align:left;line-height:1.4;white-space:normal;padding:.6rem .3rem;color:var(--gl);font:inherit;font-size:.83rem;background:none;border:0;border-bottom:1px solid var(--bdr);cursor:pointer;overflow-wrap:anywhere}
+.fluxo-chain{margin:.4rem 0 .4rem .35rem;padding-left:.55rem;border-left:2px solid var(--gold)}
+.fluxo-painel-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.4rem}
+.fluxo-painel-item{display:flex;flex-direction:column;justify-content:space-between;gap:.35rem;min-height:3.9rem;padding:.55rem .5rem;border:1px solid var(--brd);border-radius:.45rem;background:var(--bg2);color:var(--mut);font:inherit;font-size:.75rem;line-height:1.25;text-align:left;cursor:pointer;overflow-wrap:anywhere}
+.fluxo-painel-item strong{color:var(--gl);font-size:.95rem;font-weight:bold}
+.fluxo-estagio{display:block;color:var(--grn);font-size:.85rem;line-height:1.4;margin:.3rem 0}
+#s-fermentacao-lotes .btn-main,#s-fermentacao .btn-main,#s-forneamento .btn-main,#s-fluxo .btn-main,#s-rastreio .btn-main{font-size:.94rem;line-height:1.3;letter-spacing:0;text-transform:none;padding:.7rem .5rem}
+#s-fluxo .pos-card,#s-rastreio .pos-card{overflow-wrap:anywhere}
+#s-rastreio .pos-title{font-size:1rem}
+#s-fermentacao-lotes .pos-scroll,#s-fermentacao .pos-scroll,#s-forneamento .pos-scroll,#s-fluxo .pos-scroll,#s-rastreio .pos-scroll{min-height:0;padding:.55rem .7rem 1rem;overscroll-behavior:contain}
+
 </style>
   <!-- Firebase Realtime Database (compat, namespaced) — SDK local, sem build -->
   <script src="vendor/firebase-app-compat.js"></script>
@@ -883,7 +914,7 @@
   <div class="cfg-sep"></div>
   <div class="cfg-t" style="font-size:1rem">📱 Este aparelho</div>
   <div class="cfg-s" id="device-info" style="font-size:.68rem;line-height:1.45;word-break:break-all">Identificação Firebase: —</div>
-  <div class="cfg-s" style="font-size:.68rem;line-height:1.45">Versão 26.6.2 · cache fdo-v26-6-2 · Firebase SDK local · App Check</div>
+  <div class="cfg-s" style="font-size:.68rem;line-height:1.45">Versão 26.7 · cache fdo-v26-7 · Firebase SDK local · App Check</div>
   <div class="cfg-s" id="appcheck-info" style="font-size:.68rem;line-height:1.45">App Check: verificando…</div>
   <div class="cfg-s" id="storage-info" style="font-size:.68rem;line-height:1.45">Armazenamento local: verificando…</div>
   <div class="cfg-sep"></div>
@@ -943,6 +974,7 @@
     <button class="op-bar-trocar" onclick="trocarOperador()">Trocar</button>
   </div>
   <div class="sync-pill" id="sync-pill">Salvo neste aparelho</div>
+  <button class="fluxo-home" data-perm="historico" onclick="abrirFluxo()">Ver fluxo e estágios da produção →</button>
   <div class="modulos-label">Módulos de Produção</div>
   <div class="modulos">
     <div class="modulo ativo" data-perm="porcionamento" onclick="entrarPorcionamento()">
@@ -975,13 +1007,13 @@
     </div>
     <div class="modulo ativo" data-perm="fermentacao" onclick="entrarFermentacao()">
       <div class="modulo-icon">🌡️</div>
-      <div class="modulo-info"><div class="modulo-nome">Fermentação</div><div class="modulo-desc">Registra temperatura mínima e máxima do balde</div></div>
+      <div class="modulo-info"><div class="modulo-nome">Fermentação</div><div class="modulo-desc">Formas com croissants nos armários · até 20 por armário</div></div>
       <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
-    <div class="modulo inativo">
+    <div class="modulo ativo" data-perm="forneamento" onclick="entrarForneamento()">
       <div class="modulo-icon">🔥</div>
-      <div class="modulo-info"><div class="modulo-nome">Forneamento</div><div class="modulo-desc">Temperatura, vapor e tempo</div></div>
-      <div class="modulo-badge badge-breve">Em breve</div>
+      <div class="modulo-info"><div class="modulo-nome">Forneamento</div><div class="modulo-desc">Entrada e conclusão do assamento das formas</div></div>
+      <div class="modulo-badge badge-ativo">Ativo</div>
     </div>
     <div class="modulo inativo">
       <div class="modulo-icon">📦</div>
@@ -1404,6 +1436,10 @@
   </div>
   <div class="modulos-label">Relatórios de produção</div>
   <div class="modulos">
+    <button class="fluxo-home" onclick="abrirFluxo()">Fluxo e estágios da produção →</button>
+    <button class="fluxo-home" onclick="abrirFluxo('laminacoes')">Massas laminadas →</button>
+    <button class="fluxo-home" onclick="abrirFluxo('fatias')">Fatias cortadas / produtos →</button>
+    <button class="fluxo-home" onclick="abrirFluxo('formas')">Formas, fermentação e assamento →</button>
     <div class="modulo ativo modulo-slim" onclick="ir('history')">
       <div class="modulo-icon">🪣</div>
       <div class="modulo-info"><div class="modulo-nome">Baldes de Produção</div></div>
@@ -1679,57 +1715,43 @@
   </div>
 </div>
 
-<!-- ═══ FERMENTAÇÃO — seleção de lote ═══ -->
+<!-- ═══ v26.7 — FORMAS NOS ARMÁRIOS, NÃO BALDES ═══ -->
 <div id="s-fermentacao-lotes" class="scr off">
-  <div class="start-top">
-    <div class="start-icon">🌡️</div>
-    <div class="start-brand">Folhados d'Ouro</div>
-    <div class="start-title">Fermentação</div>
-    <div class="start-sub">Selecione o balde</div>
+  <div class="hdr ux-compact"><div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Fermentação</div></div></div>
+  <div class="fluxo-tabs"><button class="btn-sec" data-ferm-tab="prontas" onclick="fermFiltrar('prontas')">Formas prontas</button><button class="btn-sec" data-ferm-tab="armarios" onclick="fermFiltrar('armarios')">Nos armários</button></div>
+  <div class="pos-scroll">
+    <div class="pos-summary" id="ferm-orientacao"></div>
+    <div id="ferm-armario-campo" class="pos-card"><label for="ferm-armario">Número do armário</label><input class="inp" id="ferm-armario" type="number" inputmode="numeric" min="1" step="1" placeholder="Armário usado" oninput="fermArmarioMudou(this.value)"><div class="ux-muted" id="ferm-capacidade" aria-live="polite"></div></div>
+    <button class="link-btn" id="ferm-selecionar-todas" onclick="fermSelecionarProntas()">Selecionar até a capacidade disponível</button>
+    <div id="ferm-lotes-list"></div>
   </div>
-  <div class="modulos-label">Baldes aguardando registro de fermentação</div>
-  <div class="modulos" id="ferm-lotes-list"></div>
-  <div class="start-footer">
-    <button class="link-btn" onclick="ir('start')">⌂ Início</button>
-  </div>
+  <div class="bot fluxo-bot"><div id="ferm-selecao-resumo" aria-live="polite"></div><button class="btn-main" id="ferm-avancar" onclick="fermRevisarSelecao()">Conferir formas →</button></div>
 </div>
-
-<!-- ═══ FERMENTAÇÃO — registro de um lote ═══ -->
 <div id="s-fermentacao" class="scr off">
-  <div class="hdr">
-    <div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Fermentação</div></div>
-    <button class="link-btn" onclick="ir('fermentacao-lotes')">← Voltar</button>
+  <div class="hdr ux-compact"><div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title" id="mov-formas-titulo">Conferir formas</div></div></div>
+  <div class="pos-scroll">
+    <div class="pos-summary" id="mov-formas-resumo"></div><div id="mov-formas-lista"></div>
+    <details id="mov-temperaturas" class="ux-details"><summary>Temperaturas medidas (opcional)</summary><div class="ux-muted">Somente medições reais da fermentação. Deixe em branco quando não houver medição.</div><div class="pos-grid"><label>Mínima · °C<input class="inp" id="ferm-temp-min" type="number" inputmode="decimal" step="any"></label><label>Máxima · °C<input class="inp" id="ferm-temp-max" type="number" inputmode="decimal" step="any"></label></div></details>
+    <label class="fluxo-selecao"><input id="mov-formas-conferido" type="checkbox" onchange="fluxoConferenciaMudou()"><span id="mov-formas-confirmacao"></span></label>
+    <div class="ux-muted">É necessária conexão para confirmar este registro. O horário é salvo ao confirmar; nenhuma etapa termina automaticamente pelo tempo.</div>
+    <div class="fluxo-aviso" id="mov-formas-status" role="status" aria-live="polite"></div>
   </div>
-  <div class="bat-body">
-    <div class="bat-card">
-      <div class="bat-card-lbl">Balde selecionado</div>
-      <div class="bat-lote-num" id="ferm-lote-num">#—</div>
-      <div class="bat-lote-rec" id="ferm-lote-rec">—</div>
-      <div class="bat-note" id="ferm-lote-meta"></div>
-    </div>
-    <div class="bat-card">
-      <div class="bat-card-lbl">Temperatura mínima</div>
-      <div class="step-ctrl">
-        <button class="step-pm" onclick="ajustarTempFerm('min',-1)">−</button>
-        <div class="step-val"><span id="ferm-min-val">24</span><small>°C</small></div>
-        <button class="step-pm" onclick="ajustarTempFerm('min',1)">+</button>
-      </div>
-    </div>
-    <div class="bat-card">
-      <div class="bat-card-lbl">Temperatura máxima</div>
-      <div class="step-ctrl">
-        <button class="step-pm" onclick="ajustarTempFerm('max',-1)">−</button>
-        <div class="step-val"><span id="ferm-max-val">28</span><small>°C</small></div>
-        <button class="step-pm" onclick="ajustarTempFerm('max',1)">+</button>
-      </div>
-      <div class="bat-note" id="ferm-temp-note">Defina as temperaturas da fermentação.</div>
-    </div>
-    <button class="btn-main" onclick="concluirFermentacao()">Confirmar e concluir fermentação ✓</button>
-  </div>
-  <div class="bot" style="display:flex;gap:.5rem">
-    <button class="btn-danger" style="flex:1" onclick="ir('fermentacao-lotes')">← Baldes</button>
-    <button class="btn-danger" style="flex:1" onclick="ir('start')">⌂ Início</button>
-  </div>
+  <div class="bot fluxo-bot"><button class="btn-main" id="mov-formas-confirmar" disabled onclick="confirmarMovimentoFormas()">Confirmar registro</button></div>
+</div>
+<div id="s-forneamento" class="scr off">
+  <div class="hdr ux-compact"><div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Assamento</div></div></div>
+  <div class="fluxo-tabs"><button class="btn-sec" data-forno-tab="aguardando_assamento" onclick="fornoFiltrar('aguardando_assamento')">Para assar</button><button class="btn-sec" data-forno-tab="assando" onclick="fornoFiltrar('assando')">No forno</button></div>
+  <div class="pos-scroll"><div class="pos-summary">Selecione as formas que realmente entram ou saem juntas. A capacidade do forno não é presumida pelo aplicativo.</div><button class="link-btn" onclick="fornoSelecionarTodas()">Selecionar todas desta lista</button><div id="forno-formas-list"></div></div>
+  <div class="bot fluxo-bot"><div id="forno-selecao-resumo" aria-live="polite"></div><button class="btn-main" id="forno-avancar" onclick="fornoRevisarSelecao()">Conferir formas →</button></div>
+</div>
+<div id="s-fluxo" class="scr off">
+  <div class="hdr ux-compact"><div><div class="hdr-brand">Folhados d'Ouro</div><div class="hdr-title">Fluxo da produção</div></div></div>
+  <div class="fluxo-tabs" id="fluxo-filtros"><button class="btn-sec" data-fluxo-filtro="painel" onclick="fluxoFiltrar('painel')">Agora</button><button class="btn-sec" data-fluxo-filtro="laminacoes" onclick="fluxoFiltrar('laminacoes')">Massas laminadas</button><button class="btn-sec" data-fluxo-filtro="fatias" onclick="fluxoFiltrar('fatias')">Fatias cortadas</button><button class="btn-sec" data-fluxo-filtro="formas" onclick="fluxoFiltrar('formas')">Formas</button></div>
+  <div class="pos-scroll"><div id="fluxo-busca-campo" class="ux-hidden"><label for="fluxo-busca">Buscar número, produto ou receita</label><input class="inp" id="fluxo-busca" type="search" oninput="fluxoBuscar(this.value)"></div><div id="fluxo-lista"></div></div>
+</div>
+<div id="s-rastreio" class="scr off">
+  <div class="hdr ux-compact"><div><div class="hdr-brand">Origens · junções · divisões</div><div class="hdr-title">Rastrear produção</div></div></div>
+  <div class="pos-scroll" id="rastreio-conteudo"></div>
 </div>
 
 <!-- ═══ LAMINAÇÃO — agrupa partes de massa batida e forma o lote ═══ -->
@@ -2312,7 +2334,7 @@ function garantirPermissoesV260(){
     if(n==='wagner'){set('estoque',true);set('estoque_entrada',true);set('estoque_contagem',true);set('receita_obs',true);set('receita_editar',true);}
     else if(n==='maycon'){set('estoque',true);set('estoque_entrada',false);set('estoque_contagem',true);set('receita_obs',false);set('receita_editar',false);}
     else{set('estoque',false);set('estoque_entrada',false);set('estoque_contagem',false);set('receita_obs',false);set('receita_editar',false);}
-    set('modelagem',!!o.perms.laminacao);
+    set('modelagem',!!o.perms.laminacao);set('forneamento',!!o.perms.fermentacao);
   });
   if(mudou)OP.setLista(arr);
 }
@@ -2593,6 +2615,9 @@ const FB={
       else if(id==='s-estoque-mov' && typeof renderEstoqueMovimentos==='function') renderEstoqueMovimentos();
       else if(id==='s-receita-completa' && typeof renderReceitaCompleta==='function') renderReceitaCompleta();
       else if(id==='s-history' && typeof renderHist==='function') renderHist();
+      else if(id==='s-forneamento')renderForneamento();
+      else if(id==='s-fluxo')renderFluxo();
+      else if(id==='s-rastreio')renderRastreio();
       else if(id==='s-hist-batimentos' && typeof renderHistBatimentos==='function') renderHistBatimentos();
       else if(id==='s-bater-lotes' && typeof renderBatLotes==='function') renderBatLotes();
       else if(id==='s-batimento-lotes' && typeof renderBatLotes==='function') renderBatLotes();
@@ -2621,6 +2646,7 @@ const OP_PERMS_MOD=[
   {k:'porcionamento', icon:'⚖️', label:'Porcionamento'},
   {k:'batimento',     icon:'🥣', label:'Bater a Massa'},
   {k:'fermentacao',   icon:'🌡️', label:'Fermentação'},
+  {k:'forneamento',    icon:'🔥', label:'Forneamento'},
   {k:'laminacao',     icon:'📐', label:'Laminação'},
   {k:'modelagem',     icon:'🥐', label:'Frio e Modelagem'},
   {k:'historico',     icon:'📋', label:'Histórico'},
@@ -2914,6 +2940,10 @@ function ir(id){
   if(id==='porc-menu')mostrarGeracaoPendente();
   if(id==='history') renderHist();
   if(id==='hist-batimentos') renderHistBatimentos();
+  if(id==='fermentacao-lotes')renderFermLotes();
+  if(id==='forneamento')renderForneamento();
+  if(id==='fluxo')renderFluxo();
+  if(id==='rastreio')renderRastreio();
   if(id==='config') carregarConfig();
   if(id==='start' && typeof aplicarPermsStart==='function'){ aplicarPermsStart(); setTimeout(()=>{try{estoqueChecarLembreteContagem();}catch(e){}},180); }
   if(id==='login' && typeof renderLogin==='function') renderLogin();
@@ -2962,8 +2992,8 @@ function carregarConfig(){
   if(typeof DEVICE!=='undefined') DEVICE.renderConfig();
 }
 function exportarBackup(){
-  const chaves=['fdo_lotes','fdo_laminacoes','fdo_partidas','fdo_formas','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25','fdo_estoque_movimentos','fdo_estoque_contagens','fdo_estoque_configuracoes','fdo_receitas_observacoes','fdo_receitas_definitivas','fdo_receitas_auditoria','fdo_estoque_outbox_v26','fdo_estoque_inicio_ts_v26','fdo_baldes_pendentes_v2661'];
-  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.6.2',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
+  const chaves=['fdo_lotes','fdo_laminacoes','fdo_partidas','fdo_formas','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25','fdo_estoque_movimentos','fdo_estoque_contagens','fdo_estoque_configuracoes','fdo_receitas_observacoes','fdo_receitas_definitivas','fdo_receitas_auditoria','fdo_estoque_outbox_v26','fdo_estoque_inicio_ts_v26','fdo_baldes_pendentes_v2661','fdo_ultimo_armario_v267'];
+  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.7',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
   chaves.forEach(k=>{ const raw=localStorage.getItem(k); if(raw!==null){ try{dados.dados[k]=JSON.parse(raw);}catch{dados.dados[k]=raw;} } });
   const blob=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
@@ -4240,79 +4270,259 @@ async function imprimirTeste(){
 }
 
 // ════════════════════════════════════════════════════════════
-// FERMENTAÇÃO — registra temperatura mínima e máxima do lote.
-// 1º lote do dia define; os próximos puxam a leitura p/ confirmar.
+// v26.7 — o objeto físico após a modelagem é a FORMA.
+// Nenhuma etapa abaixo é gravada em balde.etapas. A ocupação é
+// confirmada em transação única na coleção de formas já existente.
 // ════════════════════════════════════════════════════════════
-function lotesPendentesFermentacao(){
-  return LS.g('fdo_lotes',[]).filter(l=>{
-    if(!loteAtivo(l)) return false;
-    const e=l.etapas||{};
-    return e.batimento && e.batimento.feito && !(e.fermentacao && e.fermentacao.feito);
+const FLUXO267={capacidadeArmario:20,eventos:['entradaArmario','saidaArmario','assamentoInicio','assamentoFim']};
+function fluxoEvento(f,k){return f&&f.eventos&&f.eventos[k]||null;}
+function fluxoEstadoForma(f){
+  if(!f||f._deleted)return 'indisponivel';
+  const a=fluxoEvento(f,'entradaArmario'),s=fluxoEvento(f,'saidaArmario'),i=fluxoEvento(f,'assamentoInicio'),t=fluxoEvento(f,'assamentoFim');
+  if((s&&!a)||(i&&!s)||(t&&!i)||[a,s,i,t].some(e=>e&&(!Number.isFinite(e.emTs)||e.emTs<=0))||(a&&(!Number.isSafeInteger(a.armario)||a.armario<1))||(s&&s.emTs<a.emTs)||(i&&i.emTs<s.emTs)||(t&&t.emTs<i.emTs))return 'conferir';
+  return t?'assada':i?'assando':s?'aguardando_assamento':a?'fermentando':'pronta_fermentar';
+}
+function fluxoEstadoTexto(f){return {pronta_fermentar:'Forma modelada · aguardando fermentação',fermentando:'Fermentando · Armário '+(fluxoEvento(f,'entradaArmario')||{}).armario,aguardando_assamento:'Retirada do armário · aguardando assamento',assando:'Assando',assada:'Assamento concluído',conferir:'Registro incompleto · conferir',indisponivel:'Registro indisponível'}[fluxoEstadoForma(f)];}
+function fluxoFormasEstado(estado){return posFormas().filter(f=>fluxoEstadoForma(f)===estado).sort((a,b)=>(Number(a.criadoTs)||0)-(Number(b.criadoTs)||0));}
+function fluxoOcupacao(armario,formas){return (formas||posFormas()).filter(f=>!f._deleted&&fluxoEvento(f,'entradaArmario')&&fluxoEvento(f,'entradaArmario').armario===armario&&!fluxoEvento(f,'saidaArmario')).length;}
+function fluxoArmario(v){const n=Number(v);return Number.isSafeInteger(n)&&n>0?n:null;}
+function fluxoDuracao(ini,fim){if(!ini)return 'horário não registrado';const ms=(fim||Date.now())-Number(ini);if(ms<0)return 'confira o relógio';const min=Math.floor(ms/60000);return Math.floor(min/60)+'h '+String(min%60).padStart(2,'0')+'min';}
+function fluxoPodeEtapa(etapa){return OP.pode(etapa==='assamentoInicio'||etapa==='assamentoFim'?'forneamento':'fermentacao');}
+function fluxoMergeForma(a,b){
+  // Cópia antiga do mesmo registro não pode apagar etapas já registradas.
+  const novo=SYNC25.ts(b)>=SYNC25.ts(a)?{...clonarReceita(a),...clonarReceita(b)}:{...clonarReceita(b),...clonarReceita(a)};
+  const ea=a.eventos||{},eb=b.eventos||{},eventos={...clonarReceita(ea),...clonarReceita(eb)};
+  FLUXO267.eventos.forEach(k=>{const x=ea[k],y=eb[k];if(x&&y){const tx=Number(x.emTs)||0,ty=Number(y.emTs)||0;eventos[k]=clonarReceita(tx<ty?x:ty<tx?y:String(x.operacaoId||'')<=String(y.operacaoId||'')?x:y);}else if(x||y)eventos[k]=clonarReceita(x||y);});
+  if(Object.keys(eventos).length)novo.eventos=eventos;
+  return novo;
+}
+function fluxoAplicarPlano(atual,plano){
+  // Função pura: valida tudo antes de mudar qualquer forma. Usada no teste e RTDB.
+  const m=clonarReceita(atual&&typeof atual==='object'?atual:{}),ids=plano&&plano.ids;
+  if(!plano||!FLUXO267.eventos.includes(plano.etapa)||!Array.isArray(ids)||!ids.length||new Set(ids).size!==ids.length)throw new Error('Seleção de formas inválida.');
+  if(!plano.operacaoId||!Number.isFinite(plano.emTs)||plano.emTs<=0)throw new Error('Registro sem identificação ou horário válido.');
+  const esperado={entradaArmario:'pronta_fermentar',saidaArmario:'fermentando',assamentoInicio:'aguardando_assamento',assamentoFim:'assando'}[plano.etapa];
+  const anteriores={saidaArmario:'entradaArmario',assamentoInicio:'saidaArmario',assamentoFim:'assamentoInicio'};
+  const pend=[];
+  ids.forEach(id=>{
+    const f=m[SYNC25.key(id)];if(!f||f.id!==id||f._deleted)throw new Error('Uma forma não está mais disponível. Atualize a seleção.');
+    if(!Number.isSafeInteger(f.totalUnidades)||f.totalUnidades<=0||!Array.isArray(f.composicao)||!f.composicao.length||f.composicao.some(c=>!c||!c.partidaId||!Number.isSafeInteger(c.unidades)||c.unidades<=0)||f.composicao.reduce((s,c)=>s+(Number(c.unidades)||0),0)!==f.totalUnidades)throw new Error('A quantidade ou composição da Forma '+f.nome+' precisa ser conferida.');
+    const ja=fluxoEvento(f,plano.etapa);if(ja&&ja.operacaoId===plano.operacaoId)return; // retry idempotente
+    if(fluxoEstadoForma(f)!==esperado)throw new Error('A Forma '+f.nome+' mudou de etapa. Confira antes de continuar.');
+    const ant=fluxoEvento(f,anteriores[plano.etapa]);if(ant&&Number(ant.emTs)>plano.emTs)throw new Error('O relógio está anterior à última etapa. Confira data e hora do aparelho.');
+    pend.push(f);
   });
-}
-function abrirFermentacaoLotes(){ renderFermLotes(); ir('fermentacao-lotes'); }
-function renderFermLotes(){
-  const lotes=lotesPendentesFermentacao();
-  const el=document.getElementById('ferm-lotes-list');
-  if(!lotes.length){
-    el.innerHTML='<div class="bat-empty"><div class="bat-empty-icon">✅</div><div>Nenhum balde aguardando fermentação.</div><div style="font-size:.78rem">Conclua o batimento de um balde primeiro.</div></div>';
-    return;
+  if(plano.etapa==='entradaArmario'){
+    if(!Number.isSafeInteger(plano.armario)||plano.armario<1)throw new Error('Informe o número real do armário.');
+    if(fluxoOcupacao(plano.armario,Object.values(m))+pend.length>FLUXO267.capacidadeArmario)throw new Error('O Armário '+plano.armario+' ultrapassaria 20 formas. Nenhuma forma foi movimentada.');
   }
-  el.innerHTML=lotes.map(l=>{
-    const b=(l.etapas&&l.etapas.batimento)||{};
-    const sub=[l.criado||'', b.tempAmbiente!=null?('amb. '+b.tempAmbiente+'°C'):''].filter(Boolean).join(' · ');
-    return `<div class="modulo ativo" onclick="abrirFermentacao('${l.id}')">
-      <div class="modulo-icon">🌡️</div>
-      <div class="modulo-info">
-        <div class="modulo-nome">Balde #${l.num} · ${l.receitaNome||l.rotulo||''}</div>
-        <div class="modulo-desc">${sub}</div>
-      </div>
-      <div class="modulo-badge badge-ativo">Fermentar</div>
-    </div>`;
-  }).join('');
+  if(plano.etapa==='saidaArmario'){
+    for(const k of ['tempMin','tempMax'])if(plano[k]!=null&&!Number.isFinite(plano[k]))throw new Error('Temperatura inválida.');
+    if(plano.tempMin!=null&&plano.tempMax!=null&&plano.tempMax<plano.tempMin)throw new Error('A máxima não pode ser menor que a mínima.');
+  }
+  pend.forEach(f=>{
+    const ev={operacaoId:plano.operacaoId,emTs:plano.emTs,em:new Date(plano.emTs).toLocaleString('pt-BR'),op:plano.op,operadorId:plano.operadorId,dispositivo:clonarReceita(plano.dispositivo)};
+    if(plano.etapa==='entradaArmario')ev.armario=plano.armario;
+    if(plano.etapa==='saidaArmario'){ev.armario=f.eventos.entradaArmario.armario;if(plano.tempMin!=null)ev.tempMin=plano.tempMin;if(plano.tempMax!=null)ev.tempMax=plano.tempMax;}
+    f.eventos={...(f.eventos||{}),[plano.etapa]:ev};f.atualizadoTs=plano.emTs;f.atualizadoPor=plano.op;f.fluxoVersao=1;
+  });
+  return m;
 }
-function tempFermentacaoDoDia(){
-  const hoje=new Date().toDateString();
-  for(const l of LS.g('fdo_lotes',[])){
-    if(!loteAtivo(l)) continue;
-    const f=l.etapas&&l.etapas.fermentacao;
-    if(f&&f.feito&&f.tempMin!=null&&f.emTs&&new Date(f.emTs).toDateString()===hoje) return {min:f.tempMin,max:f.tempMax};
+function abrirFermentacaoLotes(){if(!OP.pode('fermentacao'))return;st.fermTab='prontas';st.fermSel={};st.fermArmario=LS.g('fdo_ultimo_armario_v267','');ir('fermentacao-lotes');}
+function abrirFermentacao(id){if(!OP.pode('fermentacao'))return;abrirFermentacaoLotes();if(id)st.fermSel={[id]:true};renderFermLotes();}
+function fermFiltrar(tab){if(st.movendoFormas)return;st.fermTab=tab==='armarios'?'armarios':'prontas';st.fermSel={};renderFermLotes();}
+function fermSelecionar(id,marcado){st.fermSel=st.fermSel||{};if(marcado)st.fermSel[id]=true;else delete st.fermSel[id];fermRenderResumo();}
+function fermArmarioMudou(v){st.fermArmario=v;fermRenderResumo();}
+function fermSelecionadas(){const estado=st.fermTab==='armarios'?'fermentando':'pronta_fermentar';return fluxoFormasEstado(estado).filter(f=>st.fermSel&&st.fermSel[f.id]);}
+function fermRenderResumo(){
+  const a=fluxoArmario(st.fermArmario),ocup=a?fluxoOcupacao(a):0,fs=fermSelecionadas(),entrar=st.fermTab!=='armarios';
+  document.getElementById('ferm-capacidade').textContent=a?'Armário '+a+': '+ocup+' / 20 formas · '+Math.max(0,20-ocup)+' vagas':'Cada armário comporta até 20 formas.';
+  document.getElementById('ferm-selecao-resumo').textContent=fs.length+' formas selecionadas · '+fs.reduce((s,f)=>s+f.totalUnidades,0)+' unidades';
+  const b=document.getElementById('ferm-avancar');b.textContent=entrar?'Conferir entrada →':'Conferir retirada →';b.disabled=!fs.length||!!st.movendoFormas||(entrar&&(!a||ocup+fs.length>20));
+}
+function fluxoSelecaoHtml(f,tipo){
+  const marcada=!!((tipo==='ferm'?st.fermSel:st.fornoSel)||{})[f.id],handler=tipo==='ferm'?'fermSelecionar':'fornoSelecionar';
+  const ev=fluxoEvento(f,fluxoEstadoForma(f)==='assando'?'assamentoInicio':'entradaArmario');
+  return '<label class="fluxo-selecao"><input type="checkbox" data-forma-id="'+_escHtml(f.id)+'" '+(marcada?'checked ':'')+'onchange="'+handler+'(this.dataset.formaId,this.checked)"><span><strong>Forma '+_escHtml(f.nome)+' · '+f.totalUnidades+' unidades</strong>'+_escHtml(f.produtoNome||'Produto não informado')+'<br><span class="ux-muted">'+_escHtml(fluxoEstadoTexto(f))+(ev?' · '+_escHtml(fluxoDuracao(ev.emTs)):'')+'</span></span></label>';
+}
+function fermSelecionarProntas(){const a=fluxoArmario(st.fermArmario);if(!a){falar('Informe primeiro o armário que será usado.');document.getElementById('ferm-armario').focus();return;}st.fermSel={};fluxoFormasEstado('pronta_fermentar').slice(0,Math.max(0,20-fluxoOcupacao(a))).forEach(f=>st.fermSel[f.id]=true);renderFermLotes();}
+function fermSelecionarArmario(a){st.fermSel={};fluxoFormasEstado('fermentando').filter(f=>fluxoEvento(f,'entradaArmario').armario===a).forEach(f=>st.fermSel[f.id]=true);renderFermLotes();}
+function renderFermLotes(){
+  const el=document.getElementById('ferm-lotes-list');if(!el)return;
+  const entrar=st.fermTab!=='armarios';document.querySelectorAll('[data-ferm-tab]').forEach(b=>b.classList.toggle('sel',b.dataset.fermTab===(entrar?'prontas':'armarios')));
+  document.getElementById('ferm-armario-campo').classList.toggle('ux-hidden',!entrar);document.getElementById('ferm-selecionar-todas').classList.toggle('ux-hidden',!entrar);
+  const inp=document.getElementById('ferm-armario');if(document.activeElement!==inp)inp.value=st.fermArmario||'';
+  document.getElementById('ferm-orientacao').textContent=entrar?'Selecione as formas com croissants já modelados e confira o armário real.':'As formas permanecem ocupando o armário até você confirmar a retirada real e o ponto de fermentação.';
+  if(entrar){const fs=fluxoFormasEstado('pronta_fermentar');el.innerHTML=fs.length?fs.map(f=>fluxoSelecaoHtml(f,'ferm')).join(''):'<div class="pos-empty">Nenhuma forma aguardando fermentação. Registre as formas em Frio e Modelagem.</div>'+(OP.pode('modelagem')?'<button class="btn-main" onclick="entrarModelagem()">Ir para Frio e Modelagem</button>':'');}
+  else {const fs=fluxoFormasEstado('fermentando'),arms=[...new Set(fs.map(f=>fluxoEvento(f,'entradaArmario').armario))].sort((a,b)=>a-b);el.innerHTML=arms.length?arms.map(a=>'<div class="pos-card"><div class="pos-title">Armário '+a+' · '+fluxoOcupacao(a)+' / 20 formas</div><button class="link-btn" onclick="fermSelecionarArmario('+a+')">Selecionar as formas deste armário</button>'+fs.filter(f=>fluxoEvento(f,'entradaArmario').armario===a).map(f=>fluxoSelecaoHtml(f,'ferm')).join('')+'</div>').join(''):'<div class="pos-empty">Nenhuma forma com entrada registrada nos armários.</div>';}
+  fermRenderResumo();
+}
+function fermRevisarSelecao(){const fs=fermSelecionadas();if(!fs.length)return;const entrada=st.fermTab!=='armarios',armario=fluxoArmario(st.fermArmario);if(entrada&&(!armario||fluxoOcupacao(armario)+fs.length>20))return;abrirRevisaoFormas(entrada?'entradaArmario':'saidaArmario',fs.map(f=>f.id),armario);}
+function entrarForneamento(){exigeP('forneamento',()=>{st.fornoTab='aguardando_assamento';st.fornoSel={};ir('forneamento');});}
+function fornoFiltrar(t){st.fornoTab=t==='assando'?'assando':'aguardando_assamento';st.fornoSel={};renderForneamento();}
+function fornoSelecionar(id,marcado){st.fornoSel=st.fornoSel||{};if(marcado)st.fornoSel[id]=true;else delete st.fornoSel[id];fornoRenderResumo();}
+function fornoSelecionadas(){return fluxoFormasEstado(st.fornoTab||'aguardando_assamento').filter(f=>st.fornoSel&&st.fornoSel[f.id]);}
+function fornoRenderResumo(){const fs=fornoSelecionadas();document.getElementById('forno-selecao-resumo').textContent=fs.length+' formas selecionadas · '+fs.reduce((s,f)=>s+f.totalUnidades,0)+' unidades';const b=document.getElementById('forno-avancar');b.textContent=st.fornoTab==='assando'?'Conferir conclusão →':'Conferir entrada →';b.disabled=!fs.length||!!st.movendoFormas;}
+function fornoSelecionarTodas(){st.fornoSel={};fluxoFormasEstado(st.fornoTab||'aguardando_assamento').forEach(f=>st.fornoSel[f.id]=true);renderForneamento();}
+function renderForneamento(){const t=st.fornoTab||'aguardando_assamento',el=document.getElementById('forno-formas-list');if(!el)return;document.querySelectorAll('[data-forno-tab]').forEach(b=>b.classList.toggle('sel',b.dataset.fornoTab===t));const fs=fluxoFormasEstado(t);el.innerHTML=(st.movFormasRecado?'<div class="pos-summary" role="status">'+_escHtml(st.movFormasRecado)+'</div>':'')+(fs.length?fs.map(f=>fluxoSelecaoHtml(f,'forno')).join(''):'<div class="pos-empty">'+(t==='assando'?'Nenhuma forma com assamento iniciado.':'Nenhuma forma retirada da fermentação aguardando assamento.')+'</div>');fornoRenderResumo();}
+function fornoRevisarSelecao(){abrirRevisaoFormas(st.fornoTab==='assando'?'assamentoFim':'assamentoInicio',fornoSelecionadas().map(f=>f.id));}
+function abrirRevisaoFormas(etapa,ids,armario){
+  if(!fluxoPodeEtapa(etapa)||!ids.length||st.movendoFormas)return;
+  st.movFormas={etapa,ids:ids.slice(),armario:armario||null,operadorId:uxOperador()};
+  const tit={entradaArmario:'Entrada no armário',saidaArmario:'Retirar para assamento',assamentoInicio:'Iniciar assamento',assamentoFim:'Concluir assamento'};
+  const txt={entradaArmario:'Coloquei estas formas no Armário '+armario+'.',saidaArmario:'Conferi o ponto de fermentação e retirei estas formas do armário.',assamentoInicio:'Coloquei estas formas no forno e iniciei o assamento.',assamentoFim:'Conferi e concluí o assamento destas formas.'};
+  const fs=posFormas().filter(f=>ids.includes(f.id));
+  document.getElementById('mov-formas-titulo').textContent=tit[etapa];document.getElementById('mov-formas-resumo').textContent=fs.length+' formas · '+fs.reduce((s,f)=>s+f.totalUnidades,0)+' unidades'+(etapa==='entradaArmario'?' · Armário '+armario:'');
+  document.getElementById('mov-formas-lista').innerHTML=fs.map(f=>'<div class="pos-card"><b>Forma '+_escHtml(f.nome)+'</b> · '+f.totalUnidades+' unidades<div class="ux-muted">'+_escHtml(f.produtoNome||'')+'<br>'+_escHtml(fluxoEstadoTexto(f))+'</div></div>').join('');
+  document.getElementById('mov-formas-confirmacao').textContent=txt[etapa];document.getElementById('mov-formas-conferido').checked=false;document.getElementById('mov-formas-confirmar').disabled=true;
+  document.getElementById('mov-temperaturas').classList.toggle('ux-hidden',etapa!=='saidaArmario');document.getElementById('mov-temperaturas').open=false;document.getElementById('ferm-temp-min').value='';document.getElementById('ferm-temp-max').value='';document.getElementById('mov-formas-status').textContent='';
+  ir('fermentacao');falar(tit[etapa]+'. '+fs.length+' formas, '+fs.reduce((s,f)=>s+f.totalUnidades,0)+' unidades. Confira a lista e confirme na tela.');
+}
+function fluxoConferenciaMudou(){document.getElementById('mov-formas-confirmar').disabled=!!st.movendoFormas||!document.getElementById('mov-formas-conferido').checked;}
+async function confirmarMovimentoFormas(){
+  const req=st.movFormas,el=document.getElementById('mov-formas-status');if(st.movendoFormas||!req||!fluxoPodeEtapa(req.etapa)||!document.getElementById('mov-formas-conferido').checked)return;
+  if(req.operadorId!==uxOperador()){el.textContent='O operador mudou. Volte e confira a seleção novamente.';return;}
+  if(!FB.db||!navigator.onLine||!SYNC25.ready.fdo_formas){el.textContent='Conecte e aguarde a sincronização para confirmar a ocupação sem conflito entre aparelhos. Nenhuma etapa foi registrada.';return;}
+  const plano={...clonarReceita(req),operacaoId:FB.novoId('movforma'),emTs:Date.now(),op:getOp(),dispositivo:DEVICE.audit()};
+  if(req.etapa==='saidaArmario'){
+    for(const [k,id] of [['tempMin','ferm-temp-min'],['tempMax','ferm-temp-max']]){const v=document.getElementById(id).value.trim();plano[k]=v===''?null:posNumero(v);if(v!==''&&plano[k]===null){el.textContent='Informe uma temperatura válida ou deixe em branco.';return;}}
+    if(plano.tempMin!=null&&plano.tempMax!=null&&plano.tempMax<plano.tempMin){el.textContent='A máxima não pode ser menor que a mínima.';return;}
+  }
+  st.movendoFormas=true;fluxoConferenciaMudou();el.textContent='Confirmando o registro…';
+  try{
+    await SYNC25.flush();
+    if(Object.keys(SYNC25.out().fdo_formas||{}).length)throw new Error('As formas ainda estão sincronizando. Aguarde e confirme novamente.');
+    const ref=FB.db.ref(SYNC25.path('fdo_formas'));await ref.once('value');let motivo='';
+    const r=await ref.transaction(cur=>{
+      if(req.operadorId!==uxOperador()||!fluxoPodeEtapa(req.etapa)){motivo='A autorização do operador mudou.';return;}
+      try{return fluxoAplicarPlano(cur,plano);}catch(e){motivo=e.message;return;}
+    },undefined,false);
+    if(!r.committed)throw new Error(motivo||'As formas mudaram em outro aparelho. Atualize e confira a seleção.');
+    // Usa o resultado confirmado pela nuvem, sem regravar cópias antigas.
+    const remoto=r.snapshot.val()||{},local=posFormas();plano.ids.forEach(id=>{const key=SYNC25.key(id),f=remoto[key];if(!f)return;const i=local.findIndex(x=>x.id===id);if(i>=0)local[i]=clonarReceita(f);else local.push(clonarReceita(f));SYNC25.itemJson.fdo_formas[key]=JSON.stringify(f);SYNC25.raw.fdo_formas[key]=clonarReceita(f);});posSalvarFormas(local);
+    if(req.etapa==='entradaArmario')LS.s('fdo_ultimo_armario_v267',req.armario);
+    st.movFormas=null;st.fermSel={};st.fornoSel={};st.movFormasRecado=(req.etapa==='assamentoFim'?'Assamento concluído':req.etapa==='saidaArmario'?'Retirada registrada':req.etapa==='entradaArmario'?'Entrada no armário registrada':'Assamento iniciado')+': '+plano.ids.length+' formas.';falar(st.movFormasRecado);
+    if(req.etapa==='entradaArmario'){st.fermTab='armarios';ir('fermentacao-lotes');}
+    else if(req.etapa==='saidaArmario'){if(OP.pode('forneamento')){st.fornoTab='aguardando_assamento';st.fornoSel=Object.fromEntries(plano.ids.map(id=>[id,true]));ir('forneamento');}else{st.fermTab='armarios';ir('fermentacao-lotes');}}
+    else {st.fornoTab=req.etapa==='assamentoInicio'?'assando':'aguardando_assamento';ir('forneamento');}
+    UX_NAV.pilha=UX_NAV.pilha.filter(x=>x!=='fermentacao'); // Não reabrir revisão já concluída pelo Voltar.
+  }catch(e){el.textContent=e.message||'Não houve confirmação. Consulte as formas antes de tentar novamente.';}
+  finally{st.movendoFormas=false;fluxoConferenciaMudou();if(uxTelaAtual()==='fermentacao-lotes')fermRenderResumo();if(uxTelaAtual()==='forneamento')fornoRenderResumo();}
+}
+
+// Consulta derivada dos vínculos existentes: não cria massas/fatias fictícias.
+function fluxoDados(){return {baldes:LS.g('fdo_lotes',[]).filter(x=>x&&!x._deleted),laminacoes:LS.g('fdo_laminacoes',[]).filter(x=>x&&!x._deleted),fatias:posPartidas(),formas:posFormas()};}
+function fluxoRegistro(tipo,id,d){return (d[tipo]||[]).find(x=>x.id===id)||null;}
+function fluxoNome(tipo,x){return {baldes:'Balde #'+x.num,laminacoes:(x.modeloFisico==='duas_massas_v1'?'Massa laminada ':'Laminação · registro anterior ')+(x.nome||'—'),fatias:'Fatias '+(x.nome||'—'),formas:'Forma '+(x.nome||'—')}[tipo]||'';}
+function fluxoStatus(tipo,x){
+  if(tipo==='formas')return fluxoEstadoTexto(x);
+  if(tipo==='fatias')return posEstadoTexto(x)+' · '+posSaldo(x)+' de '+x.qtd+' unidades disponíveis';
+  if(tipo==='laminacoes')return corteConcluido(x)?'Corte concluído':posPartidasDaLam(x.id).length?'Corte parcial · ainda pode gerar fatias':'Aguardando laminação final / corte';
+  if(!loteAtivo(x))return 'Balde cancelado · histórico preservado';
+  const b=x.etapas&&x.etapas.batimento;if(b&&b.feito)return (Number(b.partes)||0)+' massas registradas · '+lotePartesDisp(x)+' disponíveis para laminar';
+  return x.etapas&&x.etapas.porcionamento_liquidos&&x.etapas.porcionamento_liquidos.feito?'Aguardando batimento':'Porcionamento / aguardando líquidos';
+}
+function fluxoLink(tipo,id,texto){return '<button class="fluxo-link" data-fluxo-tipo="'+_escHtml(tipo)+'" data-fluxo-id="'+_escHtml(id)+'" onclick="abrirRastreio(this.dataset.fluxoTipo,this.dataset.fluxoId)">'+_escHtml(texto)+' →</button>';}
+function fluxoPais(tipo,x,d){
+  if(tipo==='laminacoes')return (x.composicao||[]).map(c=>({tipo:'baldes',id:c.loteId,rotulo:c.partes+' massas do Balde #'+c.loteNum}));
+  if(tipo==='fatias')return x.laminacaoId?[{tipo:'laminacoes',id:x.laminacaoId,rotulo:'Massa laminada '+(x.laminacaoNome||x.laminacaoId)}]:[];
+  if(tipo==='formas')return (x.composicao||[]).map(c=>({tipo:'fatias',id:c.partidaId,rotulo:c.unidades+' unidades das Fatias '+(c.partidaNome||c.partidaId)}));
+  return [];
+}
+function fluxoFilhos(tipo,x,d){
+  if(tipo==='baldes')return d.laminacoes.filter(l=>(l.composicao||[]).some(c=>c.loteId===x.id)).map(l=>({tipo:'laminacoes',id:l.id,rotulo:(l.composicao||[]).filter(c=>c.loteId===x.id).reduce((s,c)=>s+(Number(c.partes)||0),0)+' massas → '+fluxoNome('laminacoes',l)}));
+  if(tipo==='laminacoes')return d.fatias.filter(p=>p.laminacaoId===x.id).map(p=>({tipo:'fatias',id:p.id,rotulo:p.qtd+' unidades · '+(p.produtoNome||'')+' → '+fluxoNome('fatias',p)}));
+  if(tipo==='fatias')return d.formas.filter(f=>(f.composicao||[]).some(c=>c.partidaId===x.id)).map(f=>({tipo:'formas',id:f.id,rotulo:(f.composicao||[]).filter(c=>c.partidaId===x.id).reduce((s,c)=>s+(Number(c.unidades)||0),0)+' unidades → '+fluxoNome('formas',f)+' · '+fluxoEstadoTexto(f)}));
+  return [];
+}
+function fluxoOrigemHtml(tipo,x,d,nivel){
+  if(nivel>3)return '';const ps=fluxoPais(tipo,x,d);return ps.map(p=>{const obj=fluxoRegistro(p.tipo,p.id,d);return '<div class="fluxo-chain">'+fluxoLink(p.tipo,p.id,p.rotulo)+(obj?fluxoOrigemHtml(p.tipo,obj,d,nivel+1):'<div class="ux-muted">Registro de origem não disponível neste aparelho. Vínculo preservado.</div>')+'</div>';}).join('');
+}
+function fluxoAcao(tipo,x){
+  if(tipo==='laminacoes'&&!corteConcluido(x)&&OP.pode('laminacao'))return {fn:'corte',label:'Continuar corte desta massa'};
+  if(tipo==='fatias'&&posSaldo(x)>0&&OP.pode('modelagem'))return {fn:'modelagem',label:'Continuar em Frio e Modelagem'};
+  if(tipo==='formas'){
+    const e=fluxoEstadoForma(x);
+    if(e==='pronta_fermentar'&&OP.pode('fermentacao'))return {fn:'fermentar',label:'Colocar esta forma no armário'};
+    if(e==='fermentando'&&OP.pode('fermentacao'))return {fn:'retirar',label:'Conferir retirada para assamento'};
+    if(e==='aguardando_assamento'&&OP.pode('forneamento'))return {fn:'assar',label:'Conferir entrada no forno'};
+    if(e==='assando'&&OP.pode('forneamento'))return {fn:'concluir',label:'Conferir assamento concluído'};
   }
   return null;
 }
-function abrirFermentacao(id){
-  const lote=LS.g('fdo_lotes',[]).find(l=>l.id===id);
-  if(!lote){ abrirFermentacaoLotes(); return; }
-  st.fermLote=id; st.fermStart=Date.now();
-  const b=(lote.etapas&&lote.etapas.batimento)||{};
-  document.getElementById('ferm-lote-num').textContent='#'+lote.num;
-  document.getElementById('ferm-lote-rec').textContent=lote.receitaNome||lote.rotulo||'';
-  document.getElementById('ferm-lote-meta').textContent=[lote.criado||'', b.op?('op. '+b.op):''].filter(Boolean).join(' · ');
-  const tDia=tempFermentacaoDoDia();
-  const note=document.getElementById('ferm-temp-note');
-  if(tDia){ st.fermMin=tDia.min; st.fermMax=tDia.max; note.textContent='Puxado de uma fermentação de hoje — confirme ou ajuste.'; note.classList.add('puxado'); }
-  else{ st.fermMin=24; st.fermMax=28; note.textContent='Defina as temperaturas da fermentação.'; note.classList.remove('puxado'); }
-  document.getElementById('ferm-min-val').textContent=st.fermMin;
-  document.getElementById('ferm-max-val').textContent=st.fermMax;
-  ir('fermentacao');
-  falar(`Fermentação do balde ${lote.num}. `+(tDia?`Mínima ${st.fermMin} e máxima ${st.fermMax} graus de hoje. Confirme ou ajuste.`:'Defina a temperatura mínima e máxima.'));
+function fluxoAcaoHtml(tipo,x){const a=fluxoAcao(tipo,x);return a?'<button class="btn-main" data-fluxo-tipo="'+tipo+'" data-fluxo-id="'+_escHtml(x.id)+'" onclick="fluxoContinuar(this.dataset.fluxoTipo,this.dataset.fluxoId)">'+_escHtml(a.label)+'</button>':'';}
+function fluxoContinuar(tipo,id){
+  const x=fluxoRegistro(tipo,id,fluxoDados());if(!x)return;const a=fluxoAcao(tipo,x);if(!a)return;
+  if(a.fn==='corte')abrirCorteLaminacao(id);
+  if(a.fn==='modelagem'){st.posFiltro=['descongelando','modelagem'].includes(x.situacao)?'modelagem':'frio';ir('modelagem');const el=document.getElementById('pos-card-'+id);if(el)el.scrollIntoView({block:'start'});}
+  if(a.fn==='fermentar')abrirFermentacao(id);
+  if(a.fn==='retirar')abrirRevisaoFormas('saidaArmario',[id]);
+  if(a.fn==='assar')abrirRevisaoFormas('assamentoInicio',[id]);
+  if(a.fn==='concluir')abrirRevisaoFormas('assamentoFim',[id]);
 }
-function ajustarTempFerm(campo,d){
-  if(campo==='min'){ st.fermMin=Math.max(0,Math.min(60,(st.fermMin||24)+d)); document.getElementById('ferm-min-val').textContent=st.fermMin; }
-  else{ st.fermMax=Math.max(0,Math.min(60,(st.fermMax||28)+d)); document.getElementById('ferm-max-val').textContent=st.fermMax; }
+function abrirFluxo(filtro){if(!OP.pode('historico'))return;st.fluxoFiltro=['laminacoes','fatias','formas'].includes(filtro)?filtro:'painel';st.fluxoBusca='';st.fluxoLimite=60;document.getElementById('fluxo-busca').value='';ir('fluxo');}
+function fluxoFiltrar(filtro){st.fluxoFiltro=['laminacoes','fatias','formas'].includes(filtro)?filtro:'painel';st.fluxoBusca='';st.fluxoLimite=60;document.getElementById('fluxo-busca').value='';renderFluxo();}
+function fluxoBuscar(v){st.fluxoBusca=v;st.fluxoLimite=60;renderFluxo();}
+function fluxoMais(){st.fluxoLimite=(st.fluxoLimite||60)+60;renderFluxo();}
+function fluxoPainel(d){
+  const ativos=d.baldes.filter(loteAtivo),cortaveis=d.laminacoes.filter(l=>!corteConcluido(l));
+  const noFrio=d.fatias.filter(p=>['cortada','freezer_rapido','freezer_conservador'].includes(p.situacao)),modelar=d.fatias.filter(p=>['descongelando','modelagem'].includes(p.situacao));
+  const linhas=[
+    ['Baldes em preparo',ativos.filter(l=>!(l.etapas&&l.etapas.batimento&&l.etapas.batimento.feito)).length+' baldes','Secos → líquidos → batimento.','baldes'],
+    ['Massas disponíveis',ativos.reduce((s,l)=>s+lotePartesDisp(l),0)+' massas','Partes registradas no batimento, ainda não usadas em laminação.','massas'],
+    ['Massas laminadas para cortar',cortaveis.length+(cortaveis.length===1?' registro':' registros'),'Inclui cortes parciais; os registros antigos não são reinterpretados.','corte'],
+    ['Fatias no frio / aguardando destino',noFrio.reduce((s,p)=>s+posSaldo(p),0)+' unidades','Fatias ainda disponíveis, sem contar as já colocadas em formas.','frio'],
+    ['Descongelamento / modelagem',modelar.reduce((s,p)=>s+posSaldo(p),0)+' unidades','Disponíveis para acompanhar ou modelar.','modelagem'],
+    ['Formas prontas para fermentar',fluxoFormasEstado('pronta_fermentar').length+' formas','Croissants nas formas; ainda sem entrada registrada no armário.','fermentacao'],
+    ['Fermentando nos armários',fluxoFormasEstado('fermentando').length+' formas','Até 20 formas por armário; saída depende de confirmação real.','armarios'],
+    ['Aguardando assamento',fluxoFormasEstado('aguardando_assamento').length+' formas','Já retiradas dos armários.','forno'],
+    ['No forno',fluxoFormasEstado('assando').length+' formas','Assamento iniciado, ainda não concluído.','assando'],
+    ['Assamento concluído',fluxoFormasEstado('assada').length+' formas · '+fluxoFormasEstado('assada').reduce((s,f)=>s+f.totalUnidades,0)+' unidades','Total registrado; não significa produto embalado ou expedido.','concluidas']
+  ];
+  const alertas=d.formas.filter(f=>fluxoEstadoForma(f)==='conferir').length,legados=d.baldes.filter(l=>l.etapas&&l.etapas.fermentacao&&l.etapas.fermentacao.feito).length;
+  return '<div class="ux-muted" style="margin:.1rem 0 .5rem">Toque na etapa para ver ou continuar.</div>'+(alertas?'<div class="fluxo-aviso">'+alertas+' formas com registros incompletos precisam de conferência.</div>':'')+'<div class="fluxo-painel-grid">'+linhas.map((v,i)=>'<button class="fluxo-painel-item" data-fluxo-fila="'+v[3]+'" onclick="fluxoAbrirFila(this.dataset.fluxoFila)"><span>'+v[0]+'</span><strong>'+v[1]+'</strong></button>').join('')+'</div><div class="ux-muted" style="margin-top:.5rem">Assamento concluído: total do histórico; não significa produto embalado ou expedido.</div><details class="ux-details"><summary>Como ler os saldos / registros anteriores</summary><div class="ux-muted">Cada etapa mostra seu próprio saldo, sem somar as mesmas unidades duas vezes.'+(legados?'<p>'+legados+' registros antigos de fermentação em baldes continuam no Histórico; não foram convertidos em formas.</p>':'')+linhas.map(v=>'<p><b>'+v[0]+':</b> '+v[2]+'</p>').join('')+'</div></details>';
 }
-function concluirFermentacao(){
-  const todos=LS.g('fdo_lotes',[]);
-  const lote=todos.find(l=>l.id===st.fermLote);
-  if(!lote){ abrirFermentacaoLotes(); return; }
-  if(st.fermMax<st.fermMin){ alert('A temperatura máxima não pode ser menor que a mínima.'); return; }
-  const agora=new Date();
-  lote.etapas=lote.etapas||{};
-  lote.etapas.fermentacao={ feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(), op:getOp(), tempMin:st.fermMin, tempMax:st.fermMax, dur:Math.round((Date.now()-(st.fermStart||Date.now()))/60000) };
-  LS.s('fdo_lotes',todos);
-  falar(`Fermentação do balde ${lote.num} registrada. Mínima ${st.fermMin}, máxima ${st.fermMax} graus.`);
-  st.fermLote=null;
-  abrirFermentacaoLotes();
+function fluxoAbrirFila(fila){
+  if(!OP.pode('historico'))return;
+  if(fila==='baldes'){ir('history');return;}
+  if(fila==='massas'){if(OP.pode('laminacao'))abrirPrimeiraLaminacao();else ir('history');return;}
+  if(fila==='corte'){if(OP.pode('laminacao'))abrirLaminacaoFinal();else fluxoFiltrar('laminacoes');return;}
+  if(fila==='frio'||fila==='modelagem'){if(OP.pode('modelagem')){st.posFiltro=fila;ir('modelagem');}else fluxoFiltrar('fatias');return;}
+  if(fila==='fermentacao'||fila==='armarios'){if(OP.pode('fermentacao')){abrirFermentacaoLotes();if(fila==='armarios')fermFiltrar('armarios');}else fluxoFiltrar('formas');return;}
+  if(fila==='forno'||fila==='assando'){if(OP.pode('forneamento')){entrarForneamento();if(fila==='assando')fornoFiltrar('assando');}else fluxoFiltrar('formas');return;}
+  fluxoFiltrar('formas');
+}
+function fluxoCard(tipo,x,d){
+  const filhos=fluxoFilhos(tipo,x,d),pais=fluxoPais(tipo,x,d),meta=[x.produtoNome||x.receitaNome||'',posHora(x.criadoTs||x.dataTs)].filter(Boolean).join(' · ');
+  return '<div class="pos-card"><div class="pos-title">'+_escHtml(fluxoNome(tipo,x))+'</div><div class="ux-muted">'+_escHtml(meta)+'</div><span class="fluxo-estagio">'+_escHtml(fluxoStatus(tipo,x))+'</span><div class="ux-muted">'+_escHtml(pais.map(p=>p.rotulo).join(' + ')||'Origem registrada no balde')+'</div>'+(tipo==='laminacoes'?'<div class="ux-muted">'+_escHtml(filhos.map(c=>c.rotulo).join(' · ')||'Nenhuma fatia registrada ainda.')+'</div>':'')+'<div class="fluxo-card-acoes">'+fluxoLink(tipo,x.id,'Ver origens, junções e destinos')+fluxoAcaoHtml(tipo,x)+'</div></div>';
+}
+function renderFluxo(){
+  const el=document.getElementById('fluxo-lista');if(!el)return;const tipo=st.fluxoFiltro||'painel',d=fluxoDados();
+  document.querySelectorAll('[data-fluxo-filtro]').forEach(b=>b.classList.toggle('sel',b.dataset.fluxoFiltro===tipo));document.getElementById('fluxo-busca-campo').classList.toggle('ux-hidden',tipo==='painel');
+  if(tipo==='painel'){el.innerHTML=fluxoPainel(d);return;}
+  const busca=String(st.fluxoBusca||'').trim().toLocaleLowerCase('pt-BR'),arr=(d[tipo]||[]).filter(x=>!busca||[fluxoNome(tipo,x),x.produtoNome||'',x.receitaNome||'',fluxoStatus(tipo,x),...fluxoPais(tipo,x,d).map(p=>p.rotulo)].join(' ').toLocaleLowerCase('pt-BR').includes(busca)).sort((a,b)=>(Number(b.criadoTs||b.dataTs)||0)-(Number(a.criadoTs||a.dataTs)||0)),limite=st.fluxoLimite||60;
+  el.innerHTML=arr.length?'<div class="ux-muted">'+arr.length+' registros encontrados</div>'+arr.slice(0,limite).map(x=>fluxoCard(tipo,x,d)).join('')+(arr.length>limite?'<button class="btn-main" onclick="fluxoMais()">Mostrar mais registros</button>':''):'<div class="pos-empty">Nenhum registro encontrado.</div>';
+}
+function abrirRastreio(tipo,id){if(!OP.pode('historico'))return;if(uxTelaAtual()==='rastreio'&&st.rastro&&(st.rastro.tipo!==tipo||st.rastro.id!==id)){st.rastroPilha=st.rastroPilha||[];st.rastroPilha.push({...st.rastro});if(st.rastroPilha.length>30)st.rastroPilha.shift();}else if(uxTelaAtual()!=='rastreio')st.rastroPilha=[];st.rastro={tipo,id};ir('rastreio');}
+function renderRastreio(){
+  const el=document.getElementById('rastreio-conteudo');if(!el||!st.rastro)return;const {tipo,id}=st.rastro,d=fluxoDados(),x=fluxoRegistro(tipo,id,d);
+  if(!x){el.innerHTML='<div class="pos-empty">Este registro não está disponível neste aparelho. O vínculo de origem foi preservado.</div>';return;}
+  const filhos=fluxoFilhos(tipo,x,d),ps=fluxoPais(tipo,x,d),eventos=[];
+  if(x.criadoTs||x.dataTs)eventos.push({rotulo:'Registro criado',emTs:x.criadoTs||x.dataTs,op:x.op});
+  Object.entries(x.etapas||{}).forEach(([k,v])=>{if(v&&v.feito&&!(k==='corte'&&(x.corteEventos||[]).length))eventos.push({...v,rotulo:k==='fermentacao'&&tipo==='baldes'?'Fermentação antiga vinculada ao balde (legado)':nomeEtapa(k)});});
+  const nomes={freezerRapido:'Entrada no freezer rápido',freezerConservador:'Entrada no freezer conservador',descongelamentoInicio:'Início do descongelamento',saidaFreezer:'Saída do freezer',modelagemInicio:'Início da modelagem',modelagemDireta:'Modelagem direta / urgente',entradaArmario:'Entrada no armário',saidaArmario:'Ponto conferido e retirada para assamento',assamentoInicio:'Início do assamento',assamentoFim:'Assamento concluído'};
+  Object.entries(x.eventos||{}).forEach(([k,v])=>{if(v&&v.emTs)eventos.push({...v,rotulo:nomes[k]||k});});
+  Object.values(x.corteEventos||{}).forEach(v=>{if(v&&v.emTs)eventos.push({...v,rotulo:v.feito?'Corte concluído':'Corte reaberto'});});
+  eventos.sort((a,b)=>(Number(a.emTs)||0)-(Number(b.emTs)||0));
+  let tempo='';if(tipo==='formas'){
+    const a=fluxoEvento(x,'entradaArmario'),s=fluxoEvento(x,'saidaArmario'),i=fluxoEvento(x,'assamentoInicio'),t=fluxoEvento(x,'assamentoFim');
+    if(a)tempo+='<div class="ux-muted">Fermentação: '+_escHtml(fluxoDuracao(a.emTs,s&&s.emTs))+(s?' registrada':' em andamento')+'</div>';
+    if(i)tempo+='<div class="ux-muted">Assamento: '+_escHtml(fluxoDuracao(i.emTs,t&&t.emTs))+(t?' registrado':' em andamento')+'</div>';
+  }
+  el.innerHTML='<div class="pos-card"><div class="pos-title">'+_escHtml(fluxoNome(tipo,x))+'</div><div class="ux-muted">'+_escHtml(x.produtoNome||x.receitaNome||'')+'</div><span class="fluxo-estagio">'+_escHtml(fluxoStatus(tipo,x))+'</span>'+tempo+'<div class="fluxo-card-acoes">'+fluxoAcaoHtml(tipo,x)+'</div></div>'+
+    '<div class="pos-card"><div class="pos-title">De onde veio'+(ps.length>1?' · junção':'')+'</div>'+(ps.length?fluxoOrigemHtml(tipo,x,d,0):'<div class="ux-muted">'+(tipo==='baldes'?'Origem: ingredientes e receita do balde.':'Origem não informada neste registro antigo.')+'</div>')+'</div>'+
+    '<div class="pos-card"><div class="pos-title">O que gerou'+(filhos.length>1?' · desmembramento':'')+'</div>'+(filhos.length?filhos.map(c=>fluxoLink(c.tipo,c.id,c.rotulo)).join(''):'<div class="ux-muted">'+(tipo==='formas'?'A mesma forma acompanha fermentação e assamento. Embalagem e expedição ainda não registradas neste módulo.':'Nenhum destino registrado ainda.')+'</div>')+'</div>'+
+    '<div class="pos-card"><div class="pos-title">Etapas registradas</div>'+eventos.map(e=>'<div class="fluxo-chain"><b>'+_escHtml(e.rotulo)+'</b><div class="ux-muted">'+_escHtml(posHora(e.emTs))+(e.op?' · '+_escHtml(e.op):'')+(e.armario?' · Armário '+e.armario:'')+(e.tempMin!=null?' · mínima '+_escHtml(e.tempMin)+'°C':'')+(e.tempMax!=null?' · máxima '+_escHtml(e.tempMax)+'°C':'')+'</div></div>').join('')+'</div>';
 }
 
 // Reiniciar numeração dos lotes — o próximo criado será #1
@@ -5125,7 +5335,7 @@ function renderHist(){
     const mostradas=Array.from(new Set(base.concat(feitas)));
     const chips=mostradas.map(k=>{
       const ok=l.etapas&&l.etapas[k]&&l.etapas[k].feito;
-      return `<span class="etapa-chip ${ok?'ok':'pend'}">${ok?'✓ ':''}${nomeEtapa(k)}</span>`;
+      return `<span class="etapa-chip ${ok?'ok':'pend'}">${ok?'✓ ':''}${k==='fermentacao'?'Fermentação do balde · legado':k==='laminacao'&&lotePartesDisp(l)>0?'Laminação parcial':nomeEtapa(k)}</span>`;
     }).join('');
     const cancelado=!loteAtivo(l);
     const btnDel = podeApagar ? (cancelado
@@ -5144,6 +5354,8 @@ function renderHist(){
       ${cancelado?`<div class="lote-cancelado">CANCELADO · ${l.cancelado.em||''} · ${_escHtml(l.cancelado.op||'')}</div>`:''}
       ${testeHtml}
       <div class="lote-etapas">${chips}</div>
+      <div class="ux-muted">${_escHtml(fluxoStatus('baldes',l))}</div>
+      ${fluxoLink('baldes',l.id,'Ver massas, junções e destinos')}
     </div>`;
   }).join('');
 }
@@ -5478,7 +5690,7 @@ function renderModelagem(){
   const arr=posPartidas().filter(p=>posSaldo(p)>0&&(filtro==='modelagem'?['descongelando','modelagem'].includes(p.situacao):['cortada','freezer_rapido','freezer_conservador'].includes(p.situacao))).sort((a,b)=>(Number(a.criadoTs)||0)-(Number(b.criadoTs)||0));
   el.innerHTML=arr.length?arr.map(posCardOperacional).join(''):'<div class="pos-empty">'+(filtro==='modelagem'?'Nenhuma fatia em descongelamento ou modelagem.':'Nenhuma fatia aguardando movimentação no frio.')+'</div>';
   const formas=posFormas().slice().sort((a,b)=>(Number(b.criadoTs)||0)-(Number(a.criadoTs)||0));
-  fe.innerHTML=formas.length?formas.map(f=>'<div class="pos-card"><div class="pos-title">Forma '+_escHtml(f.nome)+' · '+_escHtml(f.produtoNome)+'</div><div class="pos-saldo">'+f.totalUnidades+' unidades</div><div class="pos-meta">'+_escHtml(posHora(f.criadoTs))+'</div><details class="ux-details"><summary>Detalhes</summary><div class="ux-muted">'+(f.composicao||[]).map(c=>c.unidades+'× Fatias '+_escHtml(c.partidaNome||c.partidaId)).join(' + ')+'</div>'+(OP.pode('apagar')?'<button class="link-btn" onclick="apagarForma(\''+f.id+'\')">Excluir lançamento por engano</button>':'')+'</details></div>').join(''):'<div class="pos-empty">Nenhuma forma registrada.</div>';
+  fe.innerHTML=formas.length?formas.map(f=>'<div class="pos-card"><div class="pos-title">Forma '+_escHtml(f.nome)+' · '+_escHtml(f.produtoNome)+'</div><div class="pos-saldo">'+f.totalUnidades+' unidades</div><span class="fluxo-estagio">'+_escHtml(fluxoEstadoTexto(f))+'</span><div class="fluxo-card-acoes">'+fluxoAcaoHtml('formas',f)+(OP.pode('historico')?fluxoLink('formas',f.id,'Ver todas as origens e etapas'):'')+'</div><details class="ux-details"><summary>Composição / outras ações</summary><div class="ux-muted">'+(f.composicao||[]).map(c=>c.unidades+'× Fatias '+_escHtml(c.partidaNome||c.partidaId)).join(' + ')+'</div>'+(OP.pode('apagar')&&fluxoEstadoForma(f)==='pronta_fermentar'?'<button class="link-btn" data-forma-id="'+_escHtml(f.id)+'" onclick="apagarForma(this.dataset.formaId)">Excluir lançamento por engano</button>':'')+'</details></div>').join(''):'<div class="pos-empty">Nenhuma forma registrada.</div>';
 }
 async function montarForma(partidaId){
   if(st.criandoForma||!OP.pode('modelagem'))return;
@@ -5501,7 +5713,7 @@ async function montarForma(partidaId){
     falar('Forma '+forma.nome+' criada com '+alvo+' unidades.');renderModelagem();
   }finally{st.criandoForma=false;}
 }
-function apagarForma(id){if(!OP.pode('apagar'))return;const formas=posFormas(),f=formas.find(x=>x.id===id);if(!f||!confirm('Excluir a forma '+f.nome+'? As unidades voltarão a ficar disponíveis para modelagem.'))return;FB.removerRegistro('fdo_formas',id);posSalvarFormas(formas.filter(x=>x.id!==id));const ps=posPartidas(),t=Date.now();(f.composicao||[]).forEach(c=>{const p=ps.find(x=>x.id===c.partidaId);if(!p)return;const ev=p.eventos||{};p.situacao=(ev.modelagemInicio||ev.modelagemDireta)?'modelagem':ev.descongelamentoInicio?'descongelando':ev.modelagemDireta?'modelagem':ev.freezerConservador?'freezer_conservador':ev.freezerRapido?'freezer_rapido':'cortada';p.atualizadoTs=t;});posSalvarPartidas(ps);renderModelagem();}
+function apagarForma(id){if(!OP.pode('apagar'))return;const atual=posFormas().find(x=>x.id===id);if(atual&&FLUXO267.eventos.some(k=>fluxoEvento(atual,k))){alert('Esta forma já avançou na produção. O histórico e as unidades utilizadas serão preservados.');return;}const formas=posFormas(),f=formas.find(x=>x.id===id);if(!f||!confirm('Excluir a forma '+f.nome+'? As unidades voltarão a ficar disponíveis para modelagem.'))return;FB.removerRegistro('fdo_formas',id);posSalvarFormas(formas.filter(x=>x.id!==id));const ps=posPartidas(),t=Date.now();(f.composicao||[]).forEach(c=>{const p=ps.find(x=>x.id===c.partidaId);if(!p)return;const ev=p.eventos||{};p.situacao=(ev.modelagemInicio||ev.modelagemDireta)?'modelagem':ev.descongelamentoInicio?'descongelando':ev.modelagemDireta?'modelagem':ev.freezerConservador?'freezer_conservador':ev.freezerRapido?'freezer_rapido':'cortada';p.atualizadoTs=t;});posSalvarPartidas(ps);renderModelagem();}
 function apagarPartida(id){if(!OP.pode('apagar')||posUnidadesUsadas(id)>0)return;const ps=posPartidas(),p=ps.find(x=>x.id===id);if(!p||!confirm('Excluir '+p.nome+'? Use apenas para lançamento feito por engano.'))return;FB.removerRegistro('fdo_partidas',id);posSalvarPartidas(ps.filter(x=>x.id!==id));if(!posPartidasDaLam(p.laminacaoId).length)marcarCorte(p.laminacaoId,false);posReexibir();if(st.corteLamId)renderCorteLaminacao();}
 
 
@@ -5511,7 +5723,7 @@ const UX_NAV={pilha:[],operador:null,saindo:false};
 function uxTelaAtual(){const e=document.querySelector('.scr:not(.off)');return e?e.id.replace(/^s-/,''):'';}
 function uxOperador(){const a=OP.atual();return a?a.id:'legado';}
 function uxBloqueada(id){return ['device','geo','geo-perm','geo-loading','login'].includes(id);}
-function uxOcupado(){return !!(st.criandoLote||st.criandoLam||st.salvandoCorte||st.criandoForma||st.imprimindo);}
+function uxOcupado(){return !!(st.criandoLote||st.criandoLam||st.salvandoCorte||st.criandoForma||st.movendoFormas||st.imprimindo);}
 function uxAvisarOcupado(){falar('Operação em andamento. Aguarde a confirmação antes de voltar.');}
 function uxRegistrarTela(id){
   const atual=uxTelaAtual(),op=uxOperador();
@@ -5539,6 +5751,8 @@ function voltarTela(){
   if(uxOcupado()){uxAvisarOcupado();return;}
   const lembrete=document.getElementById('estoque-lembrete-bg');if(lembrete&&lembrete.classList.contains('on')){estoqueLembreteFechar();return;}
   const atual=uxTelaAtual();if(uxBloqueada(atual))return;
+  if(atual==='rastreio'&&st.rastroPilha&&st.rastroPilha.length){st.rastro=st.rastroPilha.pop();renderRastreio();return;}
+  if(atual==='fermentacao'){st.movFormas=null;document.getElementById('mov-formas-conferido').checked=false;fluxoConferenciaMudou();}
   if(atual==='active'){voltarPasso();return;}
   if(atual==='pin'){cancelarPin();return;}
   if(atual==='batimento'){batSair('batimento-lotes');return;}
@@ -5692,7 +5906,7 @@ function posIniciarModelagem(id){
 }
 function posCardOperacional(p){
   const des=p.eventos&&p.eventos.descongelamentoInicio?posTempoDescongelando(p):'',temp=p.eventos&&p.eventos.descongelamentoInicio&&p.eventos.descongelamentoInicio.tempAmbiente;
-  return '<div class="pos-card"><div class="pos-title">Fatias '+_escHtml(p.nome)+' · '+_escHtml(p.produtoNome)+(p.testeId?' · TESTE':'')+'</div><div class="pos-saldo">'+posSaldo(p)+' disponíveis</div><div class="pos-state">'+_escHtml(posEstadoTexto(p))+'</div>'+(des?'<div class="pos-meta">Descongelamento: '+des+(temp!=null?' · '+temp+'°C':' · temperatura não informada')+'</div>':'')+'<div class="pos-actions">'+posAcaoHtml(p)+'</div></div>';
+  return '<div class="pos-card" id="pos-card-'+_escHtml(p.id)+'"><div class="pos-title">Fatias '+_escHtml(p.nome)+' · '+_escHtml(p.produtoNome)+(p.testeId?' · TESTE':'')+'</div><div class="pos-saldo">'+posSaldo(p)+' disponíveis</div><div class="pos-state">'+_escHtml(posEstadoTexto(p))+'</div>'+(des?'<div class="pos-meta">Descongelamento: '+des+(temp!=null?' · '+temp+'°C':' · temperatura não informada')+'</div>':'')+'<div class="pos-actions">'+posAcaoHtml(p)+'</div></div>';
 }
 
 // A impressão só lê dados; cada balde do grupo gera o próprio payload.
@@ -5785,6 +5999,7 @@ const SYNC25={
   etapa(a,b){if(!a)return this.clone(b);if(!b)return this.clone(a);return (Number(b.emTs)||0)>=(Number(a.emTs)||0)?{...this.clone(a),...this.clone(b)}:{...this.clone(b),...this.clone(a)}},
   merge(k,a,b){
     if(!a)return this.clone(b); if(!b)return this.clone(a);
+    if(k==='fdo_formas'&&!a._deleted&&!b._deleted)return fluxoMergeForma(a,b);
     if(k!=='fdo_lotes'){
       if(a._deleted||b._deleted){const da=Number(a.deletedTs)||0,db=Number(b.deletedTs)||0;if(a._deleted&&da>=this.ts(b))return this.clone(a);if(b._deleted&&db>=this.ts(a))return this.clone(b)}
       return this.ts(b)>=this.ts(a)?{...this.clone(a),...this.clone(b)}:{...this.clone(b),...this.clone(a)};
