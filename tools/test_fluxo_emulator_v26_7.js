@@ -5,6 +5,17 @@ const {ref,set,get,onValue,runTransaction}=require('firebase/database');
 const {load,form,plan}=require('./fluxo_v26_7_test_helper');
 const A=load();let count=0;
 function ok(label,cond){assert(cond,label);console.log('OK '+(++count)+' '+label);}
+// Escrita confirmada em A não significa que o listener de B já recebeu o evento.
+// Aguarda o estado observável da interface, sem sleep fixo e sem repetir gravações.
+function esperarEstado(r,condicao,descricao){
+ return new Promise((resolve,reject)=>{
+  let stop=null,terminou=false;
+  const timer=setTimeout(()=>fim(new Error('Não propagou: '+descricao)),15000);
+  function fim(erro,snapshot){if(terminou)return;terminou=true;clearTimeout(timer);if(stop)stop();if(erro)reject(erro);else resolve(snapshot);}
+  stop=onValue(r,s=>{try{if(condicao(s.val()||{}))fim(null,s);}catch(e){fim(e);}},e=>fim(e));
+  if(terminou)stop(); // O SDK pode entregar imediatamente o valor já em cache.
+ });
+}
 (async()=>{
  const stops=[];
  const env=await initializeTestEnvironment({projectId:'demo-fdo-rules',database:{rules:fs.readFileSync('database.rules.json','utf8')}});
@@ -28,15 +39,19 @@ function ok(label,cond){assert(cond,label);console.log('OK '+(++count)+' '+label
   function tx(r,p){return runTransaction(r,cur=>{try{return JSON.parse(JSON.stringify(A.fluxoAplicarPlano(cur,p)));}catch(e){console.log('Transação não aplicada:',e.message);return undefined;}},{applyLocally:false});}
   const races=await Promise.all([tx(r1,plan('entradaArmario',['f19'],11000,{operacaoId:'a-ultima-vaga'})),tx(r2,plan('entradaArmario',['f20'],11000,{operacaoId:'b-ultima-vaga'}))]);
   ok('somente um aparelho obtém a última vaga',races.filter(x=>x.committed).length===1);
+  await Promise.all([r1,r2].map(r=>esperarEstado(r,m=>A.fluxoOcupacao(1,Object.values(m))===20,'última vaga em ambos os aparelhos')));
   let current=(await get(r1)).val();ok('capacidade final nunca excede 20',A.fluxoOcupacao(1,Object.values(current))===20);
   const loser=A.fluxoEstadoForma(current.f19)==='pronta_fermentar'?'f19':'f20';
   const second=await tx(r2,plan('entradaArmario',[loser],12000));ok('outro aparelho vê armário cheio e não grava',!second.committed);
   const leave=await tx(r1,plan('saidaArmario',['f0','f1'],20000));ok('saída real parcial libera duas vagas',leave.committed&&A.fluxoOcupacao(1,Object.values(leave.snapshot.val()))===18);
-  await get(r2);const enter=await tx(r2,plan('entradaArmario',[loser],21000));ok('vaga liberada pode ser ocupada no segundo aparelho',enter.committed&&A.fluxoOcupacao(1,Object.values(enter.snapshot.val()))===19);
+  await esperarEstado(r2,m=>m.f0&&m.f1&&A.fluxoEstadoForma(m.f0)==='aguardando_assamento'&&A.fluxoEstadoForma(m.f1)==='aguardando_assamento'&&A.fluxoOcupacao(1,Object.values(m))===18,'retirada parcial no segundo aparelho');
+  const enter=await tx(r2,plan('entradaArmario',[loser],21000));ok('vaga liberada pode ser ocupada no segundo aparelho',enter.committed&&A.fluxoOcupacao(1,Object.values(enter.snapshot.val()))===19);
   const bad=await tx(r1,plan('assamentoInicio',['f0','f2'],22000));ok('grupo com etapa divergente não avança parcialmente',!bad.committed&&!((await get(r1)).val().f0.eventos||{}).assamentoInicio);
   const bp=plan('assamentoInicio',['f0','f1'],23000),bake=await tx(r1,bp);ok('assamento inicia com as formas retiradas',bake.committed);
-  await get(r2);const repeat=await tx(r2,bp);ok('retry de outra conexão é idempotente',repeat.committed&&repeat.snapshot.val().f0.eventos.assamentoInicio.emTs===23000);
+  await esperarEstado(r2,m=>m.f0&&m.f1&&A.fluxoEstadoForma(m.f0)==='assando'&&A.fluxoEstadoForma(m.f1)==='assando','início do assamento no segundo aparelho');
+  const repeat=await tx(r2,bp);ok('retry de outra conexão é idempotente',repeat.committed&&repeat.snapshot.val().f0.eventos.assamentoInicio.emTs===23000);
   const end=await tx(r2,plan('assamentoFim',['f0','f1'],24000));ok('assamento finalizado nos mesmos IDs',end.committed&&A.fluxoEstadoForma(end.snapshot.val().f0)==='assada');
+  await esperarEstado(r1,m=>m.f0&&m.f1&&A.fluxoEstadoForma(m.f0)==='assada'&&A.fluxoEstadoForma(m.f1)==='assada','conclusão do assamento no primeiro aparelho');
   // Uma fila antiga com timestamp maior precisa preservar as etapas confirmadas.
   const stale={...form('f0'),atualizadoTs:99000};
   await runTransaction(ref(db1,'fdo_v25/formas/f0'),cur=>JSON.parse(JSON.stringify(A.SYNC25.merge('fdo_formas',cur,stale))),{applyLocally:false});
