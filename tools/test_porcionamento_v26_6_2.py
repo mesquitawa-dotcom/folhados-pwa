@@ -14,6 +14,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--baseline')
 args = parser.parse_args()
 SOURCE = (ROOT / 'index.html').read_text()
+# Compara o módulo preservado, não o JavaScript de novos módulos autorizados.
+PORC_CORE = 'JSON.stringify([iniciarReceita,escolherTemp,setTempOpcao,setTemp,iniciarSecos,iniciarLiquidos,avancar,criarLoteSecos,salvarSessao].map(f=>f.toString()))'
 SEED = {
     'fdo_key': 'TESTE_SEM_ACESSO_REAL', 'fdo_geo_ativo': False,
     'fdo_device_uid_v25': 'teste-aparelho',
@@ -104,8 +106,6 @@ try:
         browser = pw.chromium.launch(executable_path=exe, headless=True, args=['--no-sandbox', '--disable-dev-shm-usage'])
         if args.baseline:
             old = Path(args.baseline).read_text()
-            scripts = lambda s: '\n'.join(x for x in re.findall(r'<script[^>]*>(.*?)</script>', s, re.S) if x.strip())
-            check('JavaScript de produção idêntico à v26.6.1, exceto versão do backup', scripts(old) == scripts(SOURCE).replace("versao:'26.6.2'", "versao:'26.6.1'"))
             ctx, p = load(browser, old)
             enter(p)
             prior = visible_action(p, '#s-pre-temp button[onclick="escolherTemp()"]')
@@ -113,10 +113,13 @@ try:
             geometry.append({'baseline': prior})
             p.screenshot(path=str(OUT / 'antes-360x660.png'))
             cfg = p.evaluate('JSON.stringify({receitas:RECEITAS,fermento:TEMP_FERMENTO,opcoes:OPCOES_FERMENTO,produtos:POS_PRODUTOS})')
+            porc_core = p.evaluate(PORC_CORE)
             ctx.close()
         layouts = [(320,480,22), (360,660,22), (390,700,22), (412,780,22), (768,1024,22), (1280,800,22), (740,360,22), (360,660,27.5), (320,568,33)]
         for w,h,font in layouts:
             ctx,p = load(browser,size=(w,h),font=font)
+            if args.baseline and (w,h,font)==layouts[0]:
+                check('Funções de porcionamento preservadas desde v26.6.1',porc_core==p.evaluate(PORC_CORE))
             enter(p)
             result = visible_action(p,'#pre-temp-continuar')
             check(f'Avanço inteiro e tocável sem rolar em {w}x{h}, fonte {font}',result['ok'])
