@@ -1,25 +1,65 @@
-name: Diagnóstico isolado do porcionamento
+name: Preparação isolada do hotfix de porcionamento
 on:
   push:
     branches: ['agent/corrigir-porcionamento-v26-6-2']
     paths: ['.github/workflows/diagnostico-porcionamento.yml']
 permissions:
-  contents: read
+  contents: write
 jobs:
-  snapshot:
+  preparar:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Exportar somente código das duas versões publicadas
-        run: |
-          mkdir -p /tmp/fdo-diagnostico
-          git archive --format=zip c09b652ad079a02b5bb93fac31d71d61669edde3 > /tmp/fdo-diagnostico/v26-6-1.zip
-          git archive --format=zip 04e3a34f6aba6436859a51b9c2c0e6216942492d > /tmp/fdo-diagnostico/v26-6.zip
-          git diff 04e3a34f6aba6436859a51b9c2c0e6216942492d c09b652ad079a02b5bb93fac31d71d61669edde3 -- index.html > /tmp/fdo-diagnostico/mudancas.diff
-      - uses: actions/upload-artifact@v4
+          persist-credentials: false
+      - uses: actions/setup-python@v5
         with:
-          name: diagnostico-porcionamento-fontes
-          path: /tmp/fdo-diagnostico/
+          python-version: '3.12'
+      - name: Aplicar patch somente sobre o blob original
+        run: |
+          python tools/_preparar_hotfix_v26_6_2.py
+          mkdir -p /tmp/fdo-preparado
+          git show c09b652ad079a02b5bb93fac31d71d61669edde3:index.html > /tmp/fdo-base-v26-6-1.html
+          git diff --check
+          git diff -- index.html sw.js tools/validate_fdo.py tools/test_v26_6.js .github/workflows/validate-fdo.yml > /tmp/fdo-preparado/hotfix.diff
+      - name: Validar sintaxe, PWA, receitas e regressões
+        run: |
+          python tools/validate_fdo.py
+          node --check sw.js
+          for file in tools/test_sync_v25_1.js tools/test_receita_teste_v25_3.js tools/test_compat_teste_v25_3.js tools/test_estoque_v26_0.js tools/test_receitas_v26_1.js tools/test_v26_2.js tools/test_v26_3.js tools/test_v26_4.js tools/test_v26_5.js tools/test_v26_6.js; do node "$file"; done
+          python tools/smoke_v26_6.py
+      - name: Testar navegador com origem e armazenamento reais
+        run: |
+          python -m pip install playwright==1.58.0
+          FDO_TEST_ARTIFACT_DIR=/tmp/fdo-preparado/porcionamento python tools/test_porcionamento_v26_6_2.py --baseline /tmp/fdo-base-v26-6-1.html
+          FDO_TEST_ARTIFACT_DIR=/tmp/fdo-preparado/usabilidade python tools/test_usabilidade_v26_6_1.py --baseline /tmp/fdo-base-v26-6-1.html
+      - name: Criar somente blobs validados, sem commit nem alteração de branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,subprocess,zipfile
+          from pathlib import Path
+          paths=['index.html','sw.js','tools/validate_fdo.py','tools/test_v26_6.js','.github/workflows/validate-fdo.yml']
+          entries=[]
+          for path in paths:
+              raw=Path(path).read_bytes()
+              expected=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()
+              payload=Path('/tmp/fdo-blob.json')
+              payload.write_text(json.dumps({'content':raw.decode(),'encoding':'utf-8'}))
+              result=json.loads(subprocess.check_output(['gh','api','--method','POST','repos/'+os.environ['GITHUB_REPOSITORY']+'/git/blobs','--input',str(payload)],text=True))
+              assert result['sha']==expected
+              entries.append({'path':path,'mode':'100644','type':'blob','sha':result['sha']})
+          Path('/tmp/fdo-preparado/blob-shas.json').write_text(json.dumps({'base_commit':os.environ['GITHUB_SHA'],'entries':entries},indent=2))
+          with zipfile.ZipFile('/tmp/fdo-preparado/codigo-validado.zip','w',zipfile.ZIP_DEFLATED) as z:
+              for path in paths+['tools/test_porcionamento_v26_6_2.py']:z.write(path,path)
+          print(json.dumps(entries,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hotfix-porcionamento-validado
+          path: /tmp/fdo-preparado/
           retention-days: 7
