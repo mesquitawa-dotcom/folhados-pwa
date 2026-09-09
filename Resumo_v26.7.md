@@ -6,8 +6,10 @@
 - Base conferida: v26.6.2, `3472acaff69bb4b09cd44f61e0bd27d0231f7726`.
 - Cache: `fdo-v26-7` (anterior `fdo-v26-6-2`).
 - Branch: `agent/fluxo-formas-rastreabilidade-v26-7`.
-- Restauração: `backup/pre-v26-7-2026-09-09`, na base acima.
-- Fonte de verdade: código vigente no `main`; confirmar HEAD, PR, CI e publicação antes de novas alterações.
+- Pull Request: **#15**.
+- Código revisado antes da publicação: `2d693e0d87446b762d0ce24efda0b3047249be99`; esta revisão do Resumo altera somente documentação.
+- Restauração: `backup/pre-v26-7-2026-09-09`, confirmada na base acima.
+- Fonte de verdade: código vigente no `main`; confirmar HEAD, PR, CI e publicação antes de novas alterações. O commit final de publicação deve ser consultado no merge do PR #15, não inferido do commit de preparação.
 
 ## 2. PRESERVADO
 Arquitetura vanilla concentrada em `index.html`, tema escuro/dourado e Georgia, snapshots, históricos, Firebase local, App Check, autorização dos aparelhos, operadores/PINs, voz e impressão Bluetooth.
@@ -45,11 +47,13 @@ Nova permissão de interface `forneamento`: apenas quando ausente, herda `fermen
 **Atualizar todos os aparelhos antes de operar os novos estágios.** Clientes antigos não têm os novos bloqueios de estágio/exclusão; não afirmar garantia de imutabilidade de formas contra cliente antigo ou gravação direta autorizada no banco. Endurecimento de esquema/regras fica para alteração dedicada.
 
 ## 7. VALIDAÇÃO E ARQUIVOS
-Na preparação local passaram: validação estrutural/sintaxe extraída, handlers/IDs, manifest/assets/cache, receitas, todas as suítes Node anteriores e **43 verificações novas** do núcleo de formas. Comparação integral das receitas, tempos, fermentos e produtos com a base v26.6.2: idênticos.
-Em Chromium isolado passaram **151 verificações novas** de fluxo/rastreio e telas (nove combinações de viewport/fonte), além das regressões anteriores. Modo local de DOM/armazenamento em memória não equivale a teste de instalação/PWA com origem real.
-Workflow permanente inclui o novo navegador com origem/localStorage reais e comparação de base, além das suítes anteriores, smoke de boot e testes novos de concorrência no Firebase Emulator. **Confirmar o resultado da CI correspondente ao commit da entrega no GitHub.**
-Android, voz, impressora Bluetooth e Firebase de produção físicos/reais não foram testados nem alterados nesta sessão. Testes usam dados sintéticos.
-Arquivos: `index.html`, `sw.js`, `tools/validate_fdo.py`, `tools/test_v26_6.js`, `.github/workflows/validate-fdo.yml`, `tools/fluxo_v26_7_test_helper.js`, `tools/test_fluxo_v26_7.js`, `tools/test_fluxo_v26_7.py`, `tools/test_fluxo_emulator_v26_7.js`, este Resumo.
+Preparação local: validação estrutural/sintaxe extraída, handlers/IDs, manifest/assets/cache, receitas, todas as suítes Node anteriores e **43 verificações novas** do núcleo de formas. Comparação integral das receitas, tempos, fermentos e produtos com a base v26.6.2: idênticos.
+**CI do PR #15 conferida com sucesso:** execução `34311790851`, correspondente ao código `2d693e0d87446b762d0ce24efda0b3047249be99` e ao merge de teste `4a8db5bda7378c89d31510d82eead2bbf0be2dad`. Jobs `validate`, `usabilidade` e `firebase-rules` concluídos com sucesso.
+Foram confirmadas **151 verificações novas em Chromium com origem/localStorage reais**, nove combinações de viewport/fonte, comparação das receitas com a base e as regressões anteriores de usabilidade e porcionamento. O artefato `10088629304` contém resultados e capturas de tela com dados sintéticos; telas de armário, painel e rastreio foram inspecionadas na revisão final.
+No Firebase Emulator passaram **12 verificações novas**, incluindo dois aparelhos disputando a última vaga (apenas um obtém a vaga), retirada parcial, atomicidade de grupos, retry, preservação de eventos na mesclagem e manutenção da autorização existente. Também passaram a suíte de Rules anterior e o smoke de boot.
+Esta atualização do Resumo não substitui a conferência da CI do commit final e do deploy após o merge. Android, voz, impressora Bluetooth e Firebase de produção físicos/reais não foram testados nem alterados nesta sessão. Testes usam dados sintéticos.
+Arquivos: `index.html`, `sw.js`, `tools/validate_fdo.py`, `tools/test_v26_6.js`, `tools/test_porcionamento_v26_6_2.py`, `.github/workflows/validate-fdo.yml`, `tools/fluxo_v26_7_test_helper.js`, `tools/test_fluxo_v26_7.js`, `tools/test_fluxo_v26_7.py`, `tools/test_fluxo_emulator_v26_7.js`, este Resumo.
+O teste do hotfix de porcionamento passou a comparar suas funções preservadas, em vez de exigir que todo o JavaScript permaneça idêntico e impedir os novos módulos autorizados. Verificações de receitas, geometria e fluxos completos permanecem.
 
 ## 8. CONTINUIDADE / REVERSÃO
 Após publicação confirmada: recarregar conectado, fechar/abrir o PWA e conferir **Versão 26.7 · cache fdo-v26-7** em Configurações em todos os aparelhos. Não limpar dados nem desinstalar como primeira medida. Testar primeiro uma pequena seleção de formas reais, confirmando seu armário físico, retirada e assamento.
