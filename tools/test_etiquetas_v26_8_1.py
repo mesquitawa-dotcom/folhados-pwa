@@ -100,9 +100,9 @@ try:
     check('Balde destaca Massa laminada',massa is not None and px(massa['font'])>=24,massa)
     check('Três linhas principais ficam separadas verticalmente',
       agua and leite and massa and [agua['y'],leite['y'],massa['y']]==[192,252,312],[agua,leite,massa])
+    valores=[c for c in bc if c['align']=='right' and c['x']>=440 and c['y'] in (192,252,312)]
     check('Valores principais ficam maiores e alinhados à direita',
-      any(c['text']==str(result['v']['agua']/1000).replace('.',',')+'00 kg' for c in []) or
-      all(c['align']=='right' and px(c['font'])>=30 for c in bc if c['x']>=440 and c['y'] in (192,252,312)))
+      len(valores)==3 and all(px(c['font'])>=30 for c in valores),valores)
     check('Massa laminada do balde mostra 650 g',any(c['text']=='650 g' and c['align']=='right' and c['y']==312 for c in bc))
     check('Cabeçalho do balde deixa de chamar a execução de MASSA 3 KG',not any('MASSA 3 KG' in c['text'] for c in bc))
     check('Temperatura e 14 horas permanecem visíveis',any('20ºC' in c['text'] and '14 horas' in c['text'] for c in bc))
