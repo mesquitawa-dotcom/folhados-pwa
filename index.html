@@ -783,7 +783,7 @@
 
 
 /* v26.6.1 — mesma identidade visual, foco no trabalho atual. */
-.ux-backbar{display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-shrink:0;padding:.35rem .7rem;border-bottom:1px solid var(--brd);background:var(--bg);z-index:5;position:sticky;top:0}
+.ux-backbar{display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;flex-shrink:0;padding:.35rem .7rem;border-bottom:1px solid var(--brd);background:var(--bg);z-index:5;position:sticky;top:0}.ux-backbar .link-btn{min-width:0;flex:1 1 auto;white-space:normal}
 .ux-backbar button{min-height:2rem;padding:.35rem .65rem;font-size:.85rem}
 .ux-compact .start-top{padding:.7rem 1rem .5rem}
 .ux-compact .start-icon,.ux-compact .start-brand{display:none}
@@ -5849,7 +5849,7 @@ function uxRegistrarTela(id){
   if(UX_NAV.pilha.length>30)UX_NAV.pilha.shift();
 }
 function uxPodeInicioRapido(id){
-  return !['active','batimento','etiqueta','calc','fermentacao','corte-fatias','corte-resultado','modelagem','laminacao'].includes(id);
+  return ['farinha-lotes','pre-temp'].includes(id);
 }
 function uxPrepararVoltar(id){
   const el=document.getElementById('s-'+id);if(!el||id==='start'||uxBloqueada(id)||id==='pin')return;
