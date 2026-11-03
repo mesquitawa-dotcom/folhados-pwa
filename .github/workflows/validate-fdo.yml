@@ -41,6 +41,8 @@ jobs:
         run: node tools/test_v26_6.js
       - name: Testar fluxo por formas, capacidade e sincronização v26.7
         run: node tools/test_fluxo_v26_7.js
+      - name: Testar reaproveitamento e navegação v26.8
+        run: node tools/test_v26_8.js
       - name: Smoke de boot offline em navegador v26.6
         run: python3 tools/smoke_v26_6.py
 
