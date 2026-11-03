@@ -41,6 +41,8 @@ jobs:
         run: node tools/test_v26_6.js
       - name: Testar fluxo por formas, capacidade e sincronização v26.7
         run: node tools/test_fluxo_v26_7.js
+      - name: Testar reaproveitamento e navegação v26.8
+        run: node tools/test_v26_8.js
       - name: Smoke de boot offline em navegador v26.6
         run: python3 tools/smoke_v26_6.py
 
@@ -74,6 +76,10 @@ jobs:
         run: |
           git show 3472acaff69bb4b09cd44f61e0bd27d0231f7726:index.html > /tmp/fdo-base-v26-6-2.html
           python tools/test_fluxo_v26_7.py --baseline /tmp/fdo-base-v26-6-2.html
+      - name: Testar R2 variável e navegação v26.8
+        env:
+          FDO_TEST_ARTIFACT_DIR: /tmp/fdo-usabilidade-tests/v26-8
+        run: python tools/test_v26_8.py
       - name: Guardar evidências e telas de teste
         if: always()
         uses: actions/upload-artifact@v4

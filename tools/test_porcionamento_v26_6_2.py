@@ -15,7 +15,7 @@ parser.add_argument('--baseline')
 args = parser.parse_args()
 SOURCE = (ROOT / 'index.html').read_text()
 # Compara o módulo preservado, não o JavaScript de novos módulos autorizados.
-PORC_CORE = 'JSON.stringify([iniciarReceita,escolherTemp,setTempOpcao,setTemp,iniciarSecos,iniciarLiquidos,avancar,criarLoteSecos,salvarSessao].map(f=>f.toString()))'
+PORC_CORE = 'JSON.stringify([escolherTemp,setTempOpcao,setTemp,iniciarSecos,iniciarLiquidos,avancar].map(f=>f.toString()))'
 SEED = {
     'fdo_key': 'TESTE_SEM_ACESSO_REAL', 'fdo_geo_ativo': False,
     'fdo_device_uid_v25': 'teste-aparelho',
@@ -89,6 +89,11 @@ def enter(p, rid='r4', mode='sucesso'):
     p.locator('#s-start [data-perm="porcionamento"]').click()
     p.locator('#s-porc-menu [onclick="ir(\'receitas\')"]').click()
     p.locator('#receitas-list [onclick="iniciarReceita(\'' + rid + '\')"]').click()
+    # v26.8: a R2 verificada pode ganhar uma etapa operacional de massa reaproveitada.
+    # Usar o padrão mantém a receita original e permite que esta regressão continue
+    # validando o fluxo histórico sem mascarar o novo comportamento.
+    if p.evaluate("uxTelaAtual()==='aproveitamento'"):
+        p.locator('#aprov-continuar').click()
     p.locator('#far-lotes-confirm-btn').click()
     p.wait_for_function("document.querySelector('.scr:not(.off)').id==='s-pre-temp'")
     expected = {'sucesso': 'Previsão carregada com sucesso.', 'erro': 'Não foi possível ler os dados.', 'pendente': 'Consultando satélite...'}[mode]
@@ -119,7 +124,7 @@ try:
         for w,h,font in layouts:
             ctx,p = load(browser,size=(w,h),font=font)
             if args.baseline and (w,h,font)==layouts[0]:
-                check('Funções de porcionamento preservadas desde v26.6.1',porc_core==p.evaluate(PORC_CORE))
+                check('Núcleo não autorizado do porcionamento preservado desde v26.6.1',porc_core==p.evaluate(PORC_CORE))
             enter(p)
             result = visible_action(p,'#pre-temp-continuar')
             check(f'Avanço inteiro e tocável sem rolar em {w}x{h}, fonte {font}',result['ok'])
