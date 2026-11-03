@@ -2,7 +2,11 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — atualização v26.8
+       FOLHADOS D'OURO — atualização v26.8.1
+       NOVIDADES v26.8.1:
+       • Etiqueta das massas identifica a receita curta e a quantidade de massa reaproveitada usada na execução.
+       • Etiqueta do balde destaca Água/gelo, Leite em pó e Massa laminada em linhas maiores, preservando o formato 60×50 mm.
+       • Nenhuma receita, peso, fermento, tempo, dado histórico ou regra de produção foi alterado.
        NOVIDADES v26.8:
        • R2 permite informar, por execução, de 0 a 3.000 g de massa reaproveitada laminada com manteiga.
        • O recálculo usa a regra conferida da planilha, respeita a balança de 2 em 2 g e não altera a receita definitiva.
@@ -925,7 +929,7 @@
   <div class="cfg-sep"></div>
   <div class="cfg-t" style="font-size:1rem">📱 Este aparelho</div>
   <div class="cfg-s" id="device-info" style="font-size:.68rem;line-height:1.45;word-break:break-all">Identificação Firebase: —</div>
-  <div class="cfg-s" style="font-size:.68rem;line-height:1.45">Versão 26.8 · cache fdo-v26-8 · Firebase SDK local · App Check</div>
+  <div class="cfg-s" style="font-size:.68rem;line-height:1.45">Versão 26.8.1 · cache fdo-v26-8-1 · Firebase SDK local · App Check</div>
   <div class="cfg-s" id="appcheck-info" style="font-size:.68rem;line-height:1.45">App Check: verificando…</div>
   <div class="cfg-s" id="storage-info" style="font-size:.68rem;line-height:1.45">Armazenamento local: verificando…</div>
   <div class="cfg-sep"></div>
@@ -3034,7 +3038,7 @@ function carregarConfig(){
 }
 function exportarBackup(){
   const chaves=['fdo_lotes','fdo_laminacoes','fdo_partidas','fdo_formas','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25','fdo_estoque_movimentos','fdo_estoque_contagens','fdo_estoque_configuracoes','fdo_receitas_observacoes','fdo_receitas_definitivas','fdo_receitas_auditoria','fdo_estoque_outbox_v26','fdo_estoque_inicio_ts_v26','fdo_baldes_pendentes_v2661','fdo_ultimo_armario_v267'];
-  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.8',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
+  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.8.1',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
   chaves.forEach(k=>{ const raw=localStorage.getItem(k); if(raw!==null){ try{dados.dados[k]=JSON.parse(raw);}catch{dados.dados[k]=raw;} } });
   const blob=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
@@ -4036,6 +4040,26 @@ function loteMassas(lote){
   if(laminada==null && semLaminar==null) return null;
   return { laminada, semLaminar };
 }
+function formatGramasEtiqueta(g){
+  const n=Math.max(0,Math.round(Number(g)||0));
+  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'.')+' g';
+}
+function loteAproveitamentoEtiqueta(lote){
+  const pi=porcInfo(lote),a=(pi&&pi.aproveitamento)||(lote&&lote.receitaSnapshot&&lote.receitaSnapshot.aproveitamentoExecucao);
+  if(a&&Number.isFinite(Number(a.usado_g)))return Number(a.usado_g);
+  const rid=String(lote&&lote.receita||'').toLowerCase(),rot=String(lote&&lote.rotulo||'').toUpperCase();
+  if(rid==='r2'||rot==='R2'){
+    const m=loteMassas(lote);if(m&&Number.isFinite(Number(m.laminada)))return Number(m.laminada);
+  }
+  return null;
+}
+function loteReceitaCurtaEtiqueta(lote,d){
+  const r=lote&&lote.receitaSnapshot,rot=String((r&&r.rotulo)||lote&&lote.rotulo||'').trim();
+  const mr=rot.match(/^R(\d+)$/i);if(mr)return 'Receita '+mr[1];
+  const nome=String(d&&d.receita||lote&&lote.receitaNome||'').trim(),mn=nome.match(/Receita\s*\d+/i);
+  if(mn)return 'Receita '+String(mn[0]).match(/\d+/)[0];
+  return nome;
+}
 function testeTokenEtiqueta(a){
   const ab={bag:'Bag',feu:'Feu',ita:'Ita',fermento:'Ferm',acucar:'Aç',sal:'Sal',manteiga:'Mant',agua:'Água',leite:'Leite',aprov:'Aprov',semLaminar:'SemLam',temp:'Temp',horas:'Horas'};
   const nome=ab[a&&a.k]||(a&&a.nome)||'Alt', v=a&&a.para;
@@ -4059,39 +4083,44 @@ function desenharEtiqueta(lote){
   x.fillStyle='#000'; x.strokeStyle='#000'; x.lineWidth=4;
   x.strokeRect(10,10,ETQ_W-20,ETQ_H-20);
   const d=loteEtqDados(lote); const liq=loteLiquidos(lote); const mas=loteMassas(lote);
-  const pi=porcInfo(lote);
+  const pi=porcInfo(lote),aprov=loteAproveitamentoEtiqueta(lote);
   x.textAlign='center';
-  x.font=lote.teste?'bold 40px Arial, sans-serif':'bold 56px Arial, sans-serif'; x.fillText((lote.teste?'TESTE · ':'')+'BALDE #'+d.num, ETQ_W/2, 66);
-  x.font='24px Arial, sans-serif';
-  let rec=lote.teste?('Base '+(lote.teste.baseRotulo||lote.teste.baseReceita||d.receita)):d.receita; if(rec.length>34) rec=rec.slice(0,34);
-  x.fillText(rec, ETQ_W/2, 100);
-  x.font='bold 26px Arial, sans-serif';
-  x.fillText(d.data+'    '+d.hora, ETQ_W/2, 132);
-  // divisória
-  x.lineWidth=2; x.beginPath(); x.moveTo(40,150); x.lineTo(ETQ_W-40,150); x.stroke();
-  // valores normais; no TESTE, a etiqueta prioriza exatamente o que mudou.
-  const linhas=[];
+  x.font=lote.teste?'bold 40px Arial, sans-serif':'bold 52px Arial, sans-serif'; x.fillText((lote.teste?'TESTE · ':'')+'BALDE #'+d.num, ETQ_W/2, 60);
+  x.font=lote.teste?'24px Arial, sans-serif':'bold 27px Arial, sans-serif';
+  let rec=lote.teste?('Base '+(lote.teste.baseRotulo||lote.teste.baseReceita||d.receita)):(aprov!=null?loteReceitaCurtaEtiqueta(lote,d):d.receita); if(rec.length>34) rec=rec.slice(0,34);
+  x.fillText(rec, ETQ_W/2, 94);
+  x.font='bold 24px Arial, sans-serif';
+  x.fillText(d.data+'    '+d.hora, ETQ_W/2, 124);
+  x.lineWidth=2; x.beginPath(); x.moveTo(28,140); x.lineTo(ETQ_W-28,140); x.stroke();
+
   if(lote.teste){
-    linhas.push(...testeLinhasEtiqueta(lote,pi));
-  }else{
-    if(liq){
-      if(liq.agua!=null)  linhas.push('Água/gelo:  '+formatPeso(liq.agua));
-      if(liq.leite!=null) linhas.push('Leite em pó:  '+formatPeso(liq.leite));
-    }
-    if(mas){
-      if(mas.laminada!=null)                        linhas.push('Massa laminada:  '+formatPeso(mas.laminada));
-      if(mas.semLaminar!=null && mas.semLaminar>0)  linhas.push('Massa sem laminar:  '+formatPeso(mas.semLaminar));
-    }
-    if(pi.temp!=null && pi.fermento_horas!=null) linhas.push(pi.temp+'ºC  '+pi.fermento_horas+' horas fermentação');
+    const linhas=testeLinhasEtiqueta(lote,pi);
+    if(linhas.length){
+      x.textAlign='left';x.font='19px Arial, sans-serif';let yy=178;
+      linhas.forEach(t=>{x.fillText(t,40,yy);yy+=27;});x.textAlign='center';
+    }else{x.font='22px Arial, sans-serif';x.fillText('(conforme a receita)',ETQ_W/2,250);}
+    return c;
   }
-  if(linhas.length){
-    x.textAlign='left'; x.font=lote.teste?'19px Arial, sans-serif':'24px Arial, sans-serif';
-    let yy=188, passo=lote.teste?27:33;
-    linhas.forEach(t=>{ x.fillText(t, 40, yy); yy+=passo; });
-    x.textAlign='center';
-  } else {
-    x.font='22px Arial, sans-serif'; x.fillText('(conforme a receita)', ETQ_W/2, 250);
+
+  function ajustarFonte(txt,alvo,min,limite,peso){
+    let s=alvo;while(s>min){x.font=(peso||'bold')+' '+s+'px Arial, sans-serif';if(x.measureText(txt).width<=limite)break;s--;}return s;
   }
+  function linhaPrincipal(nome,valor,y){
+    const sn=ajustarFonte(nome,30,24,255,'bold');x.textAlign='left';x.font='bold '+sn+'px Arial, sans-serif';x.fillText(nome,30,y);
+    const sv=ajustarFonte(valor,36,30,160,'bold');x.textAlign='right';x.font='bold '+sv+'px Arial, sans-serif';x.fillText(valor,ETQ_W-30,y);
+  }
+  let temPrincipal=false;
+  if(liq&&liq.agua!=null){linhaPrincipal('Água/gelo',formatPeso(liq.agua),192);temPrincipal=true;}
+  if(liq&&liq.leite!=null){linhaPrincipal('Leite em pó',formatPeso(liq.leite),252);temPrincipal=true;}
+  if(mas&&mas.laminada!=null){linhaPrincipal('Massa laminada',formatPeso(mas.laminada),312);temPrincipal=true;}
+
+  const extras=[];
+  if(mas&&mas.semLaminar!=null&&mas.semLaminar>0)extras.push('Massa sem laminar: '+formatPeso(mas.semLaminar));
+  if(pi.temp!=null&&pi.fermento_horas!=null)extras.push(pi.temp+'ºC  '+pi.fermento_horas+' horas fermentação');
+  x.textAlign='center';
+  if(extras.length===1){x.font='bold 22px Arial, sans-serif';x.fillText(extras[0],ETQ_W/2,362);}
+  else if(extras.length>1){x.font='19px Arial, sans-serif';x.fillText(extras[0],ETQ_W/2,350);x.fillText(extras[1],ETQ_W/2,377);}
+  else if(!temPrincipal){x.font='22px Arial, sans-serif';x.fillText('(conforme a receita)',ETQ_W/2,250);}
   return c;
 }
 // Etiqueta das MASSAS — 4 faixas iguais, 2 linhas grandes por faixa:
@@ -4103,38 +4132,31 @@ function desenharEtiquetaMassas(lote){
   const x=c.getContext('2d');
   x.fillStyle='#fff'; x.fillRect(0,0,ETQ_W,ETQ_H);
   x.fillStyle='#000'; x.strokeStyle='#000';
-  const d=loteEtqDados(lote);
-  const pi=porcInfo(lote);
-  // Data curta DD/MM/AA (economiza espaço na 2ª linha)
-  const dataCurta = (d.data||'').replace(/\/(\d{2})(\d{2})$/,'/$2');
-  const tem=(pi.temp!=null && pi.fermento_horas!=null);
-  const info = tem ? (dataCurta+'  -  '+pi.temp+'°C  '+pi.fermento_horas+' horas') : dataCurta;
-  let rec=lote.teste?('TESTE · '+(lote.teste.baseRotulo||lote.teste.baseReceita||d.receita)):d.receita; if(rec.length>30) rec=rec.slice(0,30);
-  const fh=ETQ_H/4;             // 100 px por faixa
-  const maxW=ETQ_W-24;          // margem lateral pra não tocar a borda
-  // Ajusta a fonte até caber: começa grande, reduz até a largura caber.
-  function ajustar(txt, alvo, peso, minP){
-    let s=alvo;
-    while(s>minP){
-      x.font=peso+' '+s+'px Arial, sans-serif';
-      if(x.measureText(txt).width<=maxW) break;
-      s--;
-    }
+  const d=loteEtqDados(lote),pi=porcInfo(lote),aprov=loteAproveitamentoEtiqueta(lote);
+  const dataCurta=(d.data||'').replace(/\/(\d{2})(\d{2})$/,'/$2');
+  const tem=(pi.temp!=null&&pi.fermento_horas!=null);
+  const info=tem?(dataCurta+'  -  '+pi.temp+'°C  '+pi.fermento_horas+' horas'):dataCurta;
+  let rec=lote.teste?('TESTE · '+(lote.teste.baseRotulo||lote.teste.baseReceita||d.receita)):(aprov!=null?loteReceitaCurtaEtiqueta(lote,d):d.receita);if(rec.length>30)rec=rec.slice(0,30);
+  const reapTxt=aprov!=null?formatGramasEtiqueta(aprov):null,fh=ETQ_H/4,maxW=ETQ_W-24;
+  function ajustar(txt,alvo,peso,minP,limite){
+    let s=alvo,lim=limite||maxW;
+    while(s>minP){x.font=peso+' '+s+'px Arial, sans-serif';if(x.measureText(txt).width<=lim)break;s--;}
     return s;
   }
-  x.textAlign='center'; x.textBaseline='alphabetic';
+  x.textBaseline='alphabetic';
   for(let i=0;i<4;i++){
     const cy=i*fh;
-    // Linha 1 — receita (bem grande)
-    const s1=ajustar(rec, 44, 'bold', 26);
-    x.font='bold '+s1+'px Arial, sans-serif';
-    x.fillText(rec, ETQ_W/2, cy+50);
-    // Linha 2 — data + fermentação (grande)
-    const s2=ajustar(info, 32, 'bold', 20);
-    x.font='bold '+s2+'px Arial, sans-serif';
-    x.fillText(info, ETQ_W/2, cy+88);
-    // Risco para cortar entre as faixas
-    if(i<3){ x.lineWidth=2; x.beginPath(); x.moveTo(0,cy+fh); x.lineTo(ETQ_W,cy+fh); x.stroke(); }
+    if(!lote.teste&&reapTxt!=null){
+      const metade=ETQ_W/2,margem=14,lim=metade-(margem*2);
+      const sRec=ajustar(rec,40,'bold',24,lim),sAprov=ajustar(reapTxt,42,'bold',26,lim);
+      x.textAlign='center';x.font='bold '+sRec+'px Arial, sans-serif';x.fillText(rec,metade/2,cy+50);
+      x.lineWidth=2;x.beginPath();x.moveTo(metade,cy+14);x.lineTo(metade,cy+60);x.stroke();
+      x.font='bold '+sAprov+'px Arial, sans-serif';x.fillText(reapTxt,metade+(metade/2),cy+50);
+    }else{
+      const s1=ajustar(rec,44,'bold',26,maxW);x.textAlign='center';x.font='bold '+s1+'px Arial, sans-serif';x.fillText(rec,ETQ_W/2,cy+50);
+    }
+    const s2=ajustar(info,32,'bold',20,maxW);x.textAlign='center';x.font='bold '+s2+'px Arial, sans-serif';x.fillText(info,ETQ_W/2,cy+88);
+    if(i<3){x.lineWidth=2;x.beginPath();x.moveTo(0,cy+fh);x.lineTo(ETQ_W,cy+fh);x.stroke();}
   }
   return c;
 }
