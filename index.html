@@ -783,7 +783,7 @@
 
 
 /* v26.6.1 — mesma identidade visual, foco no trabalho atual. */
-.ux-backbar{display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;flex-shrink:0;padding:.35rem .7rem;border-bottom:1px solid var(--brd);background:var(--bg);z-index:5;position:sticky;top:0}.ux-backbar .link-btn{min-width:0;flex:1 1 auto;white-space:normal}
+.ux-backbar{display:flex;align-items:center;flex-shrink:0;padding:.35rem .7rem;border-bottom:1px solid var(--brd);background:var(--bg);z-index:5;position:sticky;top:0}
 .ux-backbar button{min-height:2rem;padding:.35rem .65rem;font-size:.85rem}
 .ux-compact .start-top{padding:.7rem 1rem .5rem}
 .ux-compact .start-icon,.ux-compact .start-brand{display:none}
@@ -5848,9 +5848,6 @@ function uxRegistrarTela(id){
   else if(atual&&!uxBloqueada(atual)&&atual!=='pin'&&!(id==='done'&&atual==='active'))UX_NAV.pilha.push(atual);
   if(UX_NAV.pilha.length>30)UX_NAV.pilha.shift();
 }
-function uxPodeInicioRapido(id){
-  return ['farinha-lotes','pre-temp'].includes(id);
-}
 function uxPrepararVoltar(id){
   const el=document.getElementById('s-'+id);if(!el||id==='start'||uxBloqueada(id)||id==='pin')return;
   if(el.querySelector('[data-ux-voltar]'))return;
@@ -5858,8 +5855,6 @@ function uxPrepararVoltar(id){
   if(existente){existente.setAttribute('data-ux-voltar','1');existente.onclick=voltarTela;existente.textContent='← Voltar';return;}
   const bar=document.createElement('div');bar.className='ux-backbar';
   const btn=document.createElement('button');btn.className='link-btn';btn.textContent='← Voltar';btn.setAttribute('data-ux-voltar','1');btn.onclick=voltarTela;bar.appendChild(btn);
-  const temInicio=Array.from(el.querySelectorAll('button')).some(b=>/Início|⌂/.test(b.textContent));
-  if(!temInicio&&uxPodeInicioRapido(id)){const home=document.createElement('button');home.className='link-btn';home.textContent='⌂ Início';home.setAttribute('data-ux-inicio','1');home.onclick=()=>ir('start');bar.appendChild(home);}
   el.insertBefore(bar,el.firstChild);
   el.querySelectorAll('.start-footer button').forEach(b=>{if(/←/.test(b.textContent))b.classList.add('ux-hidden');});
 }
