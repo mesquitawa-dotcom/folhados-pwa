@@ -778,7 +778,7 @@
 
 
 /* v26.6.1 — mesma identidade visual, foco no trabalho atual. */
-.ux-backbar{display:flex;align-items:center;flex-shrink:0;padding:.35rem .7rem;border-bottom:1px solid var(--brd);background:var(--bg);z-index:5;position:sticky;top:0}
+.ux-backbar{display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-shrink:0;padding:.35rem .7rem;border-bottom:1px solid var(--brd);background:var(--bg);z-index:5;position:sticky;top:0}
 .ux-backbar button{min-height:2rem;padding:.35rem .65rem;font-size:.85rem}
 .ux-compact .start-top{padding:.7rem 1rem .5rem}
 .ux-compact .start-icon,.ux-compact .start-brand{display:none}
@@ -5719,7 +5719,7 @@ function apagarPartida(id){if(!OP.pode('apagar')||posUnidadesUsadas(id)>0)return
 
 
 // v26.6.1 — Navegação: retorno visual e Android não desfazem uma gravação.
-const UX_NAV={pilha:[],operador:null,saindo:false};
+const UX_NAV={pilha:[],operador:null,saindo:false,voltando:false};
 function uxTelaAtual(){const e=document.querySelector('.scr:not(.off)');return e?e.id.replace(/^s-/,''):'';}
 function uxOperador(){const a=OP.atual();return a?a.id:'legado';}
 function uxBloqueada(id){return ['device','geo','geo-perm','geo-loading','login'].includes(id);}
@@ -5731,11 +5731,15 @@ function uxRegistrarTela(id){
   if(id==='pin'&&atual!=='pin')st.pinRet=atual;
   if(uxBloqueada(id)){UX_NAV.pilha=[];st.adminBaldes=null;return;}
   if(id===atual)return;
-  if(id==='start'){UX_NAV.pilha=[];return;}
+  if(id==='start'){UX_NAV.pilha=[];UX_NAV.voltando=false;return;}
+  if(UX_NAV.voltando){UX_NAV.voltando=false;return;}
   const i=UX_NAV.pilha.lastIndexOf(id);
   if(i>=0)UX_NAV.pilha=UX_NAV.pilha.slice(0,i);
   else if(atual&&!uxBloqueada(atual)&&atual!=='pin'&&!(id==='done'&&atual==='active'))UX_NAV.pilha.push(atual);
   if(UX_NAV.pilha.length>30)UX_NAV.pilha.shift();
+}
+function uxPodeInicioRapido(id){
+  return !['active','batimento','etiqueta','calc','fermentacao','corte-fatias','corte-resultado','modelagem','laminacao'].includes(id);
 }
 function uxPrepararVoltar(id){
   const el=document.getElementById('s-'+id);if(!el||id==='start'||uxBloqueada(id)||id==='pin')return;
@@ -5743,7 +5747,10 @@ function uxPrepararVoltar(id){
   const existente=Array.from(el.querySelectorAll('.hdr button')).find(b=>/←/.test(b.textContent));
   if(existente){existente.setAttribute('data-ux-voltar','1');existente.onclick=voltarTela;existente.textContent='← Voltar';return;}
   const bar=document.createElement('div');bar.className='ux-backbar';
-  const btn=document.createElement('button');btn.className='link-btn';btn.textContent='← Voltar';btn.setAttribute('data-ux-voltar','1');btn.onclick=voltarTela;bar.appendChild(btn);el.insertBefore(bar,el.firstChild);
+  const btn=document.createElement('button');btn.className='link-btn';btn.textContent='← Voltar';btn.setAttribute('data-ux-voltar','1');btn.onclick=voltarTela;bar.appendChild(btn);
+  const temInicio=Array.from(el.querySelectorAll('button')).some(b=>/Início|⌂/.test(b.textContent));
+  if(!temInicio&&uxPodeInicioRapido(id)){const home=document.createElement('button');home.className='link-btn';home.textContent='⌂ Início';home.setAttribute('data-ux-inicio','1');home.onclick=()=>ir('start');bar.appendChild(home);}
+  el.insertBefore(bar,el.firstChild);
   el.querySelectorAll('.start-footer button').forEach(b=>{if(/←/.test(b.textContent))b.classList.add('ux-hidden');});
 }
 function voltarTela(){
@@ -5761,12 +5768,15 @@ function voltarTela(){
   if(atual==='receita-edit'){voltarEditorReceita();return;}
   if(atual==='receita-auditoria'){voltarAuditoriaReceita();return;}
   if(atual==='config'){destinoBoot();return;}
+  if(atual==='farinha-lotes'){UX_NAV.voltando=true;if(st.receita==='teste'&&st.testeReceita)ir('teste-edit');else ir('receitas');return;}
+  if(atual==='pre-temp'){UX_NAV.voltando=true;abrirLotesFarinha();return;}
+  if(atual==='temp'){UX_NAV.voltando=true;ir('pre-temp');return;}
   const fixos={done:st.subModulo==='liquidos'?'liquidos-lotes':'porc-menu','lam-menu':'start',laminacao:'lam-menu','lam-cortes':'lam-menu','lam-concluida':'lam-menu','corte-fatias':'lam-cortes','corte-resultado':'corte-fatias',modelagem:'start'};
   let alvo=fixos[atual]||UX_NAV.pilha.pop()||'start';
   if(alvo==='active'&&(!st.sessionStart||st.secosFinalizado))alvo='porc-menu';
   if(alvo==='config'){entrarConfig();return;}
   if(uxBloqueada(alvo)||alvo==='pin'){destinoBoot();return;}
-  ir(alvo);
+  UX_NAV.voltando=true;ir(alvo);
 }
 function uxInstalarHistorico(){
   // Uma sentinela, não uma rota reexecutável: nunca restaurar uma tela protegida via history.state.
