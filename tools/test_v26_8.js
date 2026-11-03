@@ -65,9 +65,8 @@ ok('fluxo de porcionamento tem retornos semânticos definidos',()=>{
   assert(src.includes("if(atual==='pre-temp')"));
   assert(src.includes("if(atual==='temp')"));
 });
-ok('telas preparatórias recebem saída para Início quando necessário',()=>{
-  assert(src.includes("home.textContent='⌂ Início'"));
-  assert(src.includes('uxPodeInicioRapido'));
+ok('Voltar sem destino anterior cai com segurança para Início',()=>{
+  assert(src.includes("let alvo=fixos[atual]||UX_NAV.pilha.pop()||'start';"));
 });
 ok('tela de reaproveitamento oferece Início explícito',()=>{
   const tela=src.slice(src.indexOf('id="s-aproveitamento"'),src.indexOf('<!-- ═══ RECEITA COMPLETA',src.indexOf('id="s-aproveitamento"')));
