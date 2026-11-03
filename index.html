@@ -4014,7 +4014,7 @@ function calcIgual(){
 
 // ════════════════════════════════════════════════════════════
 // ETIQUETA 60×50 mm — impressão na Tomate MDK-022 via Bluetooth.
-// Conteúdo: número do lote, receita, data e horário.
+// Balde: identificação + líquidos/massa de leitura imediata. Massas: receita curta + reaproveitamento.
 // ════════════════════════════════════════════════════════════
 const ETQ_W=480, ETQ_H=400; // 60×50 mm @ 203 dpi (8 pontos/mm)
 let etqCanvas=null;
@@ -4124,9 +4124,9 @@ function desenharEtiqueta(lote){
   return c;
 }
 // Etiqueta das MASSAS — 4 faixas iguais, 2 linhas grandes por faixa:
-//   linha 1: nome da receita (NEGRITO, grande)
-//   linha 2: "DD/MM/AA  -  19°C  14 horas"  (única linha de info, fácil de ler)
-// As fontes diminuem se necessário pra caber na largura.
+//   linha 1: metade esquerda = receita curta; metade direita = massa reaproveitada.
+//   linha 2: "DD/MM/AA  -  19°C  14 horas".
+// Receitas sem reaproveitamento conhecido preservam o cabeçalho anterior.
 function desenharEtiquetaMassas(lote){
   const c=document.createElement('canvas'); c.width=ETQ_W; c.height=ETQ_H;
   const x=c.getContext('2d');
