@@ -80,6 +80,10 @@ jobs:
         env:
           FDO_TEST_ARTIFACT_DIR: /tmp/fdo-usabilidade-tests/v26-8
         run: python tools/test_v26_8.py
+      - name: Testar etiquetas v26.8.1
+        env:
+          FDO_TEST_ARTIFACT_DIR: /tmp/fdo-usabilidade-tests/v26-8-1
+        run: python tools/test_etiquetas_v26_8_1.py
       - name: Guardar evidências e telas de teste
         if: always()
         uses: actions/upload-artifact@v4
