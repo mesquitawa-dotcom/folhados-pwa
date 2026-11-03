@@ -787,6 +787,12 @@
 .ux-details>summary{cursor:pointer;color:var(--gl);min-height:1.8rem;display:list-item}
 .ux-details[open]>summary{margin-bottom:.65rem}
 .ux-muted{font-size:.78rem;color:var(--mut);line-height:1.45}
+.aprov-card{margin:.7rem 0;padding:.85rem;border:1px solid var(--gold);border-radius:.55rem;background:var(--bg3)}
+.aprov-title{font-size:.82rem;color:var(--gl);font-weight:bold;line-height:1.35}
+.aprov-input-row{display:flex;align-items:center;gap:.45rem;margin:.75rem 0}.aprov-input-row .inp{flex:1;min-width:0;text-align:center;font-size:1.45rem;font-weight:bold}.aprov-input-row span{font-size:1rem;color:var(--mut)}
+.aprov-quick{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin:.55rem 0}.aprov-quick button{min-height:2.6rem}
+.aprov-resumo{margin-top:.7rem;padding:.65rem;border-left:3px solid var(--gold);background:#161106;border-radius:.3rem;line-height:1.45}.aprov-resumo b{color:var(--gl)}
+.aprov-grid{display:grid;grid-template-columns:1fr 1fr;gap:.25rem .6rem;margin-top:.45rem;font-size:.72rem;color:var(--mut)}.aprov-grid strong{color:var(--text)}
 .ux-flow-menu{padding:.8rem;display:flex;flex-direction:column;gap:.8rem;overflow-y:auto}
 .ux-choice{text-align:left;white-space:normal;padding:1rem;min-height:4.5rem;line-height:1.35}
 .ux-choice small{display:block;font-weight:normal;font-size:.85rem;margin-top:.35rem;text-transform:none;letter-spacing:normal}
@@ -1062,6 +1068,34 @@
   </div>
 </div>
 
+<!-- ═══ MASSA REAPROVEITADA VARIÁVEL — execução da receita (v26.8) ═══ -->
+<div id="s-aproveitamento" class="scr off ux-compact">
+  <div class="start-top">
+    <div class="start-title">Massa reaproveitada</div>
+    <div class="start-sub" id="aprov-rec">Informe quanto será usado neste balde</div>
+  </div>
+  <div class="far-lotes-body">
+    <div class="aprov-card">
+      <div class="aprov-title">Massa laminada com manteiga disponível</div>
+      <div class="ux-muted" id="aprov-padrao" style="margin-top:.25rem">Padrão da receita: —</div>
+      <div class="aprov-input-row">
+        <input id="aprov-qtd" class="inp" type="number" inputmode="numeric" min="0" step="2" autocomplete="off" oninput="aprovAtualizarResumo()">
+        <span>g</span>
+      </div>
+      <div class="aprov-quick">
+        <button class="btn-sec" onclick="aprovDefinirRapido(0)">Sem massa · 0 g</button>
+        <button class="btn-sec" id="aprov-padrao-btn" onclick="aprovUsarPadrao()">Usar padrão</button>
+      </div>
+      <div class="ux-muted">Use somente valor em gramas compatível com a balança de 2 em 2 g. O fermento continua sendo definido pela temperatura/tempo no fluxo normal.</div>
+      <div class="aprov-resumo" id="aprov-resumo"></div>
+    </div>
+    <button class="btn-main" id="aprov-continuar" onclick="aprovConfirmar()">Confirmar e continuar →</button>
+  </div>
+  <div class="start-footer">
+    <button class="link-btn" onclick="aprovVoltar()">← Voltar</button>
+    <button class="link-btn" onclick="ir('start')">⌂ Início</button>
+  </div>
+</div>
 
 <!-- ═══ RECEITA COMPLETA — consulta rápida no porcionamento (v26.0) ═══ -->
 <div id="s-receita-completa" class="scr off">
@@ -1389,6 +1423,7 @@
   </div>
   <div class="nav-secos" id="nav-secos">
     <div id="baldes-admin-controle" class="ux-hidden"><div class="ux-count-row"><label for="baldes-qtd">Quantidade de baldes</label><input class="inp" id="baldes-qtd" type="number" inputmode="numeric" min="1" step="1" value="1" oninput="atualizarQuantidadeBaldes()"></div><div class="ux-muted">Cada balde terá seu próprio número e baixa no estoque.</div></div>
+    <div id="baldes-aprov-total" class="ux-muted ux-hidden"></div>
     <button class="nbtn next secos-continuar" id="secos-finalizar-btn" onclick="finalizarSecos()">Finalizar e gerar balde →</button>
     <button class="link-btn" id="baldes-admin-btn" onclick="autorizarVariosBaldes()">Administrador · gerar vários baldes</button>
     <button class="nbtn" onclick="voltarPasso()">← Revisar último passo</button>
@@ -2345,6 +2380,7 @@ const st={step:0,done:new Set(),sessionStart:0,rec:null,aiTimer:null,ts:0,temp:n
   ultimoLoteId:null,calcRet:'start',calcAberta:false,etqLote:null,etqRet:'start',
   fermLote:null,fermStart:0,fermMin:24,fermMax:28,lamSel:{},farinhasLotes:null,
   testeBase:null,testeReceita:null,testeMeta:null,receitaExecucao:null,receitaVisual:null,receitaEditId:null,receitaEditOriginal:null,receitaAuditId:null,receitaAuditRet:'receita-completa',
+  aprovPerfil:null,aprovBaseReceita:null,aprovEscolhido:null,
   loginOpId:null,loginFiltro:'',criandoLote:false,criandoLam:false};
 // Desbloqueio por sessão do app: o PIN é pedido só 1x por abertura (rápido p/ produção)
 let sessaoDesbloqueada=false;
@@ -3409,6 +3445,7 @@ async function criarLoteSecos(){
       feito:true, em:agora.toLocaleString('pt-BR'), emTs:agora.getTime(),
       op:getOp(), temp:st.temp, fermento_g:st.fermento, fermento_horas:st.fermentoHoras, baldes_secos:st.baldeSecos||1,
       farinhas_lotes:st.farinhasLotes?JSON.parse(JSON.stringify(st.farinhasLotes)):null,
+      aproveitamento:r.aproveitamentoExecucao?clonarReceita(r.aproveitamentoExecucao):null,
       total_g:totalReceitaFull(st.receita), peso_secos_g:pesoBaldeSecosAtual(), concluidos:st.done.size, total:RECEITA.length,
       dur:Math.round((Date.now()-st.sessionStart)/60000)
     }}
@@ -4603,6 +4640,71 @@ function salvarReceitaTeste(){
 }
 function voltarLotesFarinha(){if(st.receita==='teste'&&st.testeReceita)ir('teste-edit');else ir('receitas');}
 
+// v26.8 — ajuste operacional da massa reaproveitada da R2.
+// Fonte de cálculo: planilha "Croissant aproveitamento", conferida para 0 g, 1.200 g e 3.000 g.
+// A receita definitiva nunca é alterada: somente st.receitaExecucao recebe a fotografia desta execução.
+const APROV_R2_PERFIL={
+  id:'r2_massa_manteiga_v1',padrao_g:3000,baseTotalComFermentos_g:16152,
+  base:{acucar:1030,agua:4200,farinha:9140,leite:200,manteiga:700,sal:200},
+  proporcaoMassa:0.80,proporcaoManteiga:0.20,bagatelle:0.45,italiana:0.55,acucarPorFarinha:0.112691466,compensacao:1.02
+};
+function aprovArredonda10(v){return Math.round((Number(v)||0)/10)*10;}
+function aprovArredondaBalanca2(v){let n=Math.round(Number(v)||0);if(n%2!==0)n+=1;return Math.max(0,n);}
+function aprovCalcularR2(g){
+  g=Number(g);if(!Number.isInteger(g)||g<0||g>APROV_R2_PERFIL.padrao_g)return null;
+  const p=APROV_R2_PERFIL,massa=g*p.proporcaoMassa,mantReap=g*p.proporcaoManteiga,red=v=>massa*(v/p.baseTotalComFermentos_g);
+  const farinha=aprovArredonda10(p.base.farinha-red(p.base.farinha));
+  const agua=aprovArredonda10(p.base.agua-red(p.base.agua));
+  const leite=aprovArredonda10(p.base.leite-red(p.base.leite))*p.compensacao;
+  const manteiga=Math.max(0,aprovArredonda10(p.base.manteiga-red(p.base.manteiga)-mantReap)*p.compensacao);
+  const sal=aprovArredonda10(p.base.sal-red(p.base.sal))*p.compensacao;
+  const bag=Math.floor((farinha*p.bagatelle)/2)*2,ita=farinha-bag;
+  return {bag,feu:0,ita,acucar:aprovArredondaBalanca2(farinha*p.acucarPorFarinha),agua:aprovArredondaBalanca2(agua),leite:aprovArredondaBalanca2(leite),manteiga:aprovArredondaBalanca2(manteiga),sal:aprovArredondaBalanca2(sal),aprov:g};
+}
+function aprovPerfilDisponivel(rid,r){
+  if(rid!=='r2'||!r)return null;
+  const v=receitaValores(r),esperado=aprovCalcularR2(APROV_R2_PERFIL.padrao_g);
+  const campos=['bag','feu','ita','acucar','agua','leite','manteiga','sal','aprov'];
+  return campos.every(k=>Number(v[k])===Number(esperado[k]))&&Number(v.semLaminar||0)===0?APROV_R2_PERFIL:null;
+}
+function aprovMetaReceita(r){return r&&r.aproveitamentoExecucao&&Number.isFinite(Number(r.aproveitamentoExecucao.usado_g))?r.aproveitamentoExecucao:null;}
+function aprovAbrir(preservar){
+  const p=st.aprovPerfil;if(!p||!st.aprovBaseReceita){abrirLotesFarinha();return;}
+  const base=st.aprovBaseReceita,valor=preservar&&Number.isInteger(st.aprovEscolhido)?st.aprovEscolhido:p.padrao_g;
+  document.getElementById('aprov-rec').textContent=(base.rotulo||'R2')+' · '+base.nome;
+  document.getElementById('aprov-padrao').textContent='Padrão da receita: '+formatPeso(p.padrao_g);
+  document.getElementById('aprov-padrao-btn').textContent='Usar padrão · '+formatPeso(p.padrao_g);
+  document.getElementById('aprov-qtd').max=String(p.padrao_g);document.getElementById('aprov-qtd').value=String(valor);
+  aprovAtualizarResumo();ir('aproveitamento');
+}
+function aprovDefinirRapido(g){document.getElementById('aprov-qtd').value=String(g);aprovAtualizarResumo();}
+function aprovUsarPadrao(){if(st.aprovPerfil)aprovDefinirRapido(st.aprovPerfil.padrao_g);}
+function aprovLerEntrada(){
+  const el=document.getElementById('aprov-qtd'),g=Number(el&&el.value),p=st.aprovPerfil;
+  if(!p||!Number.isInteger(g)||g<0||g>p.padrao_g||g%2!==0)return null;
+  return g;
+}
+function aprovAtualizarResumo(){
+  const el=document.getElementById('aprov-resumo'),btn=document.getElementById('aprov-continuar'),g=aprovLerEntrada();
+  if(!el||!btn)return;
+  if(g==null){el.innerHTML='<b style="color:var(--red)">Confira a quantidade.</b><div class="ux-muted">Use um valor entre 0 e '+(st.aprovPerfil?st.aprovPerfil.padrao_g:0)+' g, sempre de 2 em 2 g.</div>';btn.disabled=true;return;}
+  const v=aprovCalcularR2(g);btn.disabled=!v;if(!v)return;
+  el.innerHTML='<b>Será usado '+formatPeso(g)+' de massa reaproveitada.</b><div class="aprov-grid"><span>Bagatelle <strong>'+formatPeso(v.bag)+'</strong></span><span>Italiana 00 <strong>'+formatPeso(v.ita)+'</strong></span><span>Açúcar <strong>'+formatPeso(v.acucar)+'</strong></span><span>Água <strong>'+formatPeso(v.agua)+'</strong></span><span>Leite em pó <strong>'+formatPeso(v.leite)+'</strong></span><span>Manteiga <strong>'+formatPeso(v.manteiga)+'</strong></span><span>Sal <strong>'+formatPeso(v.sal)+'</strong></span><span>Reaproveita <strong>'+formatPeso(v.aprov)+'</strong></span></div>';
+}
+function aprovConfirmar(){
+  const g=aprovLerEntrada(),p=st.aprovPerfil,base=st.aprovBaseReceita;if(g==null||!p||!base){alert('Confira a quantidade de massa reaproveitada.');return;}
+  let rec;
+  if(g===p.padrao_g)rec=clonarReceita(base);
+  else{
+    const calc=aprovCalcularR2(g),v=receitaValores(base);if(!calc)return;
+    Object.assign(v,calc);v.fermento=receitaValorPasso(base,'Fermento seco');v.semLaminar=receitaValorPasso(base,'Massa sem laminar');
+    rec=receitaMontarEditada(base,v,base.nome,base.fermentoTemp!=null?Number(base.fermentoTemp):null,base.fermentoHoras!=null?Number(base.fermentoHoras):null);
+  }
+  rec.aproveitamentoExecucao={versao:1,perfil:p.id,tipo:'massa_laminada_com_manteiga',padrao_g:p.padrao_g,usado_g:g,balancaPasso_g:2,ajustado:g!==p.padrao_g};
+  st.receitaExecucao=rec;st.aprovEscolhido=g;RECEITA=rec.passosSecos;abrirLotesFarinha();
+}
+function aprovVoltar(){st.aprovEscolhido=null;st.aprovPerfil=null;st.aprovBaseReceita=null;st.receitaExecucao=null;ir('receitas');}
+
 // Escolhe qual receita rodar (R1–R5), ajusta o cabeçalho e segue para os lotes de farinha.
 function iniciarReceita(rid){
   limparTesteAtivo();aplicarReceitasDefinitivas();
@@ -4610,9 +4712,11 @@ function iniciarReceita(rid){
   st.receitaExecucao=clonarReceita(RECEITAS[st.receita]);
   st.subModulo='secos';
   st.farinhasLotes=null; // nova seleção de receita = nova confirmação dos lotes
+  st.aprovBaseReceita=clonarReceita(st.receitaExecucao);st.aprovPerfil=aprovPerfilDisponivel(st.receita,st.aprovBaseReceita);st.aprovEscolhido=st.aprovPerfil?st.aprovPerfil.padrao_g:null;
   RECEITA = st.receitaExecucao.passosSecos;
   const h=document.getElementById('hdr-rec');
   if(h) h.textContent='Secos · '+st.receitaExecucao.rotulo;
+  if(st.aprovPerfil){aprovAbrir(false);return;}
   abrirLotesFarinha();
 }
 
@@ -5288,7 +5392,7 @@ function concluirLiquidos(){
 }
 
 function concluir(){ if(st.subModulo==='liquidos') concluirLiquidos(); else finalizarSecos(); } // compat
-function encerrar(){salvarSessao(false);pararVoz();liberarWakeLock();st.sessionStart=0;st.modo='normal';st.baldeSecos=1;st.liqLote=null;st.receitaExecucao=null;limparTesteAtivo();mostrarPerguntaSecos(false);ir('start');}
+function encerrar(){salvarSessao(false);pararVoz();liberarWakeLock();st.sessionStart=0;st.modo='normal';st.baldeSecos=1;st.liqLote=null;st.receitaExecucao=null;st.aprovPerfil=null;st.aprovBaseReceita=null;st.aprovEscolhido=null;limparTesteAtivo();mostrarPerguntaSecos(false);ir('start');}
 function pararVoz(){if(st.rec){st.rec.onend=null;try{st.rec.stop();}catch(e){}st.rec=null;}speechSynthesis?.cancel();}
 function salvarSessao(ok){const all=LS.g('fdo_sess',[]),r=receitaAtualObj();all.unshift({data:new Date().toLocaleString('pt-BR'),modulo:'Porcionamento '+(r?r.rotulo:'R1')+' · '+(st.subModulo==='liquidos'?'Líquidos':'Secos'),op:getOp(),temp:st.temp,baldes_secos:st.baldeSecos||1,total_g:totalReceitaFull(st.receita),concluidos:st.done.size,total:RECEITA.length,dur:Math.round((Date.now()-st.sessionStart)/60000),ok});LS.s('fdo_sess',all.slice(0,60));}
 function testeAltHistorico(t){
@@ -5324,6 +5428,7 @@ function renderHist(){
       p.op?('op. '+p.op):'',
       p.temp?(p.temp+'°C'):'',
       farResumo,
+      ((p.aproveitamento)||(l.receitaSnapshot&&l.receitaSnapshot.aproveitamentoExecucao))?('massa reaprov. '+formatPeso(Number((p.aproveitamento||l.receitaSnapshot.aproveitamentoExecucao).usado_g)||0)+' · padrão '+formatPeso(Number((p.aproveitamento||l.receitaSnapshot.aproveitamentoExecucao).padrao_g)||0)):'',
       (p.baldes_secos&&p.baldes_secos>1)?(p.baldes_secos+'x secos'):'',
       p.total_g?('total '+formatPeso(p.total_g)):''
     ].filter(Boolean).join(' · ');
@@ -5768,7 +5873,8 @@ function voltarTela(){
   if(atual==='receita-edit'){voltarEditorReceita();return;}
   if(atual==='receita-auditoria'){voltarAuditoriaReceita();return;}
   if(atual==='config'){destinoBoot();return;}
-  if(atual==='farinha-lotes'){UX_NAV.voltando=true;if(st.receita==='teste'&&st.testeReceita)ir('teste-edit');else ir('receitas');return;}
+  if(atual==='aproveitamento'){UX_NAV.voltando=true;ir('receitas');return;}
+  if(atual==='farinha-lotes'){UX_NAV.voltando=true;if(st.receita==='teste'&&st.testeReceita)ir('teste-edit');else if(st.aprovPerfil&&st.aprovBaseReceita)aprovAbrir(true);else ir('receitas');return;}
   if(atual==='pre-temp'){UX_NAV.voltando=true;abrirLotesFarinha();return;}
   if(atual==='temp'){UX_NAV.voltando=true;ir('pre-temp');return;}
   const fixos={done:st.subModulo==='liquidos'?'liquidos-lotes':'porc-menu','lam-menu':'start',laminacao:'lam-menu','lam-cortes':'lam-menu','lam-concluida':'lam-menu','corte-fatias':'lam-cortes','corte-resultado':'corte-fatias',modelagem:'start'};
@@ -5824,13 +5930,14 @@ function atualizarQuantidadeBaldes(){
   document.getElementById('baldes-admin-btn').classList.toggle('ux-hidden',autorizado);
   const n=st.qtdBaldes,ok=Number.isSafeInteger(n)&&n>0,btn=document.getElementById('secos-finalizar-btn');
   btn.disabled=!ok;btn.textContent=ok&&n>1?'Finalizar e gerar '+n+' baldes →':'Finalizar e gerar balde →';
+  const apEl=document.getElementById('baldes-aprov-total'),ap=aprovMetaReceita(receitaAtualObj());if(apEl){const mostrar=!!(ap&&ok&&n>1);apEl.classList.toggle('ux-hidden',!mostrar);apEl.textContent=mostrar?'Massa reaproveitada necessária: '+formatPeso(Number(ap.usado_g)*n)+' ('+formatPeso(Number(ap.usado_g))+' por balde × '+n+')':'';}
 }
 function guardarGrupoBaldes(g){try{localStorage.setItem('fdo_baldes_pendentes_v2661',JSON.stringify(g));}catch(e){storageFalhou(e,'fdo_baldes_pendentes_v2661');throw e;}}
 function geracaoBaldesPendente(){const g=LS.g('fdo_baldes_pendentes_v2661',null);return g&&!g.concluido?g:null;}
 function prepararGrupoBaldes(qtd){
   const r=clonarReceita(receitaAtualObj()),t=Date.now(),id=FB.novoId('baldes');
   return {id,qtd,sessaoStart:st.sessionStart,criadoTs:t,op:getOp(),operadorId:uxOperador(),receita:st.receita,receitaSnapshot:r,teste:st.receita==='teste'?clonarReceita(st.testeMeta):null,dispositivo:DEVICE.audit(),
-    parametros:{temp:st.temp,fermento_g:st.fermento,fermento_horas:st.fermentoHoras,farinhas_lotes:clonarReceita(st.farinhasLotes),total_g:totalReceitaFull(st.receita),peso_secos_g:pesoBaldeSecosAtual(),concluidos:st.done.size,total:RECEITA.length,dur:Math.round((t-st.sessionStart)/60000)},
+    parametros:{temp:st.temp,fermento_g:st.fermento,fermento_horas:st.fermentoHoras,farinhas_lotes:clonarReceita(st.farinhasLotes),aproveitamento:r.aproveitamentoExecucao?clonarReceita(r.aproveitamentoExecucao):null,total_g:totalReceitaFull(st.receita),peso_secos_g:pesoBaldeSecosAtual(),concluidos:st.done.size,total:RECEITA.length,dur:Math.round((t-st.sessionStart)/60000)},
     itens:Array.from({length:qtd},()=>({id:FB.novoId('lote'),seq:null})),concluido:false};
 }
 function montarBaldeDoGrupo(g,item,indice){
