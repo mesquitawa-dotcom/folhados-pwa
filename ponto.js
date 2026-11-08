@@ -355,6 +355,37 @@ const P={
   try{await this.db.ref('fdo_ponto_aprovacoes/'+emp+'/'+id).push({decisao,motivo:motivo.trim().slice(0,250),gerenteUid:this.uid,servidorTs:firebase.database.ServerValue.TIMESTAMP});await this.atualizarGerencia()}
   catch(e){alert('Não foi possível registrar a decisão.')}
  },
+
+ async ajustar(emp,id){
+  if(!this.gerente)return;const e=(this.marcacoes[emp]||{})[id];if(!e)return;
+  const original=new Date(e.clienteTs).toLocaleString('sv-SE',{timeZone:'America/Sao_Paulo'}).replace(' ','T').slice(0,16);
+  const horario=prompt('Novo dia e horário da fábrica (AAAA-MM-DDTHH:MM):',original);
+  if(!horario)return;
+  const ts=Date.parse(horario+':00-03:00');
+  if(!Number.isFinite(ts)||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(horario))return alert('Horário inválido.');
+  const motivo=prompt('Justificativa obrigatória para corrigir a marcação:')||'';
+  if(motivo.trim().length<5)return alert('Informe o motivo.');
+  if(!confirm('Preservar horário original e acrescentar correção?'))return;
+  try{await this.db.ref('fdo_ponto_ajustes/'+emp+'/'+id).push({clienteTs:ts,motivo:motivo.trim().slice(0,250),gerenteUid:this.uid,servidorTs:firebase.database.ServerValue.TIMESTAMP});await this.atualizarGerencia()}
+  catch(e){alert('Erro ao gravar correção.')}
+ },
+ async resolverSolicitacao(emp,id){
+  const resposta=prompt('Como a solicitação foi tratada? Se necessário, inclua uma marcação supervisionada ou corrija o horário:')||'';
+  if(resposta.trim().length<5)return;
+  try{await this.db.ref('fdo_ponto_solucoes/'+emp+'/'+id).push({texto:resposta.trim().slice(0,500),gerenteUid:this.uid,servidorTs:firebase.database.ServerValue.TIMESTAMP});await this.atualizarGerencia()}
+  catch(e){alert('Erro ao registrar resposta.')}
+ },
+ async marcarManual(){
+  if(!this.gerente)return;
+  const emp=$('emp-selecionado').value,tipo=$('manual-tipo').value,h=$('manual-hora').value,motivo=$('manual-motivo').value.trim();
+  const ts=Date.parse(h+':00-03:00');
+  if(!this.colabs[emp]||!tipos.includes(tipo)||!Number.isFinite(ts)||motivo.length<5)return alert('Selecione funcionário, horário, tipo e motivo válido.');
+  if(!confirm('Incluir marcação supervisionada, com auditoria?'))return;
+  try{
+   await this.db.ref('fdo_ponto_marcacoes/'+emp).push({tipo,uid:this.uid,clienteTs:ts,servidorTs:firebase.database.ServerValue.TIMESTAMP,gps:{situacao:'supervisionado'},avaliacao:'aprovado',origem:'gerencia',motivo});
+   $('manual-motivo').value='';await this.atualizarGerencia();
+  }catch(e){alert('Erro ao registrar marcação supervisionada.')}
+ },
  // METHODS
 };
 if(typeof module!=='undefined')module.exports={dataBR,horaBR,horas,vigentes,hashLeve,distM};
