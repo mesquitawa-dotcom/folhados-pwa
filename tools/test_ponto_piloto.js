@@ -47,7 +47,7 @@ assert.strictEqual(P.marcacoes.emp.d.clienteTs,t('17:23'));
 P.marcacoes.emp.d={tipo:'fim_intervalo',clienteTs:t('17:23'),avaliacao:'normal'};
 P.ajustes.emp.d={};res=P.resumoMes('emp','2026-06');
 assert.strictEqual(res.confirmados,0,'jornada incompleta não pode ser considerada completa');
-P.marcacoes.emp.d=regs.d;P.regras.emp={'2026-06-01~v1':{dias:{3:480}}};P.ocorrencias={emp:{}};
+P.marcacoes.emp.d={tipo:'saida',clienteTs:t('17:23'),avaliacao:'normal'};P.regras.emp={'2026-06-01~v1':{dias:{3:480}}};P.ocorrencias={emp:{}};
 res=P.resumoMes('emp','2026-06');
 assert(res.dias.some(d=>d.data==='2026-06-10'&&d.provisorio),'dia sem marcação prevista deve ser sinalizado');
 P.ocorrencias.emp.f1={data:'2026-06-10',tipo:'feriado',nota:'Sem desconto'};
