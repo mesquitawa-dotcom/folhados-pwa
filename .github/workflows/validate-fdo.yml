@@ -43,6 +43,8 @@ jobs:
         run: node tools/test_fluxo_v26_7.js
       - name: Testar reaproveitamento e navegação v26.8
         run: node tools/test_v26_8.js
+      - name: Testar módulo Ponto piloto v26.9
+        run: node tools/test_ponto_piloto.js
       - name: Smoke de boot offline em navegador v26.6
         run: python3 tools/smoke_v26_6.py
 
@@ -106,4 +108,4 @@ jobs:
       - name: Instalar ferramentas de teste das Rules
         run: npm install --no-save --no-package-lock @firebase/rules-unit-testing firebase firebase-tools
       - name: Testar Realtime Database Rules no Emulator Suite
-        run: npx firebase emulators:exec --only database --project demo-fdo-rules "node tools/test_database_rules_v26_6.js && node tools/test_fluxo_emulator_v26_7.js"
+        run: npx firebase emulators:exec --only database --project demo-fdo-rules "node tools/test_database_rules_v26_6.js && node tools/test_fluxo_emulator_v26_7.js && node tools/test_ponto_rules.js"
