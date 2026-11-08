@@ -1,6 +1,7 @@
 name: Validar Folhados d'Ouro PWA
 
 on:
+  workflow_call:
   push:
     branches:
       - main
@@ -45,6 +46,8 @@ jobs:
         run: node tools/test_v26_8.js
       - name: Testar módulo Ponto piloto v26.9
         run: node tools/test_ponto_piloto.js
+      - name: Testar isolamento da homologação sem segredos reais
+        run: python3 tools/test_build_homologacao.py
       - name: Smoke de boot offline em navegador v26.6
         run: python3 tools/smoke_v26_6.py
 
