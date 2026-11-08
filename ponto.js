@@ -519,6 +519,7 @@ const P={
    $('ocorrencia-nota').value='';await this.atualizarGerencia();this.status('Ocorrência registrada, sem desconto automático de horas.','ok')}
   catch(e){this.status('Falha ao registrar ocorrência.','err')}
  },
+ backupGerencia(){if(!this.gerente)return;const dados={version:'26.9',data:new Date().toISOString(),colaboradores:this.colabs,regras:this.regras,financeiro:this.salarios,marcacoes:this.marcacoes,aprovacoes:this.aprovacoes,ajustes:this.ajustes,ocorrencias:this.ocorrencias,solicitacoes:this.solicitacoes,conferencias:this.conferencias};const b=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='ponto-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),3000);},
  // METHODS
 };
 if(typeof module!=='undefined')module.exports={dataBR,horaBR,horas,vigentes,hashLeve,distM};
