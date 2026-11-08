@@ -258,6 +258,70 @@ const P={
   this.status('Solicitação enviada à gerência. O ponto original será preservado.','ok')}
   catch(e){this.status('Não foi possível enviar a solicitação.','err')}
  },
+
+ async atualizarGerencia(){
+  if(!this.gerente||!navigator.onLine)return this.status('Painel gerencial exige conexão.','err');
+  const keys=['fdo_ponto_colaboradores','fdo_ponto_regras','fdo_ponto_financeiro','fdo_ponto_marcacoes','fdo_ponto_aprovacoes','fdo_ponto_solicitacoes','fdo_ponto_solucoes','fdo_ponto_conferencias','fdo_ponto_fechamentos','fdo_ponto_vinculos','fdo_ponto_config/area'];
+  try{
+   const results=await Promise.all(keys.map(k=>this.db.ref(k).once('value').then(s=>s.val())));
+   [this.colabs,this.regras,this.salarios,this.marcacoes,this.aprovacoes,this.solicitacoes,this.solucoes,this.conferencias,this.fechamentos,this.pares]=results.map(x=>x||{});
+   this.area=results[10]||this.area;
+   this.prepararSeletores();this.renderPendencias();this.renderRelatorio();this.preencherGPS();this.status('Gerência atualizada.','ok');
+  }catch(e){console.error('[PONTO] gerência',e);this.status('Erro ao carregar a gerência. Verifique as Rules e sua autorização.','err')}
+ },
+ aba(a){for(const nome of ['resumo','cadastro','mes','avisos','gps'])show('aba-'+nome,nome===a)},
+ prepararSeletores(){
+  const itens=Object.entries(this.colabs).sort((a,b)=>String(a[1].nome).localeCompare(String(b[1].nome),'pt-BR'));
+  const opts=itens.map(([id,p])=>'<option value="'+xhtml(id)+'">'+xhtml(p.nome)+'</option>').join('');
+  for(const id of ['emp-selecionado','rel-emp','aviso-alvo']){
+   const sel=$(id),old=sel.value;
+   sel.innerHTML=(id==='emp-selecionado'?'<option value="">Novo funcionário</option>':id==='rel-emp'?'<option value="todos">Todos</option>':'<option value="todos">Todos os funcionários</option>')+opts;
+   if([...sel.options].some(o=>o.value===old))sel.value=old;
+  }
+  this.preencherCadastro();
+ },
+ preencherCadastro(){
+  const id=$('emp-selecionado').value,p=this.colabs[id]||{},reg=vigentes(this.regras[id],dataBR(Date.now())),fin=vigentes(this.salarios[id],dataBR(Date.now()));
+  $('emp-nome').value=p.nome||'';$('emp-tipo').value=p.tipo||'mensalista';$('emp-ativo').checked=p.ativo!==false;
+  for(let i=0;i<7;i++)$('jornada-'+i).value=reg&&reg.dias&&reg.dias[i]!=null?reg.dias[i]:'';
+  $('emp-valor').value=fin&&Number.isFinite(Number(fin.centavos))?(Number(fin.centavos)/100).toFixed(2):'';
+  this.renderVinculos(id);
+ },
+ renderVinculos(id){
+  const p=Object.entries(this.pares).filter(([,v])=>v.funcionarioId===id);
+  $('lista-vinculos').innerHTML=p.length?p.map(([uid,v])=>'<div class="list-row">'+xhtml(uid)+' · '+(v.ativo?'Ativo':'Revogado')+
+   (v.ativo?' <button class="btn" onclick="P.revogar('+JSON.stringify(uid)+')">Revogar</button>':'')+'</div>').join(''):'Nenhum celular vinculado.';
+ },
+ async salvarFuncionario(){
+  if(!this.gerente)return;
+  const id=$('emp-selecionado').value||idNovo(),nome=$('emp-nome').value.trim(),tipo=$('emp-tipo').value,ativo=$('emp-ativo').checked;
+  if(nome.length<2||nome.length>90||!['mensalista','horista'].includes(tipo))return alert('Confira nome e tipo.');
+  const vig=$('emp-vigencia').value||dataBR(Date.now());
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(vig))return alert('Informe a vigência válida.');
+  const dias={};
+  for(let i=0;i<7;i++){const v=$('jornada-'+i).value;if(v!==''){if(!/^\d+$/.test(v)||Number(v)>1440)return alert('Jornada inválida.');dias[i]=Number(v)}}
+  const s=$('emp-valor').value,centavos=s===''?null:Math.round(Number(s)*100);
+  if(centavos!==null&&(!Number.isFinite(centavos)||centavos<0))return alert('Valor financeiro inválido.');
+  try{
+   await this.db.ref('fdo_ponto_colaboradores/'+id).set({nome,tipo,ativo});
+   const rev=vig+'~'+this.db.ref('fdo_ponto_regras/'+id).push().key;
+   await this.db.ref('fdo_ponto_regras/'+id+'/'+rev).set({dias,tipo,gerenteUid:this.uid,servidorTs:firebase.database.ServerValue.TIMESTAMP});
+   if(centavos!==null){const rv=vig+'~'+this.db.ref('fdo_ponto_financeiro/'+id).push().key;await this.db.ref('fdo_ponto_financeiro/'+id+'/'+rv).set({centavos,tipo,gerenteUid:this.uid,servidorTs:firebase.database.ServerValue.TIMESTAMP})}
+   await this.atualizarGerencia();$('emp-selecionado').value=id;this.preencherCadastro();alert('Cadastro salvo e versionado.');
+  }catch(e){alert('Não foi possível salvar o cadastro. Verifique acesso/conexão.');console.warn(e)}
+ },
+ async vincular(){
+  if(!this.gerente)return;const id=$('emp-selecionado').value,uid=$('emp-uid').value.trim();
+  if(!this.colabs[id]||!this.colabs[id].ativo)return alert('Selecione um funcionário ativo.');
+  if(!/^[a-zA-Z0-9]{18,128}$/.test(uid))return alert('Código UID inválido.');
+  const antes=this.pares[uid];if(antes&&antes.funcionarioId!==id&&!confirm('Este aparelho já pertence a outro funcionário. Deseja transferi-lo?'))return;
+  try{await this.db.ref('fdo_ponto_vinculos/'+uid).set({funcionarioId:id,ativo:true,gerenteUid:this.uid,atualizadoTs:firebase.database.ServerValue.TIMESTAMP});$('emp-uid').value='';await this.atualizarGerencia();alert('Celular autorizado. O funcionário já pode registrar o ponto.')}
+  catch(e){alert('Erro ao autorizar celular.')}
+ },
+ async revogar(uid){
+  if(!this.gerente||!this.pares[uid]||!confirm('Revogar o acesso deste celular?'))return;
+  try{await this.db.ref('fdo_ponto_vinculos/'+uid).update({ativo:false,atualizadoTs:firebase.database.ServerValue.TIMESTAMP});await this.atualizarGerencia()}catch(e){alert('Erro ao revogar.')}
+ },
  // METHODS
 };
 if(typeof module!=='undefined')module.exports={dataBR,horaBR,horas,vigentes,hashLeve,distM};
