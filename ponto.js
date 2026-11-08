@@ -72,6 +72,97 @@ const P={
   }catch(e){console.warn('[PONTO] acesso',e);this.status('Falha ao verificar autorização. Nenhuma permissão foi presumida.','err')}
  },
  async copiarUID(){try{await navigator.clipboard.writeText(this.uid);this.status('Código copiado.')}catch{this.status('Selecione o código na tela para copiar.')}},
+
+ async atualizarFuncionario(){
+  if(!this.funcId)return;
+  try{
+   const root=this.db.ref;
+   const caminhos=['fdo_ponto_colaboradores/'+this.funcId,'fdo_ponto_marcacoes/'+this.funcId,'fdo_ponto_aprovacoes/'+this.funcId,'fdo_ponto_conferencias/'+this.funcId,'fdo_ponto_regras/'+this.funcId,'fdo_ponto_avisos_gerais','fdo_ponto_avisos_individuais/'+this.funcId,'fdo_ponto_config/area'];
+   const dados=await Promise.all(caminhos.map(p=>this.db.ref(p).once('value').then(s=>s.val()).catch(()=>null)));
+   if(!dados[0]||dados[0].ativo!==true){this.funcId='';show('funcionario',false);show('ativacao');this.status('Cadastro do funcionário inativo ou indisponível.','err');return}
+   this.perfil=dados[0];this.marcacoes=dados[1]||{};this.aprovacoes=dados[2]||{};this.conferencias=dados[3]||{};this.regras=dados[4]||{};
+   this.avisos={gerais:dados[5]||{},individuais:dados[6]||{}};this.area=dados[7]||this.area;this.cacheSalvar();this.telaFuncionario();
+   this.status('Acesso autorizado. Registre sua entrada ou saída normalmente.','ok');
+  }catch(e){this.status('Erro ao carregar seus registros. Tente novamente.','err');console.warn(e)}
+ },
+ telaFuncionario(){show('ativacao',false);show('gerencia',false);show('funcionario');this.renderFuncionario()},
+ eventosFuncionario(){
+  const obj={...this.marcacoes};
+  this.fila.filter(v=>v.funcionarioId===this.funcId).forEach(v=>{obj[v.id]=v.registro});
+  return obj;
+ },
+ ultimaMarcacao(){
+  const a=Object.values(this.eventosFuncionario()).filter(e=>tipos.includes(e.tipo)).sort((u,v)=>u.clienteTs-v.clienteTs);
+  return a.length?a[a.length-1]:null;
+ },
+ proximaAcao(){
+  const anterior=this.ultimaMarcacao();
+  if(!anterior||anterior.tipo==='saida')return'entrada';
+  if(anterior.tipo==='inicio_intervalo')return'fim_intervalo';
+  return'saida';
+ },
+ renderFuncionario(){
+  if(!this.perfil)return;
+  txt('nome-func',this.perfil.nome);txt('data-func',new Date().toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo',dateStyle:'full'}));
+  const next=this.proximaAcao();
+  txt('principal',({entrada:'REGISTRAR ENTRADA',saida:'REGISTRAR SAÍDA',fim_intervalo:'RETORNAR DO INTERVALO'})[next]);
+  const pausa=next==='saida';show('intervalo',pausa);
+  txt('estado-func',next==='entrada'?'Fora do expediente':next==='saida'?'Jornada iniciada': 'Em intervalo');
+  const mes=$('mes-func').value||mesAtual(),dados=this.resumoMes(this.funcId,mes);
+  txt('horas-func',horas(dados.confirmados));txt('pend-func',horas(dados.provisorios));
+  $('dias-func').innerHTML=this.tabelaDias(dados);
+  const conf=ultimo((this.conferencias||{})[mes]),finger=this.fingerprint(this.funcId,mes);
+  txt('conf-func',conf?(conf.resumo===finger?'✓ Conferência registrada':'Relatório alterado: confira novamente'):'Conferência ainda não registrada');
+  const all=Object.values(this.avisos.gerais||{}).concat(Object.values(this.avisos.individuais||{})).sort((a,b)=>(b.clienteTs||0)-(a.clienteTs||0)).slice(0,15);
+  $('avisos-func').innerHTML=all.length?all.map(o=>'<div class="list-row">'+xhtml(o.texto)+'<div class="tiny">'+xhtml(dataBR(o.clienteTs))+'</div></div>').join(''):'<div class="muted">Sem avisos.</div>';
+  const pediu=new URLSearchParams(location.search).get('acao');
+  if(pediu&&pediu!==next&&tipos.includes(pediu))txt('feedback','O QR solicitou outra ação. Confira o botão exibido antes de registrar.');
+ },
+ async gpsAgora(){
+  if(!navigator.geolocation)return{situacao:'indisponivel'};
+  const p=await new Promise(resolve=>navigator.geolocation.getCurrentPosition(resolve,()=>resolve(null),{enableHighAccuracy:true,timeout:13000,maximumAge:0}));
+  if(!p||!p.coords)return{situacao:'indisponivel'};
+  const c=p.coords,g=this.area||gpsBase,d=distM(c.latitude,c.longitude,Number(g.lat),Number(g.lng)),prec=Math.round(c.accuracy||99999),raio=Number(g.raio)||gpsBase.raio;
+  const situacao=prec>Math.min(100,raio/2)?'impreciso':(d+prec<=raio?'dentro':'fora');
+  return{situacao,distancia:d,precisao:prec,...(situacao==='dentro'?{}:{lat:Number(c.latitude.toFixed(6)),lng:Number(c.longitude.toFixed(6))})};
+ },
+ async registrarPrincipal(){await this.registrar(this.proximaAcao())},
+ async registrarIntervalo(){await this.registrar('inicio_intervalo')},
+ async registrar(tipo){
+  if(this.gerente||!this.funcId||!this.perfil||!tipos.includes(tipo)||this.registrando)return;
+  if(tipo!==this.proximaAcao()&&!(tipo==='inicio_intervalo'&&this.proximaAcao()==='saida')){this.status('Sequência de ponto incompatível; confira a marcação anterior.','err');return}
+  this.registrando=true;$('principal').disabled=true;show('intervalo',false);
+  try{
+   txt('feedback','Verificando a localização para registrar o horário...');
+   const geo=await this.gpsAgora(),offline=!navigator.onLine,relogio=this.offset===null||Math.abs(this.offset)>300000;
+   const status=offline?'sem_internet':relogio?'relogio':geo.situacao==='dentro'?'normal':'pendente';
+   const registro={tipo,uid:this.uid,clienteTs:Date.now(),servidorTs:firebase.database.ServerValue.TIMESTAMP,gps:geo,avaliacao:status,origem:'celular'};
+   const id=this.db.ref('fdo_ponto_marcacoes/'+this.funcId).push().key;
+   const item={id,uid:this.uid,funcionarioId:this.funcId,registro};
+   this.fila.push(item);
+   try{this.gravarFila()}catch{this.fila.pop();throw new Error('Falha ao salvar marcação no aparelho. Nenhum ponto foi registrado.')}
+   this.marcacoes[id]=registro;
+   this.renderFuncionario();
+   if(!offline)await this.sincronizarFila();
+   const pendente=status!=='normal';
+   txt('feedback',offline?'Registro salvo neste aparelho, aguardando sincronização e aprovação da gerência.':(pendente?'Ponto registrado, mas está fora da área autorizada ou sem GPS confiável: PENDENTE DE APROVAÇÃO.':'Ponto registrado. Confira a sincronização acima.'));
+  }catch(e){this.status(e.message||'Não foi possível registrar o ponto.','err')}
+  finally{this.registrando=false;$('principal').disabled=false;this.renderFuncionario()}
+ },
+ async sincronizarFila(){
+  if(this.emEnvio||!navigator.onLine||!this.db)return;
+  this.emEnvio=true;
+  try{
+   for(const item of [...this.fila]){
+    if(item.uid!==this.uid)continue;
+    try{
+     await this.db.ref('fdo_ponto_marcacoes/'+item.funcionarioId+'/'+item.id).set(item.registro);
+     this.fila=this.fila.filter(x=>x.id!==item.id);this.gravarFila();
+    }catch(e){console.warn('[PONTO] fila pendente',e);this.status('Há marcações aguardando sincronização. Não limpe os dados do aplicativo.','err');break}
+   }
+   if(this.funcId&&!this.gerente&&navigator.onLine)await this.atualizarFuncionario();
+  }finally{this.emEnvio=false}
+ },
  // METHODS
 };
 if(typeof module!=='undefined')module.exports={dataBR,horaBR,horas,vigentes,hashLeve,distM};
