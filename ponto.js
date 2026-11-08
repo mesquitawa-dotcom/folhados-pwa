@@ -36,7 +36,8 @@ const P={
  lerFila(){try{const v=JSON.parse(localStorage.getItem('fdo_ponto_fila_v1')||'[]');return Array.isArray(v)?v:[]}catch{return []}},
  gravarFila(){localStorage.setItem('fdo_ponto_fila_v1',JSON.stringify(this.fila))},
  async init(){
-  $('mes-func').value=mesAtual();$('mes-ger').value=mesAtual();
+  const mes=mesAtual(),ano=Number(mes.slice(0,4)),m=Number(mes.slice(5));const ant=(m===1?ano-1:ano)+'-'+pad(m===1?12:m-1);
+  $('mes-func').value=mes;$('mes-func').min=ant;$('mes-func').max=mes;$('mes-ger').value=mes;
   $('emp-vigencia').value=dataBR(Date.now());
   const nomes=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   $('dias-cadastro').innerHTML=nomes.map((nome,i)=>'<label class="field"><span>'+nome+' (minutos)</span><input id="jornada-'+i+'" type="number" min="0" max="1440" placeholder="Não definida"></label>').join('');
