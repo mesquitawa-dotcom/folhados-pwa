@@ -39,6 +39,10 @@ table{border-collapse:collapse;width:100%;font-size:.73rem}td,th{border-bottom:1
 <div class="actions"><button class="btn main-btn" onclick="P.salvarFuncionario()">Salvar funcionário</button></div>
 <h2>Vincular celular pessoal</h2><p class="muted">Selecione o funcionário e informe o código UID do seu aparelho.</p>
 <label class="field"><span>Código do aparelho (UID)</span><input id="emp-uid" maxlength="128" autocomplete="off" spellcheck="false"></label><button class="btn" onclick="P.vincular()">Autorizar celular</button><div class="muted" id="lista-vinculos"></div>
+<h2 style="margin-top:1rem">Folga, feriado ou justificativa</h2>
+<label class="field"><span>Data</span><input id="ocorrencia-data" type="date"></label>
+<label class="field"><span>Tipo</span><select id="ocorrencia-tipo"><option value="folga">Folga sem desconto</option><option value="feriado">Feriado sem desconto</option><option value="justificada">Ausência justificada — conferir efeito</option><option value="observacao">Observação administrativa</option></select></label>
+<label class="field"><span>Justificativa</span><input id="ocorrencia-nota" maxlength="250"></label><button class="btn" onclick="P.registrarOcorrencia()">Registrar ocorrência</button>
 <h2 style="margin-top:1rem">Marcação supervisionada</h2><label class="field"><span>Tipo</span><select id="manual-tipo"><option value="entrada">Entrada</option><option value="inicio_intervalo">Início de intervalo</option><option value="fim_intervalo">Fim de intervalo</option><option value="saida">Saída</option></select></label>
 <label class="field"><span>Data e horário da fábrica (horário de Brasília)</span><input id="manual-hora" type="datetime-local"></label><label class="field"><span>Motivo obrigatório</span><input id="manual-motivo" maxlength="250"></label><button class="btn" onclick="P.marcarManual()">Incluir com auditoria</button>
 </section>
