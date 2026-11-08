@@ -40,7 +40,7 @@ assert not (OUT / "database.rules.json").exists()
 
 # Execute the actual generated initializers: an absent optional key must never
 # start reCAPTCHA; a supplied staging key must still activate protection.
-appcheck = re.search(r"const APP_CHECK=\\{[\\s\\S]*?\\n\\};", index).group(0)
+appcheck = re.search(r"const APP_CHECK=\{[\s\S]*?\n\};", index).group(0)
 ponto_init = next(line.strip() for line in ponto.splitlines() if "try{if(PONTO_APP_CHECK_KEY&&" in line)
 for key, expected in (("", 0), ("valid-staging-site-key", 1)):
     for source, prefix in ((appcheck + ";APP_CHECK.init();", "APP_CHECK_SITE_KEY"),
