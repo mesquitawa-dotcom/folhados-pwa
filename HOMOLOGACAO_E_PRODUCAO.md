@@ -64,7 +64,15 @@ Após publicação:
 - Testar Produção com operações fictícias, conferindo que receitas e telas estão preservadas.
 - A primeira autorização gerencial do Ponto ainda exige cadastrar manualmente o UID no caminho **fdo_ponto_gerentes** do Firebase NOVO, conforme PONTO_PILOTO_v26.9.md.
 
-## 5. Proteção recomendada no GitHub
+## 5. Proposta automática de publicação (sem merge automático)
+
+Quando a publicação da HOMOLOGAÇÃO terminar com sucesso, o GitHub Actions **tentará abrir um Pull Request em RASCUNHO** de homologacao → main, caso ainda não exista um aberto. O PR fica pronto para sua conferência, **mas nenhuma automação o aprova ou mescla**.
+
+Para ativar esse conforto opcional uma única vez, abrir https://github.com/mesquitawa-dotcom/folhados-pwa/settings/actions e, em **Actions → General → Workflow permissions**, habilitar **Allow GitHub Actions to create and approve pull requests**. O nome da opção é do GitHub; nosso workflow está programado apenas para criar PR em rascunho, nunca para aprovar ou executar merge. Se não habilitar, a homologação ainda poderá ser publicada normalmente e o PR será aberto manualmente por um administrador.
+
+O PR #23 é o rascunho original do piloto Ponto, anterior à configuração permanente da homologação. **Não o mesclar isoladamente.** Quando o Firebase de testes estiver ativado, a proposta correta será homologacao → main, após teste real.
+
+## 6. Proteção recomendada no GitHub
 
 Em https://github.com/mesquitawa-dotcom/folhados-pwa/settings/rules ou Settings → Branches:
 - Proteger **main**: exigir Pull Request e checks aprovados; impedir force push/exclusão; não exigir um segundo revisor quando só houver um responsável.
@@ -73,7 +81,7 @@ Em https://github.com/mesquitawa-dotcom/folhados-pwa/settings/rules ou Settings 
 
 Essas configurações de proteção exigem ação no GitHub; **não foram realizadas automaticamente**.
 
-## 6. Estado da implementação e retorno seguro
+## 7. Estado da implementação e retorno seguro
 
 Automatizado: suíte existente de testes é reutilizada pela rotina de deploy, build com Firebase de testes, alerta visual, cache de homologação, deploy do Hosting e das Rules no projeto NOVO. A publicação de produção após merge segue GitHub Pages como atualmente.
 
