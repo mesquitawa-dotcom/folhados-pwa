@@ -223,6 +223,16 @@
           ".validate": "newData.hasChildren(['texto','gerenteUid','clienteTs','servidorTs']) && newData.child('texto').isString() && newData.child('texto').val().length <= 1000 && newData.child('servidorTs').val() === now"
         }
       }
+    },
+    "fdo_ponto_ocorrencias": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$fid": {
+        ".read": "auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid",
+        "$oid": {
+          ".write": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true && !data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['data','tipo','nota','gerenteUid','servidorTs']) && newData.child('data').isString() && newData.child('nota').isString() && newData.child('nota').val().length >= 5 && newData.child('nota').val().length <= 250 && (newData.child('tipo').val() === 'folga' || newData.child('tipo').val() === 'feriado' || newData.child('tipo').val() === 'justificada' || newData.child('tipo').val() === 'observacao') && newData.child('gerenteUid').val() === auth.uid && newData.child('servidorTs').val() === now"
+        }
+      }
     }
   }
 }
