@@ -27,5 +27,20 @@ table{border-collapse:collapse;width:100%;font-size:.73rem}td,th{border-bottom:1
 <div class="panel"><h2>Minhas horas</h2><label class="field"><span>Período</span><input type="month" id="mes-func" onchange="P.renderFuncionario()"></label><div class="grid"><div class="metric"><span class="muted">Confirmadas</span><strong id="horas-func">—</strong></div><div class="metric"><span class="muted">Provisórias</span><strong id="pend-func">—</strong></div></div><div id="dias-func" class="table-wrap"></div><div id="conf-func" class="status">—</div><div class="actions"><button class="btn" onclick="P.confirmarConferencia()">Conferi meus horários</button><button class="btn" onclick="P.pedirCorrecao()">Solicitar correção</button></div></div>
 <div class="panel"><h2>Avisos da empresa</h2><div id="avisos-func" class="muted">Sem avisos.</div></div>
 </section>
+<section id="gerencia" class="off"><h1>Ponto — Gerência</h1>
+<div class="nav"><button class="btn" onclick="P.aba('resumo')">Pendências</button><button class="btn" onclick="P.aba('cadastro')">Funcionários</button><button class="btn" onclick="P.aba('mes')">Relatórios</button><button class="btn" onclick="P.aba('avisos')">Avisos</button><button class="btn" onclick="P.aba('gps')">GPS</button></div>
+<section class="panel" id="aba-resumo"><h2>Registros para analisar</h2><div id="pendencias-ger"></div><h2>Solicitações de correção</h2><div id="solicitacoes-ger"></div><div class="actions"><button class="btn" onclick="P.atualizarGerencia()">Atualizar pendências</button></div></section>
+<section class="panel off" id="aba-cadastro"><h2>Funcionários</h2><label class="field"><span>Selecionar</span><select id="emp-selecionado" onchange="P.preencherCadastro()"><option value="">Novo funcionário</option></select></label>
+<label class="field"><span>Nome</span><input id="emp-nome" maxlength="90"></label><label class="field"><span>Tipo</span><select id="emp-tipo"><option value="mensalista">Mensalista</option><option value="horista">Horista</option></select></label>
+<label class="field"><input id="emp-ativo" type="checkbox" checked style="display:inline;width:auto;min-height:0"> Funcionário ativo</label>
+<p class="muted">Jornada prevista por dia, em minutos. Em branco = ainda não definida; 0 = folga prevista. Mudanças terão nova vigência.</p><div id="dias-cadastro" class="grid"></div>
+<label class="field"><span>Salário mensal OU valor por hora (R$) — restrito à gerência</span><input id="emp-valor" type="number" min="0" step="0.01"></label>
+<label class="field"><span>Vigência das novas condições</span><input id="emp-vigencia" type="date"></label>
+<div class="actions"><button class="btn main-btn" onclick="P.salvarFuncionario()">Salvar funcionário</button></div>
+<h2>Vincular celular pessoal</h2><p class="muted">Selecione o funcionário e informe o código UID do seu aparelho.</p>
+<label class="field"><span>Código do aparelho (UID)</span><input id="emp-uid" maxlength="128" autocomplete="off" spellcheck="false"></label><button class="btn" onclick="P.vincular()">Autorizar celular</button><div class="muted" id="lista-vinculos"></div>
+<h2 style="margin-top:1rem">Marcação supervisionada</h2><label class="field"><span>Tipo</span><select id="manual-tipo"><option value="entrada">Entrada</option><option value="inicio_intervalo">Início de intervalo</option><option value="fim_intervalo">Fim de intervalo</option><option value="saida">Saída</option></select></label>
+<label class="field"><span>Data e horário da fábrica (horário de Brasília)</span><input id="manual-hora" type="datetime-local"></label><label class="field"><span>Motivo obrigatório</span><input id="manual-motivo" maxlength="250"></label><button class="btn" onclick="P.marcarManual()">Incluir com auditoria</button>
+</section>
 <!-- TELAS -->
 </main><div id="ponto-impressao"></div><script src="./ponto.js"></script></body></html>
