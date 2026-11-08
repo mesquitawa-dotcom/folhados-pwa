@@ -468,6 +468,23 @@ const P={
   }
   const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),3000);
  },
+
+ async fecharMes(){
+  if(!this.gerente)return;
+  const mes=$('mes-ger').value||mesAtual();
+  if(mes>=mesAtual())return alert('O mês só pode ser fechado após seu último dia.');
+  const linhas=this.linhasRelatorio();
+  const pend=linhas.filter(x=>x.dados.pendencias||!x.conferido);
+  const motivo=$('motivo-fechar').value.trim();
+  if(pend.length&&motivo.length<10)return alert('Existem pendências ou conferências faltantes. Informe justificativa de pelo menos 10 caracteres.');
+  if(!confirm('Confirmar fechamento gerencial de '+mes+'? O histórico será preservado.'))return;
+  const dados={};
+  linhas.forEach(r=>{dados[r.id]={nome:r.nome,confirmados:r.dados.confirmados,provisorios:r.dados.provisorios,pendencias:r.dados.pendencias,conferido:r.conferido,resumo:this.fingerprint(r.id,mes)}});
+  try{
+   await this.db.ref('fdo_ponto_fechamentos/'+mes).push({gerenteUid:this.uid,mes,dados,motivo,clienteTs:Date.now(),servidorTs:firebase.database.ServerValue.TIMESTAMP});
+   $('motivo-fechar').value='';await this.atualizarGerencia();this.status('Fechamento registrado com histórico de auditoria.','ok');
+  }catch(e){this.status('Falha no fechamento. Nenhuma conclusão foi confirmada.','err')}
+ },
  // METHODS
 };
 if(typeof module!=='undefined')module.exports={dataBR,horaBR,horas,vigentes,hashLeve,distM};
