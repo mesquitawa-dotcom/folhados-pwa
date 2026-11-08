@@ -163,6 +163,101 @@ const P={
    if(this.funcId&&!this.gerente&&navigator.onLine)await this.atualizarFuncionario();
   }finally{this.emEnvio=false}
  },
+
+ marcasDe(id){
+  const v=this.gerente?(this.marcacoes[id]||{}):(id===this.funcId?this.eventosFuncionario():{});
+  const a=this.gerente?(this.aprovacoes[id]||{}):this.aprovacoes;
+  const registros=Object.entries(v).map(([key,e])=>{
+   const decisoes=a[key]||{},last=ultimo(decisoes);
+   return {...e,id:key,clienteTs:Number(e.clienteTs)||0,decisao:last?last.decisao:null,justificativa:last?last.motivo:null};
+  }).filter(e=>e.clienteTs>0&&tipos.includes(e.tipo));
+  return registros.sort((a,b)=>a.clienteTs-b.clienteTs||a.id.localeCompare(b.id));
+ },
+ resumoMes(id,mes){
+  const eventos=this.marcasDe(id);const sessoes=[];let sessao=null;const avulsos=[];
+  const incluir=s=>{if(s&&dataBR(s.inicio).slice(0,7)===mes)sessoes.push(s)};
+  for(const e of eventos){
+   if(e.decisao==='rejeitado'){avulsos.push({...e,razao:'Rejeitado pela gerência'});continue}
+   if(e.tipo==='entrada'){
+    if(sessao){sessao.incompleta=true;incluir(sessao)}
+    sessao={inicio:e.clienteTs,fim:null,ativa:e.clienteTs,min:0,eventos:[e],incompleta:false};continue;
+   }
+   if(!sessao){avulsos.push({...e,razao:'Marcação sem entrada'});continue}
+   sessao.eventos.push(e);
+   if(e.tipo==='inicio_intervalo'){
+    if(sessao.ativa===null)sessao.incompleta=true;
+    else{sessao.min+=(e.clienteTs-sessao.ativa)/60000;sessao.ativa=null}
+   }
+   if(e.tipo==='fim_intervalo'){
+    if(sessao.ativa!==null)sessao.incompleta=true;
+    sessao.ativa=e.clienteTs;
+   }
+   if(e.tipo==='saida'){
+    if(sessao.ativa!==null)sessao.min+=(e.clienteTs-sessao.ativa)/60000;
+    sessao.fim=e.clienteTs;
+    if(e.clienteTs<sessao.inicio||e.clienteTs-sessao.inicio>20*3600000)sessao.incompleta=true;
+    incluir(sessao);sessao=null;
+   }
+  }
+  if(sessao){sessao.incompleta=true;incluir(sessao)}
+  const porDia={};const garantir=d=>porDia[d]||(porDia[d]={data:d,marcas:[],min:0,provisorio:false,motivos:[]});
+  for(const s of sessoes){
+   const dia=dataBR(s.inicio),row=garantir(dia);
+   row.min+=Math.max(0,Math.round(s.min));
+   row.marcas.push(...s.eventos);
+   if(s.incompleta){row.provisorio=true;row.motivos.push('Jornada incompleta')}
+   for(const e of s.eventos)if(e.avaliacao!=='normal'&&e.avaliacao!=='aprovado'&&e.decisao!=='aprovado'){row.provisorio=true;row.motivos.push('Marcação pendente')}
+  }
+  for(const e of avulsos){
+   const dia=dataBR(e.clienteTs);
+   if(dia.slice(0,7)!==mes)continue;
+   const row=garantir(dia);row.marcas.push(e);row.provisorio=true;row.motivos.push(e.razao);
+  }
+  const dias=Object.values(porDia).filter(d=>d.data.slice(0,7)===mes).sort((a,b)=>a.data.localeCompare(b.data));
+  let confirmados=0,provisorios=0,previstos=0;
+  const regras=this.gerente?(this.regras[id]||{}):(id===this.funcId?this.regras:{});
+  for(const d of dias){
+   const regra=vigentes(regras,d.data),semana=diaSemana(d.data),meta=regra&&regra.dias?regra.dias[semana]:null;
+   d.previsto=meta==null?null:Number(meta);
+   if(d.previsto!==null&&Number.isFinite(d.previsto))previstos+=d.previsto;
+   if(d.provisorio)provisorios+=d.min;else confirmados+=d.min;
+  }
+  return{dias,confirmados,provisorios,previstos,pendencias:dias.filter(d=>d.provisorio).length};
+ },
+ tabelaDias(res){
+  if(!res.dias.length)return'<p class="muted">Nenhuma marcação neste mês.</p>';
+  return'<table><thead><tr><th>Data</th><th>Marcações</th><th>Trabalhado</th><th>Situação</th></tr></thead><tbody>'+
+   res.dias.map(d=>'<tr><td>'+xhtml(d.data.slice(8)+'/'+d.data.slice(5,7))+'</td><td>'+
+   d.marcas.map(e=>xhtml(horaBR(e.clienteTs))).join(' · ')+'</td><td>'+horas(d.min)+'</td><td>'+
+   (d.provisorio?'Pendente':'Confirmado')+'</td></tr>').join('')+'</tbody></table>';
+ },
+ fingerprint(id,mes){
+  const eventos=this.marcasDe(id).filter(e=>dataBR(e.clienteTs).slice(0,7)===mes);
+  const dados=this.resumoMes(id,mes);
+  return hashLeve(JSON.stringify(eventos.map(e=>[e.id,e.clienteTs,e.tipo,e.avaliacao,e.decisao]))+
+  JSON.stringify([dados.confirmados,dados.provisorios,dados.pendencias]));
+ },
+ async confirmarConferencia(){
+  if(!this.funcId||!navigator.onLine)return this.status('Conecte-se para confirmar sua conferência.','err');
+  const mes=$('mes-func').value;
+  if(mes>=mesAtual())return this.status('A confirmação mensal fica disponível após o último dia do mês.','err');
+  const r=this.resumoMes(this.funcId,mes);
+  if(r.pendencias)return this.status('Há dias pendentes. Solicite a conferência antes de confirmar.','err');
+  if(!confirm('Você conferiu as marcações de '+mes+' e não encontrou divergências?'))return;
+  const confirmacao={uid:this.uid,resumo:this.fingerprint(this.funcId,mes),clienteTs:Date.now(),servidorTs:firebase.database.ServerValue.TIMESTAMP};
+  try{await this.db.ref('fdo_ponto_conferencias/'+this.funcId+'/'+mes).push(confirmacao);await this.atualizarFuncionario();this.status('Sua conferência mensal foi registrada.','ok')}
+  catch(e){this.status('Não foi possível gravar a conferência. Tente novamente.','err')}
+ },
+ async pedirCorrecao(){
+  if(!this.funcId)return;
+  const mes=$('mes-func').value||mesAtual();
+  const texto=prompt('Informe a data, o horário correto e o que aconteceu (solicitação será analisada pela gerência):');
+  if(!texto||texto.trim().length<10)return;
+  if(!navigator.onLine)return this.status('Conecte-se para solicitar a correção.','err');
+  try{await this.db.ref('fdo_ponto_solicitacoes/'+this.funcId).push({uid:this.uid,mes,texto:texto.trim().slice(0,500),clienteTs:Date.now(),servidorTs:firebase.database.ServerValue.TIMESTAMP});
+  this.status('Solicitação enviada à gerência. O ponto original será preservado.','ok')}
+  catch(e){this.status('Não foi possível enviar a solicitação.','err')}
+ },
  // METHODS
 };
 if(typeof module!=='undefined')module.exports={dataBR,horaBR,horas,vigentes,hashLeve,distM};
