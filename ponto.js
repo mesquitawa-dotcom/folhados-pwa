@@ -149,7 +149,7 @@ const P={
    this.renderFuncionario();
    if(!offline)await this.sincronizarFila();
    const aindaLocal=this.fila.some(x=>x.id===id),pendente=status!=='normal';
-   const msg=aindaLocal?'Registro salvo no aparelho, aguardando sincronização e aprovação da gerência.':(geo.situacao==='fora'?'Você está fora da fábrica. Ponto registrado, PENDENTE DE APROVAÇÃO.':pendente?'Ponto registrado, PENDENTE DE APROVAÇÃO da gerência por GPS/relógio.':'Ponto registrado e confirmado.');
+   const msg=geo.situacao==='fora'?(aindaLocal?'Você está fora da fábrica. Ponto salvo no aparelho; aguardando sincronização e APROVAÇÃO da gerência.':'Você está fora da fábrica. Ponto registrado, PENDENTE DE APROVAÇÃO.'):aindaLocal?'Registro salvo no aparelho, aguardando sincronização e aprovação da gerência.':pendente?'Ponto registrado, PENDENTE DE APROVAÇÃO da gerência por GPS/relógio.':'Ponto registrado e confirmado.';
    txt('feedback',msg);
   }catch(e){this.status(e.message||'Não foi possível registrar o ponto.','err')}
   finally{this.registrando=false;$('principal').disabled=false;this.renderFuncionario()}
