@@ -409,6 +409,65 @@ const P={
    $('aviso-texto').value='';this.status('Aviso publicado. Ele aparecerá no Ponto do funcionário.','ok')}
   catch(e){this.status('Falha ao publicar aviso.','err')}
  },
+
+ idsRelatorio(){const id=$('rel-emp').value;return id==='todos'?Object.keys(this.colabs).sort((a,b)=>String(this.colabs[a].nome).localeCompare(String(this.colabs[b].nome),'pt-BR')):[id].filter(x=>this.colabs[x])},
+ linhasRelatorio(){
+  const mes=$('mes-ger').value||mesAtual();
+  return this.idsRelatorio().map(id=>{
+   const dados=this.resumoMes(id,mes),c=ultimo(((this.conferencias[id]||{})[mes])||{}),conferido=!!c&&c.resumo===this.fingerprint(id,mes);
+   return{id,nome:this.colabs[id].nome,dados,conferido};
+  });
+ },
+ renderRelatorio(){
+  if(!this.gerente)return;
+  const linhas=this.linhasRelatorio();
+  $('resumo-ger').innerHTML='<table><thead><tr><th>Funcionário</th><th>Horas confirmadas</th><th>Provisórias</th><th>Conferência</th></tr></thead><tbody>'+
+    linhas.map(r=>'<tr><td>'+xhtml(r.nome)+'</td><td>'+horas(r.dados.confirmados)+'</td><td>'+horas(r.dados.provisorios)+'</td><td>'+(r.conferido?'✓':'Pendente')+'</td></tr>').join('')+'</tbody></table>';
+  $('financeiro-ger').innerHTML='<table><thead><tr><th>Funcionário</th><th>Modalidade</th><th>Valor cadastrado</th><th>Estimativa básica</th></tr></thead><tbody>'+
+   linhas.map(r=>{
+    const fin=vigentes(this.salarios[r.id],$('mes-ger').value+'-01'),tipo=fin&&fin.tipo||this.colabs[r.id].tipo;
+    const bruto=fin?(tipo==='horista'?Math.round(r.dados.confirmados*Number(fin.centavos)/60):Number(fin.centavos)):null;
+    return'<tr><td>'+xhtml(r.nome)+'</td><td>'+xhtml(tipo)+'</td><td>'+ (fin?dinheiro(fin.centavos)+(tipo==='horista'?'/h':'/mês'):'Não definido')+
+    '</td><td>'+(bruto==null?'—':dinheiro(bruto)+(r.dados.pendencias?' (parcial)':''))+'</td></tr>';
+   }).join('')+'</tbody></table><p class="tiny">Estimativa básica gerencial. Não é holerite: adicionais, faltas, encargos e alterações salariais durante o mês exigem conferência contábil.</p>';
+  const fech=ultimo((this.fechamentos||{})[$('mes-ger').value]);txt('fechamento-status',fech?'Fechamento gerencial registrado. Correções posteriores exigem nova conferência.':'Mês ainda não encerrado pela gerência.');
+ },
+ htmlRelatorio(){
+  const mes=$('mes-ger').value||mesAtual(),linhas=this.linhasRelatorio();
+  return'<h1>Folhados d’Ouro — Espelho de ponto</h1><p>Período: '+xhtml(mes)+' · Gerado em '+xhtml(new Date().toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}))+'</p>'+
+   linhas.map((r,i)=>'<section '+(i?'class="page-break"':'')+'><h2>'+xhtml(r.nome)+'</h2><p>Horas confirmadas: <strong>'+horas(r.dados.confirmados)+'</strong> · Provisórias: '+horas(r.dados.provisorios)+' · Conferência: '+(r.conferido?'realizada':'pendente')+'</p>'+
+   this.tabelaDias(r.dados)+'<p>Observações: '+(r.dados.pendencias?r.dados.pendencias+' dia(s) aguardando conferência.':'Sem marcações pendentes detectadas.')+'</p></section>').join('');
+ },
+ salvarPDF(){
+  if(!this.gerente)return;
+  $('ponto-impressao').innerHTML=this.htmlRelatorio();
+  this.status('Na tela de impressão, selecione “Salvar como PDF”.','ok');
+  window.print();
+ },
+ async salvarPNG(){
+  if(!this.gerente)return;
+  const mes=$('mes-ger').value||mesAtual(),linhas=this.linhasRelatorio();
+  if(!linhas.length)return alert('Nenhum funcionário selecionado.');
+  const width=1200,height=260+linhas.length*68;
+  const cv=document.createElement('canvas');cv.width=width;cv.height=height;
+  const c=cv.getContext('2d');c.fillStyle='#ffffff';c.fillRect(0,0,width,height);c.fillStyle='#151515';
+  c.font='bold 38px Georgia';c.fillText('Folhados d’Ouro — Ponto',45,65);
+  c.font='25px Georgia';c.fillText('Mês: '+mes+' · Resumo sem salários',45,110);
+  c.fillStyle='#555';c.font='21px Georgia';c.fillText('Funcionário                         Confirmadas       Provisórias       Conferência',45,167);
+  linhas.forEach((r,i)=>{
+   const y=220+i*68;c.fillStyle=i%2?'#f5f3ef':'#eae7df';c.fillRect(30,y-34,1135,57);
+   c.fillStyle='#151515';c.font='23px Georgia';c.fillText(r.nome.slice(0,27),45,y);
+   c.fillText(horas(r.dados.confirmados),570,y);c.fillText(horas(r.dados.provisorios),775,y);
+   c.fillText(r.conferido?'Conferido':'Pendente',990,y);
+  });
+  const blob=await new Promise(resolve=>cv.toBlob(resolve,'image/png'));
+  if(!blob)return alert('Não foi possível gerar a imagem.');
+  const name='fdo-ponto-'+mes+'.png',arquivo=new File([blob],name,{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[arquivo]})){
+   try{await navigator.share({files:[arquivo],title:'Ponto Folhados d’Ouro'});return}catch(e){if(e.name==='AbortError')return}
+  }
+  const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),3000);
+ },
  // METHODS
 };
 if(typeof module!=='undefined')module.exports={dataBR,horaBR,horas,vigentes,hashLeve,distM};
