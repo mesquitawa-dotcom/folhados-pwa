@@ -72,7 +72,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          existente="$(gh pr list --base main --head homologacao --state open --json number --jq 'length')"
+          existente="$(gh pr list --repo "$GITHUB_REPOSITORY" --base main --head homologacao --state open --json number --jq 'length')"
           if [ "$existente" -gt 0 ]; then
             echo "Já há uma proposta de publicação aberta; ela acompanha as mudanças da homologação." >> "$GITHUB_STEP_SUMMARY"
             exit 0
