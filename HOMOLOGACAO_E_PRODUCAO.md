@@ -9,7 +9,7 @@
 | **PRODUÇÃO** | https://mesquitawa-dotcom.github.io/folhados-pwa/ | **main** | Projeto atual, com dados reais |
 | **HOMOLOGAÇÃO** | https://fdo-homologacao-mesquita.web.app/ | **homologacao** | **Outro projeto Firebase, sem dados reais** |
 
-Projeto configurado: `fdo-homologacao-mesquita` (Spark). Authentication anônima e banco vazio criados; o Hosting aguarda a primeira publicação validada.
+Projeto configurado: `fdo-homologacao-mesquita` (Spark). Authentication anônima habilitada, Realtime Database separado e Hosting publicado pelo GitHub Actions. Primeira publicação concluída em 08/11/2026 (execução 42449512010, tentativa 2).
 
 1. Uma nova versão é colocada em **homologacao**.
 2. GitHub Actions executa automaticamente os testes do aplicativo, receitas, interface e segurança das Rules no emulador.
@@ -29,7 +29,7 @@ Abrir https://console.firebase.google.com/ e:
 4. Em Hosting, iniciar o serviço (a URL terá o formato https://ID_DO_PROJETO.web.app).
 5. Em Project settings → General → Your apps, registrar um novo app **Web**. Copiar a configuração completa **firebaseConfig** do projeto NOVO: apiKey, authDomain, databaseURL, projectId, storageBucket, messagingSenderId e appId.
 6. **App Check:** inicialmente manter o enforcement desativado. Se desejar, configurar uma chave reCAPTCHA Enterprise própria da homologação; nunca aproveitar a chave da produção.
-7. Conta exclusiva: `fdo-github-homologacao@fdo-homologacao-mesquita.iam.gserviceaccount.com`, com Administrador do Firebase Hosting e Administrador do Firebase Realtime Database somente neste projeto.
+7. Conta exclusiva: `fdo-github-homologacao@fdo-homologacao-mesquita.iam.gserviceaccount.com`, com Administrador do Firebase Hosting e Administrador do Firebase Realtime Database somente neste projeto. Também recebe Leitor do Service Usage (`roles/serviceusage.serviceUsageViewer`) para a consulta de serviços exigida pelo Firebase CLI.
 8. Autenticação temporária por Workload Identity Federation, sem chave privada JSON. Pool `fdo-github`, provedor `github-homologacao`, projeto numérico `86853323751`.
 9. Condição do provedor restringe proprietário GitHub `286177442`, repositório `1244098321`, branch `refs/heads/homologacao` e workflow `mesquitawa-dotcom/folhados-pwa/.github/workflows/deploy-homologacao.yml@refs/heads/homologacao`.
 10. A identidade do repositório recebe `roles/iam.workloadIdentityUser` apenas na conta exclusiva. A permissão de administrador do Realtime Database inclui dados e regras do ambiente de testes.
@@ -70,7 +70,7 @@ Quando a publicação da HOMOLOGAÇÃO terminar com sucesso, o GitHub Actions **
 
 Para ativar esse conforto opcional uma única vez, abrir https://github.com/mesquitawa-dotcom/folhados-pwa/settings/actions e, em **Actions → General → Workflow permissions**, habilitar **Allow GitHub Actions to create and approve pull requests**. O nome da opção é do GitHub; nosso workflow está programado apenas para criar PR em rascunho, nunca para aprovar ou executar merge. Se não habilitar, a homologação ainda poderá ser publicada normalmente e o PR será aberto manualmente por um administrador.
 
-O PR #23 é o rascunho original do piloto Ponto, anterior à configuração permanente da homologação. **Não o mesclar isoladamente.** Quando o Firebase de testes estiver ativado, a proposta correta será homologacao → main, após teste real.
+O PR #23 é o rascunho original do piloto Ponto, anterior à configuração permanente da homologação. **Não o mesclar isoladamente.** A proposta vigente é o PR #24, homologacao → main, mantido em rascunho até teste e aprovação expressa.
 
 ## 6. Proteção recomendada no GitHub
 
@@ -85,10 +85,14 @@ Essas configurações de proteção exigem ação no GitHub; **não foram realiz
 
 Automatizado: suíte existente de testes é reutilizada pela rotina de deploy, build com Firebase de testes, alerta visual, cache de homologação, deploy do Hosting e das Rules no projeto NOVO. A publicação de produção após merge segue GitHub Pages como atualmente.
 
-Depende de ação uma única vez: configurar Firebase novo, Variables e federação de identidade. Depende de aprovação a cada versão: mesclar Pull Request para main.
+Configuração inicial concluída: Firebase novo, Variables e federação de identidade. Depende de aprovação a cada versão: mesclar Pull Request para main.
 
 Backup do main preservado em **backup/pre-homologacao-2026-11-08**, commit **41bb4c3bae958c77879069f49ecb008d8af57317**.
 
 Arquivos novos: **firebase.homologacao.json**, **tools/build_homologacao.py**, **tools/test_build_homologacao.py**, **tools/preparar_credencial_homologacao.py**, **.github/workflows/deploy-homologacao.yml**. A validação permanente foi adaptada para poder ser reutilizada, sem retirar testes de receitas ou alterar módulos já funcionais.
 
 A automação **não modifica receitas, pesos, tempos, PINs, histórico, parâmetros ou o Firebase de produção**.
+
+## 8. Validação do ambiente publicado
+
+A conferência no navegador identificou tentativa de ativar reCAPTCHA sem chave no pacote de testes. O empacotador foi corrigido para não inicializar App Check quando a chave opcional estiver vazia. Com chave válida, a ativação é preservada; testes executam os inicializadores JavaScript dos dois módulos nas duas situações. A alteração existe apenas na saída de homologação. O cache inclui um hash do conteúdo gerado para atualizar aparelhos após mudanças de configuração.

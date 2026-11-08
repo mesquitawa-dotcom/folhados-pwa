@@ -7,6 +7,7 @@ Nenhum arquivo de código fonte é alterado. Falha se tentar usar o Firebase de 
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 from pathlib import Path
 import re
@@ -108,6 +109,10 @@ def main() -> None:
     index = (DEST / "index.html").read_text(encoding="utf-8")
     index = replace_js_const(index, "FB_CFG", cfg_literal, is_object=True)
     index = replace_js_const(index, "APP_CHECK_SITE_KEY", appcheck_literal, is_object=False)
+    guard = "if(typeof firebase==='undefined'||!firebase.appCheck||!firebase.appCheck.ReCaptchaEnterpriseProvider)"
+    if index.count(guard) != 1:
+        fail("inicialização App Check da produção mudou; revisar empacotamento")
+    index = index.replace(guard, "if(!APP_CHECK_SITE_KEY)return false;\n    " + guard)
     (DEST / "index.html").write_text(inject_banner(index, title="index.html"), encoding="utf-8")
 
     ponto_js = DEST / "ponto.js"
@@ -115,6 +120,10 @@ def main() -> None:
         js = ponto_js.read_text(encoding="utf-8")
         js = replace_js_const(js, "PONTO_FIREBASE_CFG", cfg_literal, is_object=True)
         js = replace_js_const(js, "PONTO_APP_CHECK_KEY", appcheck_literal, is_object=False)
+        guard = "if(firebase.appCheck&&firebase.appCheck.ReCaptchaEnterpriseProvider)"
+        if js.count(guard) != 1:
+            fail("inicialização App Check do Ponto mudou; revisar empacotamento")
+        js = js.replace(guard, "if(PONTO_APP_CHECK_KEY&&firebase.appCheck&&firebase.appCheck.ReCaptchaEnterpriseProvider)")
         ponto_js.write_text(js, encoding="utf-8")
         html = DEST / "ponto.html"
         if not html.exists():
@@ -125,6 +134,8 @@ def main() -> None:
     sw, n = re.subn(r"(const\s+CACHE\s*=\s*['\"])([^'\"]+)(['\"])", r"\1homolog-\2\3", sw, count=1)
     if n != 1:
         fail("não foi possível nomear o cache de homologação")
+    digest = hashlib.sha256((index + (ponto_js.read_text(encoding="utf-8") if ponto_js.exists() else "")).encode()).hexdigest()[:12]
+    sw = re.sub(r"(const\s+CACHE\s*=\s*['\"])([^'\"]+)(['\"])", lambda m: m.group(1) + m.group(2) + "-" + digest + m.group(3), sw, count=1)
     (DEST / "sw.js").write_text(sw, encoding="utf-8")
 
     for rel in ("index.html", "ponto.js"):
@@ -140,3 +151,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

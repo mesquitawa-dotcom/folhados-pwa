@@ -2,6 +2,7 @@
 """Teste isolado do empacotador de homologação; nunca se conecta ao Firebase."""
 from pathlib import Path
 import json
+import re
 import os
 import subprocess
 import sys
@@ -36,6 +37,21 @@ assert (OUT / "ponto-manifest.json").read_bytes() == (ROOT / "ponto-manifest.jso
 assert (OUT / "vendor/firebase-database-compat.js").is_file()
 assert not (OUT / ".github").exists()
 assert not (OUT / "database.rules.json").exists()
+
+# Execute the actual generated initializers: an absent optional key must never
+# start reCAPTCHA; a supplied staging key must still activate protection.
+appcheck = re.search(r"const APP_CHECK=\\{[\\s\\S]*?\\n\\};", index).group(0)
+ponto_init = next(line.strip() for line in ponto.splitlines() if "try{if(PONTO_APP_CHECK_KEY&&" in line)
+for key, expected in (("", 0), ("valid-staging-site-key", 1)):
+    for source, prefix in ((appcheck + ";APP_CHECK.init();", "APP_CHECK_SITE_KEY"),
+                           (ponto_init, "PONTO_APP_CHECK_KEY")):
+        script = ("let calls=0;const firebase={appCheck:Object.assign(()=>({activate:()=>calls++}),"
+                  "{ReCaptchaEnterpriseProvider:function(key){if(!key)throw Error('empty key')}})};"
+                  + "const " + prefix + "=" + json.dumps(key) + ";" + source
+                  + ";if(calls!==" + str(expected) + ")throw Error('unexpected App Check activation');")
+        checked = subprocess.run(["node", "-e", script], capture_output=True, text=True)
+        assert checked.returncode == 0, checked.stderr
+
 wrong = dict(env, FDO_HOMOLOG_FIREBASE_PROJECT_ID="producaofolhadosdouro-b6fb5")
 bad = subprocess.run([sys.executable, "tools/build_homologacao.py"],
                      cwd=ROOT, env=wrong, capture_output=True, text=True)
