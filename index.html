@@ -2,7 +2,10 @@
 <html lang="pt-BR">
 <head>
   <!-- ════════════════════════════════════════════════════════════
-       FOLHADOS D'OURO — atualização v26.8.1
+       FOLHADOS D'OURO — atualização v26.9
+       NOVIDADES v26.9:
+       • Ponto piloto isolado com GPS, horários, relatórios e gerência.
+       • Produção e receitas anteriores preservadas integralmente.
        NOVIDADES v26.8.1:
        • Etiqueta das massas identifica a receita curta e a quantidade de massa reaproveitada usada na execução.
        • Etiqueta do balde destaca Água/gelo, Leite em pó e Massa laminada em linhas maiores, preservando o formato 60×50 mm.
@@ -929,7 +932,7 @@
   <div class="cfg-sep"></div>
   <div class="cfg-t" style="font-size:1rem">📱 Este aparelho</div>
   <div class="cfg-s" id="device-info" style="font-size:.68rem;line-height:1.45;word-break:break-all">Identificação Firebase: —</div>
-  <div class="cfg-s" style="font-size:.68rem;line-height:1.45">Versão 26.8.1 · cache fdo-v26-8-1 · Firebase SDK local · App Check</div>
+  <div class="cfg-s" style="font-size:.68rem;line-height:1.45">Versão 26.9 · cache fdo-v26-9 · Firebase SDK local · App Check</div>
   <div class="cfg-s" id="appcheck-info" style="font-size:.68rem;line-height:1.45">App Check: verificando…</div>
   <div class="cfg-s" id="storage-info" style="font-size:.68rem;line-height:1.45">Armazenamento local: verificando…</div>
   <div class="cfg-sep"></div>
@@ -982,6 +985,10 @@
     <div class="start-brand">Folhados d'Ouro</div>
     <div class="start-title">Produção</div>
     <div class="start-sub">Selecione o módulo</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin:.9rem 0">
+      <a href="./ponto.html" style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.2rem;min-height:4.1rem;border-radius:.7rem;background:#2e2515;border:1px solid #c9973a;color:#f5d98b;text-decoration:none;font-weight:bold">⏱ PONTO<span style="font-size:.57rem;font-weight:normal">Novo módulo</span></a>
+      <a href="#menu-producao" style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.2rem;min-height:4.1rem;border-radius:.7rem;background:#2e2515;border:1px solid #c9973a;color:#f5d98b;text-decoration:none;font-weight:bold">🥐 PRODUÇÃO<span style="font-size:.57rem;font-weight:normal">Módulos atuais</span></a>
+    </div>
   </div>
   <div class="op-bar" id="op-bar" style="display:none">
     <div class="op-bar-av" id="op-bar-av">?</div>
@@ -990,7 +997,7 @@
   </div>
   <div class="sync-pill" id="sync-pill">Salvo neste aparelho</div>
   <button class="fluxo-home" data-perm="historico" onclick="abrirFluxo()">Ver fluxo e estágios da produção →</button>
-  <div class="modulos-label">Módulos de Produção</div>
+  <div class="modulos-label" id="menu-producao">Módulos de Produção</div>
   <div class="modulos">
     <div class="modulo ativo" data-perm="porcionamento" onclick="entrarPorcionamento()">
       <div class="modulo-icon">⚖️</div>
@@ -3038,7 +3045,7 @@ function carregarConfig(){
 }
 function exportarBackup(){
   const chaves=['fdo_lotes','fdo_laminacoes','fdo_partidas','fdo_formas','fdo_lote_seq','fdo_operadores','fdo_farinha_lotes_atuais','fdo_sess','fdo_bat_run','fdo_sync_outbox_v25','fdo_estoque_movimentos','fdo_estoque_contagens','fdo_estoque_configuracoes','fdo_receitas_observacoes','fdo_receitas_definitivas','fdo_receitas_auditoria','fdo_estoque_outbox_v26','fdo_estoque_inicio_ts_v26','fdo_baldes_pendentes_v2661','fdo_ultimo_armario_v267'];
-  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.8.1',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
+  const dados={app:'Folhados d\'Ouro — Produção',versao:'26.9',exportadoEm:new Date().toISOString(),origem:'localStorage',dispositivo:(typeof DEVICE!=='undefined'?DEVICE.audit():null),dados:{}};
   chaves.forEach(k=>{ const raw=localStorage.getItem(k); if(raw!==null){ try{dados.dados[k]=JSON.parse(raw);}catch{dados.dados[k]=raw;} } });
   const blob=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
