@@ -322,6 +322,39 @@ const P={
   if(!this.gerente||!this.pares[uid]||!confirm('Revogar o acesso deste celular?'))return;
   try{await this.db.ref('fdo_ponto_vinculos/'+uid).update({ativo:false,atualizadoTs:firebase.database.ServerValue.TIMESTAMP});await this.atualizarGerencia()}catch(e){alert('Erro ao revogar.')}
  },
+
+ renderPendencias(){
+  if(!this.gerente)return;
+  const html=[];
+  for(const [id,p] of Object.entries(this.colabs)){
+   for(const e of this.marcasDe(id)){
+    if(e.decisao||e.avaliacao==='normal'||e.avaliacao==='aprovado')continue;
+    html.push('<div class="list-row"><strong>'+xhtml(p.nome)+'</strong> — '+xhtml(dataBR(e.clienteTs))+' '+xhtml(horaBR(e.clienteTs))+
+     ' · '+xhtml(e.tipo)+'<div class="muted">Situação: '+xhtml(e.avaliacao)+' · GPS: '+xhtml(e.gps&&e.gps.situacao||'indisponível')+'</div>'+
+     '<div class="actions"><button class="btn" onclick="P.decidir('+JSON.stringify(id)+','+JSON.stringify(e.id)+',\'aprovado\')">Aprovar</button>'+
+     '<button class="btn" onclick="P.decidir('+JSON.stringify(id)+','+JSON.stringify(e.id)+',\'rejeitado\')">Rejeitar</button>'+
+     '<button class="btn" onclick="P.ajustar('+JSON.stringify(id)+','+JSON.stringify(e.id)+')">Corrigir horário</button></div></div>');
+   }
+  }
+  $('pendencias-ger').innerHTML=html.length?html.join(''):'<div class="status ok">Nenhuma marcação pendente.</div>';
+  const sol=[];
+  for(const [id,reqs] of Object.entries(this.solicitacoes)){
+   for(const [reqId,r] of Object.entries(reqs||{})){
+    if(Object.keys((this.solucoes[id]||{})[reqId]||{}).length)continue;
+    sol.push('<div class="list-row"><strong>'+xhtml((this.colabs[id]||{}).nome||id)+'</strong> — '+xhtml(r.mes)+'<p>'+xhtml(r.texto)+'</p>'+
+    '<button class="btn" onclick="P.resolverSolicitacao('+JSON.stringify(id)+','+JSON.stringify(reqId)+')">Marcar como analisada</button></div>');
+   }
+  }
+  $('solicitacoes-ger').innerHTML=sol.length?sol.join(''):'<div class="status ok">Nenhuma solicitação pendente.</div>';
+ },
+ async decidir(emp,id,decisao){
+  if(!this.gerente||!['aprovado','rejeitado'].includes(decisao))return;
+  const motivo=prompt(decisao==='aprovado'?'Motivo da aprovação (opcional):':'Motivo da rejeição (obrigatório):')||'';
+  if(decisao==='rejeitado'&&motivo.trim().length<5)return alert('Informe o motivo.');
+  if(!confirm('Confirmar decisão? O registro original será preservado.'))return;
+  try{await this.db.ref('fdo_ponto_aprovacoes/'+emp+'/'+id).push({decisao,motivo:motivo.trim().slice(0,250),gerenteUid:this.uid,servidorTs:firebase.database.ServerValue.TIMESTAMP});await this.atualizarGerencia()}
+  catch(e){alert('Não foi possível registrar a decisão.')}
+ },
  // METHODS
 };
 if(typeof module!=='undefined')module.exports={dataBR,horaBR,horas,vigentes,hashLeve,distM};
