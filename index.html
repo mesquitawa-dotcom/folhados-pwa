@@ -2962,7 +2962,7 @@ const GEO={
   // Reverifica ao voltar do background (Android suspende GPS quando app fica em segundo plano)
   registrarVisibility(){
     document.addEventListener('visibilitychange',()=>{
-      if(document.visibilityState==='visible' && GEO.ativo() && getKey()){
+      if(document.visibilityState==='visible' && GEO.ativo()){
         GEO._reverificar();
       }
     });
