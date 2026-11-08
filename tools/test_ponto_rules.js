@@ -44,6 +44,8 @@ const {ref,set,get,update,remove,serverTimestamp}=require('firebase/database');
   await deny(remove(ref(emp,'fdo_ponto_marcacoes/jack/m1')),'não apaga marcações');
   await deny(set(ref(emp,'fdo_ponto_marcacoes/luana/m2'),mark),'não registra ponto de colega');
   await deny(set(ref(emp,'fdo_ponto_marcacoes/jack/m3'),{...mark,avaliacao:'aprovado'}),'não se autoaprova');
+  await deny(set(ref(emp,'fdo_ponto_marcacoes/jack/m5'),{...mark,gps:{situacao:'fora'}}),'GPS externo não pode ser autoaprovado');
+  await deny(set(ref(emp,'fdo_ponto_marcacoes/jack/m6'),{...mark,clienteTs:Date.now()-3600000}),'horário divergente não pode ser autoaprovado');
   await pass(set(ref(emp,'fdo_ponto_marcacoes/jack/m4'),{...mark,avaliacao:'pendente',gps:{situacao:'fora',distancia:800}}),'permite ponto externo pendente');
   await pass(set(ref(ger,'fdo_ponto_aprovacoes/jack/m4/d1'),{decisao:'aprovado',motivo:'Conferido',gerenteUid:'gerente',servidorTs:serverTimestamp()}),'gerência aprova exceção');
   await deny(set(ref(emp,'fdo_ponto_aprovacoes/jack/m4/d2'),{decisao:'aprovado'}),'funcionário não aprova ponto');
