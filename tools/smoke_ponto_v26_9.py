@@ -40,7 +40,7 @@ window.firebase.database=function(){return{
   once:async()=>({val:()=>DATA[path]??null}),
   push(value){const id='teste'+(++seq);if(value){DATA[path+'/'+id]={...value,servidorTs:Date.now()};return Promise.resolve()}
    return {key:id}},
-  set:async value=>{DATA[path]={...value,servidorTs:Date.now()}},
+  set:async value=>{const v={...value,servidorTs:Date.now()};DATA[path]=v;const a=path.split('/');if(a[0]==='fdo_ponto_marcacoes'&&a.length===3){const par=a.slice(0,-1).join('/');DATA[par]={...(DATA[par]||{}),[a[2]]:v}}},
   update:async value=>{DATA[path]={...(DATA[path]||{}),...value}}
  }}
 }};
