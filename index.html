@@ -2778,9 +2778,7 @@ const GEO={
   // (normalmente o ir('start') ou ir('config')).
   bootstrap(callback){
     GEO._callback=callback;
-    // Exceção: sem chave Gemini é primeira configuração — libera Config
-    // para o operador conseguir cadastrar a chave em qualquer lugar.
-    if(!getKey()){ GEO._chamarCallback(); return; }
+    // A ausência de chave de IA não dispensa a verificação de localização.
     if(!GEO.ativo()){ GEO._chamarCallback(); return; }
     // v23: operador atual com geo_bypass ou bypass de sessão (login autorizado)
     // → não bloqueia.
@@ -3111,9 +3109,8 @@ function entrarBatimento(){ exigeP('batimento', ()=> abrirBatimentoLotes()); }
 function entrarFermentacao(){ exigeP('fermentacao', ()=> abrirFermentacaoLotes()); }
 function entrarLaminacao(){ exigeP('laminacao', ()=> abrirLaminacao()); }
 function entrarModelagem(){ exigeP('modelagem', ()=>{ renderModelagem(); ir('modelagem'); }); }
-// Configurações: senha própria (4567), pedida TODA vez. Exceção: 1ª configuração (sem chave) entra direto.
+// Configurações: senha própria, independente da chave opcional de IA.
 function entrarConfig(){
-  if(!getKey()){ ir('config'); return; }
   st.pinTipo='config'; st.pinAlvo=()=>ir('config'); st.pinBuf='';
   document.getElementById('pin-err').textContent='';
   document.getElementById('pin-title').textContent='Configurações';
@@ -6241,8 +6238,7 @@ FB.aoVoltarOnline=()=>{SYNC25.online();if(typeof ESTOQUE_SYNC!=='undefined')ESTO
 // há operadores cadastrados e ninguém logado.
 function destinoBoot(){
   _bootPendenteOperadores=false;
-  // Primeira configuração: sem chave Gemini → vai direto pra Config
-  if(!getKey()){ ir('config'); return; }
+  // A chave Gemini é opcional e não define o destino de inicialização.
   // Retoma batimento em andamento, se houver
   if(typeof batRestaurar==='function' && batRestaurar()) return;
   // Modo legado: sem operadores cadastrados → app sem login.
@@ -6302,8 +6298,8 @@ window.addEventListener('offline',()=>FB.status('local','Salvo neste aparelho ·
   // Restrição por localização (v22): registra reverificação ao voltar do background
   GEO.registrarVisibility();
   // Verifica localização ANTES de mostrar a interface. Se passar (ou estiver
-  // desativado, ou se houver operador autorizado logado, ou for primeira
-  // config sem chave Gemini), executa o bootApp que escolhe Login/Start/Config.
+  // desativado, ou se houver operador autorizado com permissão),
+  // executa o bootApp que escolhe Login/Start.
   DEVICE.bootstrap(()=>GEO.bootstrap(bootApp));
 })();
 </script>
