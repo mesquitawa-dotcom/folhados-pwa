@@ -506,6 +506,16 @@ const P={
    $('motivo-fechar').value='';await this.atualizarGerencia();this.status('Fechamento registrado com histórico de auditoria.','ok');
   }catch(e){this.status('Falha no fechamento. Nenhuma conclusão foi confirmada.','err')}
  },
+
+ async registrarOcorrencia(){
+  if(!this.gerente)return;
+  const emp=$('emp-selecionado').value,data=$('ocorrencia-data').value,tipo=$('ocorrencia-tipo').value,nota=$('ocorrencia-nota').value.trim();
+  if(!this.colabs[emp]||!/^\d{4}-\d{2}-\d{2}$/.test(data)||!['folga','feriado','justificada','observacao'].includes(tipo)||nota.length<5)return alert('Selecione funcionário, data, tipo e justificativa.');
+  if(!confirm('Registrar esta ocorrência com histórico permanente?'))return;
+  try{await this.db.ref('fdo_ponto_ocorrencias/'+emp).push({data,tipo,nota,gerenteUid:this.uid,servidorTs:firebase.database.ServerValue.TIMESTAMP});
+   $('ocorrencia-nota').value='';await this.atualizarGerencia();this.status('Ocorrência registrada, sem desconto automático de horas.','ok')}
+  catch(e){this.status('Falha ao registrar ocorrência.','err')}
+ },
  // METHODS
 };
 if(typeof module!=='undefined')module.exports={dataBR,horaBR,horas,vigentes,hashLeve,distM};
