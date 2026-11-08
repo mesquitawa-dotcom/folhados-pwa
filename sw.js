@@ -5,6 +5,7 @@ const ASSETS=[
   './',
   './index.html',
   './ponto.html',
+  './ponto-manifest.json',
   './ponto.js',
   './manifest.json',
   './icon-192.png',
