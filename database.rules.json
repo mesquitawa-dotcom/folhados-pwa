@@ -129,6 +129,52 @@
         ".write": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
         ".validate": "newData.hasChildren(['lat','lng','raio']) && newData.child('lat').isNumber() && newData.child('lng').isNumber() && newData.child('raio').isNumber() && newData.child('raio').val() >= 20 && newData.child('raio').val() <= 2000"
       }
+    },
+    "fdo_ponto_marcacoes": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$fid": {
+        ".read": "auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid",
+        "$mid": {
+          ".write": "(auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true || auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid) && !data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['tipo','uid','clienteTs','servidorTs','gps','avaliacao','origem']) && newData.child('uid').val() === auth.uid && newData.child('clienteTs').isNumber() && newData.child('clienteTs').val() > 1577836800000 && newData.child('clienteTs').val() < now + 86400000 && newData.child('servidorTs').val() === now && (newData.child('tipo').val() === 'entrada' || newData.child('tipo').val() === 'saida' || newData.child('tipo').val() === 'inicio_intervalo' || newData.child('tipo').val() === 'fim_intervalo') && (((auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true) && newData.child('origem').val() === 'gerencia' && newData.child('avaliacao').val() === 'aprovado') || ((auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid) && newData.child('origem').val() === 'celular' && (newData.child('avaliacao').val() === 'normal' || newData.child('avaliacao').val() === 'pendente' || newData.child('avaliacao').val() === 'sem_internet' || newData.child('avaliacao').val() === 'relogio')))"
+        }
+      }
+    },
+    "fdo_ponto_aprovacoes": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$fid": {
+        ".read": "auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid",
+        "$eventId": {
+          "$auditId": {
+            ".write": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true && !data.exists() && newData.exists()",
+            ".validate": "newData.hasChildren(['gerenteUid','servidorTs']) && newData.child('gerenteUid').val() === auth.uid && newData.child('servidorTs').val() === now"
+          }
+        }
+      }
+    },
+    "fdo_ponto_ajustes": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$fid": {
+        ".read": "auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid",
+        "$eventId": {
+          "$auditId": {
+            ".write": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true && !data.exists() && newData.exists()",
+            ".validate": "newData.hasChildren(['gerenteUid','servidorTs']) && newData.child('gerenteUid').val() === auth.uid && newData.child('servidorTs').val() === now"
+          }
+        }
+      }
+    },
+    "fdo_ponto_solucoes": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$fid": {
+        ".read": "auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid",
+        "$eventId": {
+          "$auditId": {
+            ".write": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true && !data.exists() && newData.exists()",
+            ".validate": "newData.hasChildren(['gerenteUid','servidorTs']) && newData.child('gerenteUid').val() === auth.uid && newData.child('servidorTs').val() === now"
+          }
+        }
+      }
     }
   }
 }
