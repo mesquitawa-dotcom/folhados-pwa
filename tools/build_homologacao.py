@@ -134,8 +134,11 @@ def main() -> None:
     sw, n = re.subn(r"(const\s+CACHE\s*=\s*['\"])([^'\"]+)(['\"])", r"\1homolog-\2\3", sw, count=1)
     if n != 1:
         fail("não foi possível nomear o cache de homologação")
-    digest = hashlib.sha256((index + (ponto_js.read_text(encoding="utf-8") if ponto_js.exists() else "")).encode()).hexdigest()[:12]
+    digest = hashlib.sha256(Path(__file__).read_bytes() + (index + (ponto_js.read_text(encoding="utf-8") if ponto_js.exists() else "")).encode()).hexdigest()[:12]
     sw = re.sub(r"(const\s+CACHE\s*=\s*['\"])([^'\"]+)(['\"])", lambda m: m.group(1) + m.group(2) + "-" + digest + m.group(3), sw, count=1)
+    if sw.count("c.addAll(ASSETS)") != 1:
+        fail("pré-cache mudou; revisar atualização da homologação")
+    sw = sw.replace("c.addAll(ASSETS)", 'c.addAll(ASSETS.map(path=>new Request(path,{cache:"reload"})))')
     (DEST / "sw.js").write_text(sw, encoding="utf-8")
 
     for rel in ("index.html", "ponto.js"):
