@@ -29,7 +29,7 @@ function vigentes(versoes,dia){const ds=Object.keys(versoes||{}).filter(d=>d.sli
 function hashLeve(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return(h>>>0).toString(16)}
 function ultimo(a){return Object.keys(a||{}).sort().map(k=>a[k]).filter(Boolean).at(-1)||null}
 const P={
- db:null,auth:null,uid:'',gerente:false,funcId:'',perfil:null,pares:{},colabs:{},regras:{},salarios:{},avisos:{},marcacoes:{},aprovacoes:{},ajustes:{},solicitacoes:{},solucoes:{},conferencias:{},fechamentos:{},area:{...gpsBase},offset:null,fila:[],emEnvio:false,carregando:false,
+ db:null,auth:null,uid:'',gerente:false,funcId:'',perfil:null,pares:{},colabs:{},regras:{},salarios:{},avisos:{},marcacoes:{},aprovacoes:{},ajustes:{},ocorrencias:{},solicitacoes:{},solucoes:{},conferencias:{},fechamentos:{},area:{...gpsBase},offset:null,fila:[],emEnvio:false,carregando:false,
  status(msg,tipo=''){const e=$('mensagem');e.textContent=msg;e.className='status '+tipo},
  cache(){try{return JSON.parse(localStorage.getItem('fdo_ponto_sess_v1')||'null')}catch{return null}},
  cacheSalvar(){try{localStorage.setItem('fdo_ponto_sess_v1',JSON.stringify({uid:this.uid,funcId:this.funcId,perfil:this.perfil,area:this.area}))}catch(e){this.status('Armazenamento indisponível. Não registre ponto neste aparelho.','err')}},
@@ -77,11 +77,11 @@ const P={
   if(!this.funcId)return;
   try{
    const root=this.db.ref;
-   const caminhos=['fdo_ponto_colaboradores/'+this.funcId,'fdo_ponto_marcacoes/'+this.funcId,'fdo_ponto_aprovacoes/'+this.funcId,'fdo_ponto_conferencias/'+this.funcId,'fdo_ponto_regras/'+this.funcId,'fdo_ponto_avisos_gerais','fdo_ponto_avisos_individuais/'+this.funcId,'fdo_ponto_config/area','fdo_ponto_ajustes/'+this.funcId];
+   const caminhos=['fdo_ponto_colaboradores/'+this.funcId,'fdo_ponto_marcacoes/'+this.funcId,'fdo_ponto_aprovacoes/'+this.funcId,'fdo_ponto_conferencias/'+this.funcId,'fdo_ponto_regras/'+this.funcId,'fdo_ponto_avisos_gerais','fdo_ponto_avisos_individuais/'+this.funcId,'fdo_ponto_config/area','fdo_ponto_ajustes/'+this.funcId,'fdo_ponto_ocorrencias/'+this.funcId];
    const dados=await Promise.all(caminhos.map(p=>this.db.ref(p).once('value').then(s=>s.val()).catch(()=>null)));
    if(!dados[0]||dados[0].ativo!==true){this.funcId='';show('funcionario',false);show('ativacao');this.status('Cadastro do funcionário inativo ou indisponível.','err');return}
    this.perfil=dados[0];this.marcacoes=dados[1]||{};this.aprovacoes=dados[2]||{};this.conferencias=dados[3]||{};this.regras=dados[4]||{};
-   this.avisos={gerais:dados[5]||{},individuais:dados[6]||{}};this.area=dados[7]||this.area;this.ajustes=dados[8]||{};this.cacheSalvar();this.telaFuncionario();
+   this.avisos={gerais:dados[5]||{},individuais:dados[6]||{}};this.area=dados[7]||this.area;this.ajustes=dados[8]||{};this.ocorrencias=dados[9]||{};this.cacheSalvar();this.telaFuncionario();
    this.status('Acesso autorizado. Registre sua entrada ou saída normalmente.','ok');
   }catch(e){this.status('Erro ao carregar seus registros. Tente novamente.','err');console.warn(e)}
  },
@@ -217,6 +217,23 @@ const P={
    if(dia.slice(0,7)!==mes)continue;
    const row=garantir(dia);row.marcas.push(e);row.provisorio=true;row.motivos.push(e.razao);
   }
+  // Dias sem marcação não são classificados automaticamente como falta.
+  const ocorr=this.gerente?(this.ocorrencias[id]||{}):(id===this.funcId?this.ocorrencias:{});
+  for(const o of Object.values(ocorr||{})){
+   if(!o||typeof o.data!=='string'||o.data.slice(0,7)!==mes)continue;
+   const row=garantir(o.data);row.ocorrencia=o;
+   if(o.tipo==='folga'||o.tipo==='feriado')row.abonado=true;
+   if(o.tipo==='justificada')row.motivos.push('Ausência justificada: conferir impacto');
+  }
+  const regrasDia=this.gerente?(this.regras[id]||{}):(id===this.funcId?this.regras:{});
+  const partes=mes.split('-').map(Number),numDias=new Date(Date.UTC(partes[0],partes[1],0)).getUTCDate();
+  const hoje=dataBR(Date.now()),ate=mes<hoje.slice(0,7)?numDias:mes===hoje.slice(0,7)?Math.max(0,Number(hoje.slice(8))-1):0;
+  for(let n=1;n<=ate;n++){
+   const dia=mes+'-'+pad(n),reg=vigentes(regrasDia,dia),meta=reg&&reg.dias?reg.dias[diaSemana(dia)]:null;
+   if(meta==null||Number(meta)<=0)continue;
+   const row=garantir(dia);
+   if(!row.marcas.length&&!row.abonado){row.provisorio=true;row.motivos.push('Sem marcação: conferir falta, feriado ou folga')}
+  }
   const dias=Object.values(porDia).filter(d=>d.data.slice(0,7)===mes).sort((a,b)=>a.data.localeCompare(b.data));
   let confirmados=0,provisorios=0,previstos=0;
   const regras=this.gerente?(this.regras[id]||{}):(id===this.funcId?this.regras:{});
@@ -233,13 +250,13 @@ const P={
   return'<table><thead><tr><th>Data</th><th>Marcações</th><th>Trabalhado</th><th>Situação</th></tr></thead><tbody>'+
    res.dias.map(d=>'<tr><td>'+xhtml(d.data.slice(8)+'/'+d.data.slice(5,7))+'</td><td>'+
    d.marcas.map(e=>xhtml(horaBR(e.clienteTs))).join(' · ')+'</td><td>'+horas(d.min)+'</td><td>'+
-   (d.provisorio?'Pendente':'Confirmado')+'</td></tr>').join('')+'</tbody></table>';
+   (d.provisorio?'Pendente':d.abonado?(d.ocorrencia.tipo==='folga'?'Folga':'Feriado'):'Confirmado')+(d.motivos.length?' · '+xhtml([...new Set(d.motivos)].join('; ')):'')+'</td></tr>').join('')+'</tbody></table>';
  },
  fingerprint(id,mes){
   const eventos=this.marcasDe(id).filter(e=>dataBR(e.clienteTs).slice(0,7)===mes);
   const dados=this.resumoMes(id,mes);
   return hashLeve(JSON.stringify(eventos.map(e=>[e.id,e.clienteTs,e.tipo,e.avaliacao,e.decisao,e.corrigido]))+
-  JSON.stringify([dados.confirmados,dados.provisorios,dados.pendencias]));
+  JSON.stringify([dados.confirmados,dados.provisorios,dados.pendencias,dados.dias.map(d=>[d.data,d.motivos,d.abonado])]));
  },
  async confirmarConferencia(){
   if(!this.funcId||!navigator.onLine)return this.status('Conecte-se para confirmar sua conferência.','err');
@@ -265,10 +282,10 @@ const P={
 
  async atualizarGerencia(){
   if(!this.gerente||!navigator.onLine)return this.status('Painel gerencial exige conexão.','err');
-  const keys=['fdo_ponto_colaboradores','fdo_ponto_regras','fdo_ponto_financeiro','fdo_ponto_marcacoes','fdo_ponto_aprovacoes','fdo_ponto_solicitacoes','fdo_ponto_solucoes','fdo_ponto_conferencias','fdo_ponto_fechamentos','fdo_ponto_vinculos','fdo_ponto_config/area','fdo_ponto_ajustes'];
+  const keys=['fdo_ponto_colaboradores','fdo_ponto_regras','fdo_ponto_financeiro','fdo_ponto_marcacoes','fdo_ponto_aprovacoes','fdo_ponto_solicitacoes','fdo_ponto_solucoes','fdo_ponto_conferencias','fdo_ponto_fechamentos','fdo_ponto_vinculos','fdo_ponto_config/area','fdo_ponto_ajustes','fdo_ponto_ocorrencias'];
   try{
    const results=await Promise.all(keys.map(k=>this.db.ref(k).once('value').then(s=>s.val())));
-   [this.colabs,this.regras,this.salarios,this.marcacoes,this.aprovacoes,this.solicitacoes,this.solucoes,this.conferencias,this.fechamentos,this.pares]=results.slice(0,10).map(x=>x||{});this.ajustes=results[11]||{};
+   [this.colabs,this.regras,this.salarios,this.marcacoes,this.aprovacoes,this.solicitacoes,this.solucoes,this.conferencias,this.fechamentos,this.pares]=results.slice(0,10).map(x=>x||{});this.ajustes=results[11]||{};this.ocorrencias=results[12]||{};
    this.area=results[10]||this.area;
    this.prepararSeletores();this.renderPendencias();this.renderRelatorio();this.preencherGPS();this.status('Gerência atualizada.','ok');
   }catch(e){console.error('[PONTO] gerência',e);this.status('Erro ao carregar a gerência. Verifique as Rules e sua autorização.','err')}
