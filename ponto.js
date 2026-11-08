@@ -49,7 +49,8 @@ const P={
    this.auth=firebase.auth();this.db=firebase.database();await this.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
    const user=await new Promise(resolve=>{const unsub=this.auth.onAuthStateChanged(u=>{unsub();resolve(u)})});
    const cred=user?{user}:await this.auth.signInAnonymously();this.uid=cred.user.uid;txt('uid',this.uid);
-   this.fila=this.lerFila().filter(v=>v.uid===this.uid);
+   this.fila=this.lerFila();
+   if(this.fila.some(v=>v.uid!==this.uid))console.warn('[PONTO] Existem registros locais de outra identidade. Preservados para conferência; não apagados.');
    const cache=this.cache();
    if(!navigator.onLine){
     if(cache&&cache.uid===this.uid&&cache.funcId){this.funcId=cache.funcId;this.perfil=cache.perfil;this.area=cache.area||this.area;this.marcacoes={};this.telaFuncionario();this.status('Sem internet: registros ficarão pendentes de sincronização.','err')}
@@ -90,7 +91,7 @@ const P={
  telaFuncionario(){show('ativacao',false);show('gerencia',false);show('funcionario');this.renderFuncionario()},
  eventosFuncionario(){
   const obj={...this.marcacoes};
-  this.fila.filter(v=>v.funcionarioId===this.funcId).forEach(v=>{obj[v.id]=v.registro});
+  this.fila.filter(v=>v.funcionarioId===this.funcId&&v.uid===this.uid).forEach(v=>{obj[v.id]=v.registro});
   return obj;
  },
  ultimaMarcacao(){
