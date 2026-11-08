@@ -1,1 +1,25 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Folhados d'Ouro — Ponto</title></head><body><!-- CONTENT --><script>// CODE</script></body></html>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#0a0905"><title>Folhados d'Ouro — Ponto (piloto)</title><link rel="manifest" href="./manifest.json">
+<style>
+:root{--gold:#c9973a;--bg:#0a0905;--gl:#f5d98b;--grn:#4ade80;--red:#f87171;--mut:#b9ad93}
+*{box-sizing:border-box}html{font-size:20px}body{margin:0;background:var(--bg);color:#f3ecdc;font:1rem/1.45 Georgia,serif}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.48}
+.off{display:none!important}.shell{max-width:750px;margin:auto;padding:1rem .8rem 5rem}.top{display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.3rem 0 1rem}
+.brand{color:var(--gl);font-weight:bold}.sub,.muted{color:var(--mut);font-size:.75rem}.panel{border:1px solid #554728;background:#211b10;border-radius:.7rem;padding:.8rem;margin-bottom:.75rem}
+h1{font-size:1.27rem;color:var(--gl);margin:.2rem 0 .6rem}h2{font-size:1rem;color:var(--gl);margin:0 0 .6rem}
+.btn{border:1px solid #88703d;color:var(--gl);background:#2e2515;border-radius:.6rem;min-height:2.5rem;padding:.45rem .6rem}.main-btn{background:var(--gold);color:#211609;border:0;font-weight:bold}
+.big{width:100%;min-height:4rem;font-size:1.1rem}.field{display:block;margin:.5rem 0}.field span{display:block;color:var(--mut);font-size:.73rem;margin-bottom:.1rem}
+.field input,.field select,.field textarea{display:block;width:100%;background:#100e0a;color:#fff2d8;border:1px solid #655332;border-radius:.35rem;padding:.45rem;min-height:2.4rem}.field textarea{min-height:4rem}
+.actions{display:flex;gap:.45rem;flex-wrap:wrap;margin:.65rem 0}.actions>*{flex:1 1 130px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}
+.metric{background:#292213;border-radius:.55rem;padding:.65rem}.metric strong{display:block;font-size:1.35rem;color:var(--gl)}
+.status{border-radius:.5rem;padding:.6rem;margin:.55rem 0;background:#342914;color:#fce6af}.status.ok{background:#1b3522;color:#c5f7d0}.status.err{background:#482321;color:#ffe0dc}
+.nav{display:flex;gap:.35rem;overflow:auto;margin-bottom:.7rem}.nav button{font-size:.74rem;white-space:nowrap}
+.row{display:flex;align-items:center;justify-content:space-between;gap:.5rem}.list-row{padding:.6rem 0;border-bottom:1px solid #4b3a20;font-size:.82rem}.tag{font-size:.66rem;border:1px solid #907445;border-radius:1rem;padding:.15rem .4rem}
+.pill{display:inline-block;background:#2c2515;border:1px solid #5c4828;border-radius:.4rem;padding:.3rem .5rem}
+table{border-collapse:collapse;width:100%;font-size:.73rem}td,th{border-bottom:1px solid #493c25;padding:.43rem .25rem;text-align:left}
+.table-wrap{overflow:auto}.tiny{font-size:.67rem;color:var(--mut)}#ponto-impressao{display:none}
+@media print{body{background:white!important;color:black!important;font:11pt Arial,sans-serif}.shell{display:none!important}#ponto-impressao{display:block!important;margin:10mm}#ponto-impressao h1{color:#111}#ponto-impressao table{font:9pt Arial,sans-serif}#ponto-impressao td,#ponto-impressao th{border:1px solid #777;padding:3px}}
+</style>
+<script src="./vendor/firebase-app-compat.js"></script><script src="./vendor/firebase-app-check-compat.js"></script><script src="./vendor/firebase-auth-compat.js"></script><script src="./vendor/firebase-database-compat.js"></script>
+</head><body><main class="shell"><header class="top"><div><div class="brand">🥐 Folhados d'Ouro</div><div class="sub">Ponto · piloto · acesso separado da produção</div></div><a class="btn" href="./index.html">Produção</a></header>
+<div class="status" id="mensagem">Iniciando acesso seguro...</div>
+<!-- TELAS -->
+</main><div id="ponto-impressao"></div><script src="./ponto.js"></script></body></html>
