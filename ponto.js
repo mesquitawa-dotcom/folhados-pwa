@@ -134,6 +134,7 @@ const P={
   this.registrando=true;$('principal').disabled=true;show('intervalo',false);
   try{
    txt('feedback','Verificando a localização para registrar o horário...');
+   if(navigator.onLine){try{const a=await this.db.ref('fdo_ponto_config/area').once('value');if(a.val())this.area=a.val();const o=await this.db.ref('.info/serverTimeOffset').once('value');this.offset=Number(o.val())||0}catch(e){this.offset=null}}
    const geo=await this.gpsAgora(),offline=!navigator.onLine,relogio=this.offset===null||Math.abs(this.offset)>300000;
    const status=offline?'sem_internet':relogio?'relogio':geo.situacao==='dentro'?'normal':'pendente';
    const registro={tipo,uid:this.uid,clienteTs:Date.now(),servidorTs:firebase.database.ServerValue.TIMESTAMP,gps:geo,avaliacao:status,origem:'celular'};
@@ -144,8 +145,9 @@ const P={
    this.marcacoes[id]=registro;
    this.renderFuncionario();
    if(!offline)await this.sincronizarFila();
-   const pendente=status!=='normal';
-   txt('feedback',offline?'Registro salvo neste aparelho, aguardando sincronização e aprovação da gerência.':(pendente?'Ponto registrado, mas está fora da área autorizada ou sem GPS confiável: PENDENTE DE APROVAÇÃO.':'Ponto registrado. Confira a sincronização acima.'));
+   const aindaLocal=this.fila.some(x=>x.id===id),pendente=status!=='normal';
+   const msg=aindaLocal?'Registro salvo no aparelho, aguardando sincronização e aprovação da gerência.':(geo.situacao==='fora'?'Você está fora da fábrica. Ponto registrado, PENDENTE DE APROVAÇÃO.':pendente?'Ponto registrado, PENDENTE DE APROVAÇÃO da gerência por GPS/relógio.':'Ponto registrado e confirmado.');
+   txt('feedback',msg);
   }catch(e){this.status(e.message||'Não foi possível registrar o ponto.','err')}
   finally{this.registrando=false;$('principal').disabled=false;this.renderFuncionario()}
  },
@@ -158,7 +160,7 @@ const P={
     try{
      await this.db.ref('fdo_ponto_marcacoes/'+item.funcionarioId+'/'+item.id).set(item.registro);
      this.fila=this.fila.filter(x=>x.id!==item.id);this.gravarFila();
-    }catch(e){console.warn('[PONTO] fila pendente',e);this.status('Há marcações aguardando sincronização. Não limpe os dados do aplicativo.','err');break}
+    }catch(e){console.warn('[PONTO] fila pendente',e);if(item.registro.avaliacao==='normal')item.registro.avaliacao='sem_internet';this.gravarFila();this.status('Há marcações aguardando sincronização. Não limpe os dados do aplicativo.','err');break}
    }
    if(this.funcId&&!this.gerente&&navigator.onLine)await this.atualizarFuncionario();
   }finally{this.emEnvio=false}
@@ -169,7 +171,9 @@ const P={
   const a=this.gerente?(this.aprovacoes[id]||{}):this.aprovacoes;
   const registros=Object.entries(v).map(([key,e])=>{
    const decisoes=a[key]||{},last=ultimo(decisoes),aj=(this.gerente?(this.ajustes[id]||{}):this.ajustes)||{},corr=ultimo(aj[key]||{});
-   return {...e,id:key,originalTs:e.clienteTs,clienteTs:Number(corr?corr.clienteTs:e.clienteTs)||0,corrigido:!!corr,decisao:last?last.decisao:null,justificativa:last?last.motivo:null};
+   const servidor=typeof e.servidorTs==='number'?e.servidorTs:null;const drift=e.origem==='celular'&&e.avaliacao==='normal'&&servidor&&Math.abs(e.clienteTs-servidor)>300000;
+   const efetivo=corr?corr.clienteTs:(e.origem==='celular'&&servidor&&!drift?servidor:e.clienteTs);
+   return {...e,id:key,originalTs:e.clienteTs,clienteTs:Number(efetivo)||0,corrigido:!!corr,avaliacao:drift?'relogio':e.avaliacao,decisao:last?last.decisao:null,justificativa:last?last.motivo:null};
   }).filter(e=>e.clienteTs>0&&tipos.includes(e.tipo));
   return registros.sort((a,b)=>a.clienteTs-b.clienteTs||a.id.localeCompare(b.id));
  },
@@ -488,4 +492,5 @@ const P={
  // METHODS
 };
 if(typeof module!=='undefined')module.exports={dataBR,horaBR,horas,vigentes,hashLeve,distM};
+if(typeof window!=='undefined')window.P=P;
 if(typeof document!=='undefined')window.addEventListener('DOMContentLoaded',()=>P.init());
