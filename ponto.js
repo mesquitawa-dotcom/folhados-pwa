@@ -386,6 +386,29 @@ const P={
    $('manual-motivo').value='';await this.atualizarGerencia();
   }catch(e){alert('Erro ao registrar marcação supervisionada.')}
  },
+
+ preencherGPS(){const a=this.area||gpsBase;$('gps-lat').value=a.lat;$('gps-lng').value=a.lng;$('gps-raio').value=a.raio},
+ async salvarGPS(){
+  if(!this.gerente)return;
+  const lat=Number($('gps-lat').value),lng=Number($('gps-lng').value),raio=Number($('gps-raio').value);
+  if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180||raio<20||raio>2000)return alert('Valores GPS inválidos.');
+  try{await this.db.ref('fdo_ponto_config/area').set({lat,lng,raio});this.area={lat,lng,raio};this.status('Área de registro atualizada.','ok')}
+  catch(e){this.status('Erro ao salvar a área de registro.','err')}
+ },
+ async copiarLink(acao){
+  const url=new URL('./ponto.html',location.href);url.searchParams.set('acao',acao);
+  try{await navigator.clipboard.writeText(url.href);this.status('Link copiado. Pode ser transformado em QR impresso.','ok')}
+  catch{prompt('Copie o link:',url.href)}
+ },
+ async publicarAviso(){
+  if(!this.gerente)return;
+  const alvo=$('aviso-alvo').value,texto=$('aviso-texto').value.trim();
+  if(texto.length<3)return alert('Escreva a mensagem do aviso.');
+  const path=alvo==='todos'?'fdo_ponto_avisos_gerais':'fdo_ponto_avisos_individuais/'+alvo;
+  try{await this.db.ref(path).push({texto,gerenteUid:this.uid,clienteTs:Date.now(),servidorTs:firebase.database.ServerValue.TIMESTAMP});
+   $('aviso-texto').value='';this.status('Aviso publicado. Ele aparecerá no Ponto do funcionário.','ok')}
+  catch(e){this.status('Falha ao publicar aviso.','err')}
+ },
  // METHODS
 };
 if(typeof module!=='undefined')module.exports={dataBR,horaBR,horas,vigentes,hashLeve,distM};
