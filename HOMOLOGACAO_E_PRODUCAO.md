@@ -7,9 +7,9 @@
 | Ambiente | Endereço | Branch | Firebase |
 |---|---|---|---|
 | **PRODUÇÃO** | https://mesquitawa-dotcom.github.io/folhados-pwa/ | **main** | Projeto atual, com dados reais |
-| **HOMOLOGAÇÃO** | https://ID_DO_PROJETO.web.app/ | **homologacao** | **Outro projeto Firebase, sem dados reais** |
+| **HOMOLOGAÇÃO** | https://fdo-homologacao-mesquita.web.app/ | **homologacao** | **Outro projeto Firebase, sem dados reais** |
 
-O endereço de homologação só existirá após a primeira configuração. Não inventar o ID: usar o criado pelo Firebase.
+Projeto configurado: `fdo-homologacao-mesquita` (Spark). Authentication anônima e banco vazio criados; o Hosting aguarda a primeira publicação validada.
 
 1. Uma nova versão é colocada em **homologacao**.
 2. GitHub Actions executa automaticamente os testes do aplicativo, receitas, interface e segurança das Rules no emulador.
@@ -29,27 +29,27 @@ Abrir https://console.firebase.google.com/ e:
 4. Em Hosting, iniciar o serviço (a URL terá o formato https://ID_DO_PROJETO.web.app).
 5. Em Project settings → General → Your apps, registrar um novo app **Web**. Copiar a configuração completa **firebaseConfig** do projeto NOVO: apiKey, authDomain, databaseURL, projectId, storageBucket, messagingSenderId e appId.
 6. **App Check:** inicialmente manter o enforcement desativado. Se desejar, configurar uma chave reCAPTCHA Enterprise própria da homologação; nunca aproveitar a chave da produção.
-7. Criar uma **conta de serviço do projeto NOVO**, com permissões limitadas ao deploy do Hosting e das Database Rules. Baixar a credencial JSON, mantê-la secreta, nunca colocar no Git e nunca compartilhá-la pelo chat.
+7. Conta exclusiva: `fdo-github-homologacao@fdo-homologacao-mesquita.iam.gserviceaccount.com`, com Administrador do Firebase Hosting e Administrador do Firebase Realtime Database somente neste projeto.
+8. Autenticação temporária por Workload Identity Federation, sem chave privada JSON. Pool `fdo-github`, provedor `github-homologacao`, projeto numérico `86853323751`.
+9. Condição do provedor restringe proprietário GitHub `286177442`, repositório `1244098321`, branch `refs/heads/homologacao` e workflow `mesquitawa-dotcom/folhados-pwa/.github/workflows/deploy-homologacao.yml@refs/heads/homologacao`.
+10. A identidade do repositório recebe `roles/iam.workloadIdentityUser` apenas na conta exclusiva. A permissão de administrador do Realtime Database inclui dados e regras do ambiente de testes.
 
-O armazenamento local também fica separado, pois o site de homologação usa outro domínio.
+O armazenamento local fica separado pelo domínio. Usar somente dados fictícios.
 
-## 3. Configuração necessária UMA VEZ — GitHub
+## 3. Configuração do GitHub
 
-Abrir https://github.com/mesquitawa-dotcom/folhados-pwa/settings/secrets/actions
+Variables cadastradas:
+- **FDO_HOMOLOG_FIREBASE_PROJECT_ID** = `fdo-homologacao-mesquita`.
+- **FDO_HOMOLOG_FIREBASE_WEB_CONFIG** = configuração pública do app Web `1:86853323751:web:d971b48a800f71ddadcb42`.
+- **FDO_HOMOLOG_APP_CHECK_KEY** = opcional, permanece ausente.
 
-Em **Variables → New repository variable**:
-- **FDO_HOMOLOG_FIREBASE_PROJECT_ID** = ID exato do NOVO projeto Firebase.
-- **FDO_HOMOLOG_FIREBASE_WEB_CONFIG** = JSON completo do firebaseConfig do NOVO app Web.
-- **FDO_HOMOLOG_APP_CHECK_KEY** = opcional; chave pública do App Check NOVO.
+**Não é necessário Secret de chave privada.** O job de publicação recebe `id-token: write` e usa `google-github-actions/auth` fixado por SHA, imediatamente antes do deploy. A credencial temporária fica fora da pasta publicada e é removida pela action ao fim do job.
 
-Em **Secrets → New repository secret**:
-- **FDO_HOMOLOG_FIREBASE_SERVICE_ACCOUNT** = conteúdo completo da credencial JSON da conta de serviço do projeto NOVO.
-
-O workflow verifica que a credencial de serviço, a configuração Web e o projectId são do mesmo projeto e **recusa o ID da produção**. A credencial fica apenas na execução do GitHub Actions e não é publicada no PWA.
+O helper `tools/preparar_credencial_homologacao.py` agora valida projeto, banco, app Web, repositório e branch e não grava credencial. Nove testes em `tools/test_credencial_homologacao.py` verificam o isolamento antes da autenticação. O build continua recusando referências à produção.
 
 ## 4. Como iniciar o primeiro deploy
 
-Depois de configurar as Variables e o Secret, abrir a última execução de:
+Depois de configurar as Variables e a federação, abrir a última execução de:
 https://github.com/mesquitawa-dotcom/folhados-pwa/actions/workflows/deploy-homologacao.yml
 
 Reexecutar os jobs. O workflow também dispara automaticamente sempre que houver nova atualização na branch **homologacao**. Se o botão Run workflow não aparecer porque a rotina ainda não existe em main, usar **Re-run jobs** na execução já criada.
@@ -85,7 +85,7 @@ Essas configurações de proteção exigem ação no GitHub; **não foram realiz
 
 Automatizado: suíte existente de testes é reutilizada pela rotina de deploy, build com Firebase de testes, alerta visual, cache de homologação, deploy do Hosting e das Rules no projeto NOVO. A publicação de produção após merge segue GitHub Pages como atualmente.
 
-Depende de ação uma única vez: criar/configurar Firebase novo e cadastrar Variables/Secret. Depende de aprovação a cada versão: mesclar Pull Request para main.
+Depende de ação uma única vez: configurar Firebase novo, Variables e federação de identidade. Depende de aprovação a cada versão: mesclar Pull Request para main.
 
 Backup do main preservado em **backup/pre-homologacao-2026-11-08**, commit **41bb4c3bae958c77879069f49ecb008d8af57317**.
 

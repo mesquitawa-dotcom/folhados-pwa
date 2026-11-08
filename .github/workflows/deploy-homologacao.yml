@@ -21,6 +21,10 @@ jobs:
   publicar:
     name: Publicar somente no Firebase de HOMOLOGAÇÃO
     needs: validar
+    if: github.ref == 'refs/heads/homologacao' && github.repository == 'mesquitawa-dotcom/folhados-pwa'
+    permissions:
+      contents: read
+      id-token: write
     runs-on: ubuntu-latest
     environment:
       name: homologacao
@@ -30,11 +34,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Bloquear credenciais ausentes, trocadas ou de produção
+      - name: Testar bloqueios de destino e identidade
+        run: python3 tools/test_credencial_homologacao.py
+      - name: Bloquear configuração ausente, trocada ou de produção
         env:
           FDO_HOMOLOG_FIREBASE_PROJECT_ID: ${{ vars.FDO_HOMOLOG_FIREBASE_PROJECT_ID }}
           FDO_HOMOLOG_FIREBASE_WEB_CONFIG: ${{ vars.FDO_HOMOLOG_FIREBASE_WEB_CONFIG }}
-          FDO_HOMOLOG_FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FDO_HOMOLOG_FIREBASE_SERVICE_ACCOUNT }}
         run: python3 tools/preparar_credencial_homologacao.py
       - name: Construir HTML/JS com banco exclusivo de testes
         env:
@@ -44,9 +49,14 @@ jobs:
         run: python3 tools/build_homologacao.py
       - name: Instalar Firebase CLI
         run: npm install -g firebase-tools
+      - name: Autenticar com identidade temporária exclusiva da homologação
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          project_id: fdo-homologacao-mesquita
+          workload_identity_provider: projects/86853323751/locations/global/workloadIdentityPools/fdo-github/providers/github-homologacao
+          service_account: fdo-github-homologacao@fdo-homologacao-mesquita.iam.gserviceaccount.com
       - name: Publicar Hosting e Rules APENAS no projeto de testes
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/fdo-homolog-firebase-sa.json
           FDO_HOMOLOG_FIREBASE_PROJECT_ID: ${{ vars.FDO_HOMOLOG_FIREBASE_PROJECT_ID }}
         run: |
           set -euo pipefail
