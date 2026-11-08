@@ -1,0 +1,49 @@
+'use strict';
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const html=fs.readFileSync('ponto.html','utf8');
+const src=fs.readFileSync('ponto.js','utf8');
+const rules=JSON.parse(fs.readFileSync('database.rules.json','utf8')).rules;
+const index=fs.readFileSync('index.html','utf8');
+new vm.Script(src,{filename:'ponto.js'});
+const ctx={module:{exports:{}},console,Date,Math,JSON,Intl};
+vm.createContext(ctx);
+vm.runInContext(src,ctx);
+const {P,dataBR,horaBR,horas,vigentes,distM}=vm.runInContext('({P,dataBR,horaBR,horas,vigentes,distM})',ctx);
+assert(index.includes('href="./ponto.html"')&&index.includes('id="menu-producao"'));
+assert(fs.readFileSync('sw.js','utf8').includes("'./ponto.js'"));
+for(const [,id] of html.matchAll(/id="([^"]+)"/g))assert(!html.slice(html.indexOf('id="'+id+'"')+id.length+5).includes('id="'+id+'"'),'ID duplicado: '+id);
+const ids=new Set([...html.matchAll(/id="([^"]+)"/g)].map(x=>x[1]));
+for(const [,id] of src.matchAll(/\$\('([^']+)'\)/g))assert(ids.has(id),'ID faltando '+id);
+for(const [,fn] of html.matchAll(/onclick="P\.([a-zA-Z_]\w*)\(/g))assert.strictEqual(typeof P[fn],'function','Handler não existe: '+fn);
+assert.strictEqual(horas(504),'8h24');
+assert.strictEqual(dataBR(Date.parse('2026-06-03T12:00:00-03:00')),'2026-06-03');
+assert.strictEqual(horaBR(Date.parse('2026-06-03T07:35:00-03:00')),'07:35');
+assert(distM(-20.5294456,-47.3940625,-20.5294456,-47.3940625)===0);
+assert(vigentes({'2026-06-01~a':{v:1},'2026-07-01~b':{v:2}},'2026-06-25').v===1);
+const t=(s)=>Date.parse('2026-06-03T'+s+':00-03:00');
+const regs={
+ a:{tipo:'entrada',clienteTs:t('07:35'),avaliacao:'normal'},
+ b:{tipo:'inicio_intervalo',clienteTs:t('09:12'),avaliacao:'normal'},
+ c:{tipo:'fim_intervalo',clienteTs:t('10:36'),avaliacao:'normal'},
+ d:{tipo:'saida',clienteTs:t('17:23'),avaliacao:'normal'}
+};
+P.gerente=true;P.marcacoes={emp:regs};P.aprovacoes={emp:{}};P.ajustes={emp:{}};P.regras={emp:{}};P.colabs={emp:{nome:'Teste',tipo:'horista'}};
+let res=P.resumoMes('emp','2026-06');
+assert.strictEqual(res.confirmados,504,'duas sessões de trabalho no dia');
+assert.strictEqual(res.provisorios,0);
+P.marcacoes.emp.b.avaliacao='pendente';res=P.resumoMes('emp','2026-06');
+assert.strictEqual(res.confirmados,0,'pendência não entra em horas confirmadas');
+assert.strictEqual(res.provisorios,504);
+P.aprovacoes.emp.b={dec1:{decisao:'aprovado',motivo:'Conferido'}};
+res=P.resumoMes('emp','2026-06');assert.strictEqual(res.confirmados,504,'gerência aprovou exceção');
+P.ajustes.emp.d={aj1:{clienteTs:t('18:23'),motivo:'Ajuste auditado'}};
+res=P.resumoMes('emp','2026-06');assert.strictEqual(res.confirmados,564,'correção muda cálculo sem apagar original');
+assert.strictEqual(P.marcacoes.emp.d.clienteTs,t('17:23'));
+P.marcacoes.emp.d={tipo:'fim_intervalo',clienteTs:t('17:23'),avaliacao:'normal'};
+P.ajustes.emp.d={};res=P.resumoMes('emp','2026-06');
+assert.strictEqual(res.confirmados,0,'jornada incompleta não pode ser considerada completa');
+for(const key of ['fdo_ponto_gerentes','fdo_ponto_vinculos','fdo_ponto_marcacoes','fdo_ponto_financeiro','fdo_ponto_aprovacoes','fdo_ponto_ajustes','fdo_ponto_conferencias','fdo_ponto_fechamentos'])assert(rules[key],'Rules ausentes: '+key);
+assert.strictEqual(rules.fdo_ponto_financeiro['.read'].includes('fdo_ponto_gerentes'),true);
+assert.strictEqual(rules.fdo_ponto_marcacoes.$fid.$mid['.write'].includes('!data.exists()'),true);
+assert.strictEqual(rules.fdo_ponto_gerentes.$uid['.write'],false);
+console.log('PONTO v26.9 OK — sintaxe, UI, intervalos, pendência, aprovação, auditoria e privacidade estrutural');
