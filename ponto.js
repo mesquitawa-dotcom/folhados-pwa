@@ -36,6 +36,7 @@ const P={
  lerFila(){try{const v=JSON.parse(localStorage.getItem('fdo_ponto_fila_v1')||'[]');return Array.isArray(v)?v:[]}catch{return []}},
  gravarFila(){localStorage.setItem('fdo_ponto_fila_v1',JSON.stringify(this.fila))},
  async init(){
+  if(typeof navigator!=='undefined'&&'serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('[PONTO] Service Worker',e));
   const mes=mesAtual(),ano=Number(mes.slice(0,4)),m=Number(mes.slice(5));const ant=(m===1?ano-1:ano)+'-'+pad(m===1?12:m-1);
   $('mes-func').value=mes;$('mes-func').min=ant;$('mes-func').max=mes;$('mes-ger').value=mes;
   $('emp-vigencia').value=dataBR(Date.now());
