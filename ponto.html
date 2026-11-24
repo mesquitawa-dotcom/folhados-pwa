@@ -1,0 +1,62 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#0a0905"><title>Folhados d'Ouro — Ponto (piloto)</title><link rel="manifest" href="./ponto-manifest.json">
+<style>
+:root{--gold:#c9973a;--bg:#0a0905;--gl:#f5d98b;--grn:#4ade80;--red:#f87171;--mut:#b9ad93}
+*{box-sizing:border-box}html{font-size:20px}body{margin:0;background:var(--bg);color:#f3ecdc;font:1rem/1.45 Georgia,serif}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.48}
+.off{display:none!important}.shell{max-width:750px;margin:auto;padding:1rem .8rem 5rem}.top{display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.3rem 0 1rem}
+.brand{color:var(--gl);font-weight:bold}.sub,.muted{color:var(--mut);font-size:.75rem}.panel{border:1px solid #554728;background:#211b10;border-radius:.7rem;padding:.8rem;margin-bottom:.75rem}
+h1{font-size:1.27rem;color:var(--gl);margin:.2rem 0 .6rem}h2{font-size:1rem;color:var(--gl);margin:0 0 .6rem}
+.btn{border:1px solid #88703d;color:var(--gl);background:#2e2515;border-radius:.6rem;min-height:2.5rem;padding:.45rem .6rem}.main-btn{background:var(--gold);color:#211609;border:0;font-weight:bold}
+.big{width:100%;min-height:4rem;font-size:1.1rem}.field{display:block;margin:.5rem 0}.field span{display:block;color:var(--mut);font-size:.73rem;margin-bottom:.1rem}
+.field input,.field select,.field textarea{display:block;width:100%;background:#100e0a;color:#fff2d8;border:1px solid #655332;border-radius:.35rem;padding:.45rem;min-height:2.4rem}.field textarea{min-height:4rem}
+.actions{display:flex;gap:.45rem;flex-wrap:wrap;margin:.65rem 0}.actions>*{flex:1 1 130px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}
+.metric{background:#292213;border-radius:.55rem;padding:.65rem}.metric strong{display:block;font-size:1.35rem;color:var(--gl)}
+.status{border-radius:.5rem;padding:.6rem;margin:.55rem 0;background:#342914;color:#fce6af}.status.ok{background:#1b3522;color:#c5f7d0}.status.err{background:#482321;color:#ffe0dc}
+.nav{display:flex;gap:.35rem;overflow:auto;margin-bottom:.7rem}.nav button{font-size:.74rem;white-space:nowrap}
+.row{display:flex;align-items:center;justify-content:space-between;gap:.5rem}.list-row{padding:.6rem 0;border-bottom:1px solid #4b3a20;font-size:.82rem}.tag{font-size:.66rem;border:1px solid #907445;border-radius:1rem;padding:.15rem .4rem}
+.pill{display:inline-block;background:#2c2515;border:1px solid #5c4828;border-radius:.4rem;padding:.3rem .5rem}
+table{border-collapse:collapse;width:100%;font-size:.73rem}td,th{border-bottom:1px solid #493c25;padding:.43rem .25rem;text-align:left}
+.table-wrap{overflow:auto}.tiny{font-size:.67rem;color:var(--mut)}#ponto-impressao{display:none}
+@media print{body{background:white!important;color:black!important;font:11pt Arial,sans-serif}.shell{display:none!important}#ponto-impressao{display:block!important;margin:10mm}#ponto-impressao h1{color:#111}#ponto-impressao table{font:9pt Arial,sans-serif}#ponto-impressao td,#ponto-impressao th{border:1px solid #777;padding:3px}}
+</style>
+<script src="./vendor/firebase-app-compat.js"></script><script src="./vendor/firebase-app-check-compat.js"></script><script src="./vendor/firebase-auth-compat.js"></script><script src="./vendor/firebase-database-compat.js"></script>
+</head><body><main class="shell"><header class="top"><div><div class="brand">🥐 Folhados d'Ouro</div><div class="sub">Ponto · piloto · acesso separado da produção</div></div><span class="tag">Área do funcionário</span></header>
+<div class="status" id="mensagem">Iniciando acesso seguro...</div>
+<section id="ativacao" class="panel off"><h1>Autorizar este celular</h1><p class="muted">Envie à gerência o código deste aparelho. Depois da autorização, o Ponto ficará conectado.</p><div id="uid" class="pill" style="word-break:break-all">—</div><div class="actions"><button class="btn" onclick="P.copiarUID()">Copiar código</button><button class="btn" onclick="P.recarregar()">Verificar autorização</button></div><p class="tiny">O primeiro gerente deve ser autorizado manualmente em fdo_ponto_gerentes no Firebase. O sistema não concede permissão gerencial por conta própria.</p></section>
+<section id="funcionario" class="off">
+<div class="panel"><h1 id="nome-func">Meu ponto</h1><div class="muted" id="data-func"></div><div id="estado-func" class="status">Verificando marcações...</div><button class="btn main-btn big" id="principal" onclick="P.registrarPrincipal()">Registrar entrada</button><div class="actions"><button class="btn off" id="intervalo" onclick="P.registrarIntervalo()">Iniciar intervalo</button></div><div id="feedback" class="muted" aria-live="polite"></div></div>
+<div class="panel"><h2>Minhas horas</h2><label class="field"><span>Período</span><input type="month" id="mes-func" onchange="P.renderFuncionario()"></label><div class="grid"><div class="metric"><span class="muted">Confirmadas</span><strong id="horas-func">—</strong></div><div class="metric"><span class="muted">Provisórias</span><strong id="pend-func">—</strong></div></div><div id="dias-func" class="table-wrap"></div><div id="conf-func" class="status">—</div><div class="actions"><button class="btn" onclick="P.confirmarConferencia()">Conferi meus horários</button><button class="btn" onclick="P.pedirCorrecao()">Solicitar correção</button></div></div>
+<div class="panel"><h2>Avisos da empresa</h2><div id="avisos-func" class="muted">Sem avisos.</div></div>
+</section>
+<section id="gerencia" class="off"><h1>Ponto — Gerência</h1>
+<div class="nav"><button class="btn" onclick="P.aba('resumo')">Pendências</button><button class="btn" onclick="P.aba('cadastro')">Funcionários</button><button class="btn" onclick="P.aba('mes')">Relatórios</button><button class="btn" onclick="P.aba('avisos')">Avisos</button><button class="btn" onclick="P.aba('gps')">GPS</button></div>
+<section class="panel" id="aba-resumo"><h2>Registros para analisar</h2><div id="pendencias-ger"></div><h2>Solicitações de correção</h2><div id="solicitacoes-ger"></div><div class="actions"><button class="btn" onclick="P.atualizarGerencia()">Atualizar pendências</button></div></section>
+<section class="panel off" id="aba-cadastro"><h2>Funcionários</h2><label class="field"><span>Selecionar</span><select id="emp-selecionado" onchange="P.preencherCadastro()"><option value="">Novo funcionário</option></select></label>
+<label class="field"><span>Nome</span><input id="emp-nome" maxlength="90"></label><label class="field"><span>Tipo</span><select id="emp-tipo"><option value="mensalista">Mensalista</option><option value="horista">Horista</option></select></label>
+<label class="field"><input id="emp-ativo" type="checkbox" checked style="display:inline;width:auto;min-height:0"> Funcionário ativo</label>
+<p class="muted">Jornada prevista por dia, em minutos. Em branco = ainda não definida; 0 = folga prevista. Mudanças terão nova vigência.</p><div id="dias-cadastro" class="grid"></div>
+<label class="field"><span>Salário mensal OU valor por hora (R$) — restrito à gerência</span><input id="emp-valor" type="number" min="0" step="0.01"></label>
+<label class="field"><span>Vigência das novas condições</span><input id="emp-vigencia" type="date"></label>
+<div class="actions"><button class="btn main-btn" onclick="P.salvarFuncionario()">Salvar funcionário</button></div>
+<h2>Vincular celular pessoal</h2><p class="muted">Selecione o funcionário e informe o código UID do seu aparelho.</p>
+<label class="field"><span>Código do aparelho (UID)</span><input id="emp-uid" maxlength="128" autocomplete="off" spellcheck="false"></label><button class="btn" onclick="P.vincular()">Autorizar celular</button><div class="muted" id="lista-vinculos"></div>
+<h2 style="margin-top:1rem">Folga, feriado ou justificativa</h2>
+<label class="field"><span>Data</span><input id="ocorrencia-data" type="date"></label>
+<label class="field"><span>Tipo</span><select id="ocorrencia-tipo"><option value="folga">Folga sem desconto</option><option value="feriado">Feriado sem desconto</option><option value="justificada">Ausência justificada — conferir efeito</option><option value="observacao">Observação administrativa</option></select></label>
+<label class="field"><span>Justificativa</span><input id="ocorrencia-nota" maxlength="250"></label><button class="btn" onclick="P.registrarOcorrencia()">Registrar ocorrência</button>
+<h2 style="margin-top:1rem">Marcação supervisionada</h2><label class="field"><span>Tipo</span><select id="manual-tipo"><option value="entrada">Entrada</option><option value="inicio_intervalo">Início de intervalo</option><option value="fim_intervalo">Fim de intervalo</option><option value="saida">Saída</option></select></label>
+<label class="field"><span>Data e horário da fábrica (horário de Brasília)</span><input id="manual-hora" type="datetime-local"></label><label class="field"><span>Motivo obrigatório</span><input id="manual-motivo" maxlength="250"></label><button class="btn" onclick="P.marcarManual()">Incluir com auditoria</button>
+</section>
+<section class="panel off" id="aba-mes"><h2>Fechamento mensal</h2><div class="grid"><label class="field"><span>Mês</span><input type="month" id="mes-ger" onchange="P.renderRelatorio()"></label><label class="field"><span>Funcionário</span><select id="rel-emp" onchange="P.renderRelatorio()"><option value="todos">Todos</option></select></label></div>
+<div id="resumo-ger" class="table-wrap">—</div><div class="actions"><button class="btn main-btn" onclick="P.salvarPDF()">Gerar PDF / imprimir</button><button class="btn" onclick="P.salvarPNG()">Imagem PNG / compartilhar</button></div>
+<p class="muted">Relatório de ponto sem salários, pronto para a contabilidade. PDF: escolha “Salvar como PDF” na impressão. PNG: resumo para compartilhamento.</p><h2>Financeiro — somente gerência</h2><div class="actions"><button class="btn" onclick="P.backupGerencia()">Backup JSON privado (inclui salários)</button></div><div id="financeiro-ger" class="table-wrap">—</div><h2 style="margin-top:1rem">Concluir mês</h2>
+<label class="field"><span>Justificativa se houver pendências ou confirmações ausentes</span><textarea id="motivo-fechar" maxlength="500"></textarea></label><button class="btn" onclick="P.fecharMes()">Fechar mês</button><div id="fechamento-status" class="muted"></div>
+</section>
+<section class="panel off" id="aba-avisos"><h2>Avisos no celular</h2><label class="field"><span>Destinatário</span><select id="aviso-alvo"><option value="todos">Todos</option></select></label>
+<label class="field"><span>Mensagem</span><textarea id="aviso-texto" maxlength="1000"></textarea></label><button class="btn" onclick="P.publicarAviso()">Publicar aviso</button></section>
+<section class="panel off" id="aba-gps"><h2>Área autorizada</h2><p class="muted">Ponto fora da área será registrado, mas ficará pendente de aprovação. O GPS é consultado apenas quando o ponto é registrado.</p>
+<label class="field"><span>Latitude</span><input id="gps-lat" type="number" step="0.0000001"></label><label class="field"><span>Longitude</span><input id="gps-lng" type="number" step="0.0000001"></label><label class="field"><span>Raio em metros</span><input id="gps-raio" type="number" min="20" max="2000"></label>
+<button class="btn" onclick="P.salvarGPS()">Salvar área</button><p class="muted">Para QR Code, transforme um dos links abaixo em código impresso. QR é só atalho; o GPS continuará sendo verificado.</p><div class="actions"><button class="btn" onclick="P.copiarLink('entrada')">Copiar link Entrada</button><button class="btn" onclick="P.copiarLink('saida')">Copiar link Saída</button></div>
+</section></section>
+<footer class="tiny" style="text-align:center;margin:1.2rem 0">Piloto interno. Não declarado como REP-P regulamentado.</footer>
+
+</main><div id="ponto-impressao"></div><script src="./ponto.js"></script></body></html>

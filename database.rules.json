@@ -2,14 +2,12 @@
   "rules": {
     ".read": false,
     ".write": false,
-
     "fdo_dispositivos": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         ".write": false
       }
     },
-
     "fdo_lotes": {
       ".read": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true",
       ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
@@ -30,17 +28,14 @@
       ".read": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true",
       ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
     },
-
     "fdo_acessos": {
       ".read": false,
       "$id": {
         ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true && !data.exists() && newData.exists()"
       }
     },
-
     "fdo_v25": {
       ".read": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true",
-
       "lotes": {
         ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
       },
@@ -56,7 +51,6 @@
       "meta": {
         ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
       },
-
       "estoque": {
         "movimentos": {
           "$id": {
@@ -73,7 +67,6 @@
           ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
         }
       },
-
       "receitas_observacoes": {
         ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
       },
@@ -87,6 +80,158 @@
       },
       "receitas_meta": {
         ".write": "auth != null && root.child('fdo_dispositivos').child(auth.uid).child('ativo').val() === true"
+      }
+    },
+    "fdo_ponto_gerentes": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": false
+      }
+    },
+    "fdo_ponto_vinculos": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+        ".validate": "newData.hasChildren(['funcionarioId','ativo']) && newData.child('funcionarioId').isString() && newData.child('ativo').isBoolean()"
+      }
+    },
+    "fdo_ponto_colaboradores": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$fid": {
+        ".read": "auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid && root.child('fdo_ponto_colaboradores').child($fid).child('ativo').val() === true",
+        ".write": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+        ".validate": "newData.hasChildren(['nome','tipo','ativo']) && newData.child('nome').isString() && newData.child('nome').val().length >= 2 && newData.child('nome').val().length <= 90 && (newData.child('tipo').val() === 'mensalista' || newData.child('tipo').val() === 'horista') && newData.child('ativo').isBoolean()"
+      }
+    },
+    "fdo_ponto_regras": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$fid": {
+        ".read": "auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid && root.child('fdo_ponto_colaboradores').child($fid).child('ativo').val() === true",
+        "$rev": {
+          ".write": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true && !data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['dias','tipo','gerenteUid','servidorTs']) && newData.child('gerenteUid').val() === auth.uid && newData.child('servidorTs').val() === now"
+        }
+      }
+    },
+    "fdo_ponto_financeiro": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$fid": {
+        "$rev": {
+          ".write": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true && !data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['centavos','tipo','gerenteUid','servidorTs']) && newData.child('gerenteUid').val() === auth.uid && newData.child('centavos').isNumber() && newData.child('centavos').val() >= 0 && newData.child('servidorTs').val() === now"
+        }
+      }
+    },
+    "fdo_ponto_config": {
+      "area": {
+        ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true || auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true",
+        ".write": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+        ".validate": "newData.hasChildren(['lat','lng','raio']) && newData.child('lat').isNumber() && newData.child('lng').isNumber() && newData.child('raio').isNumber() && newData.child('raio').val() >= 20 && newData.child('raio').val() <= 2000"
+      }
+    },
+    "fdo_ponto_marcacoes": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$fid": {
+        ".read": "auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid && root.child('fdo_ponto_colaboradores').child($fid).child('ativo').val() === true",
+        "$mid": {
+          ".write": "(auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true || auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid && root.child('fdo_ponto_colaboradores').child($fid).child('ativo').val() === true) && !data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['tipo','uid','clienteTs','servidorTs','gps','avaliacao','origem']) && newData.child('uid').val() === auth.uid && newData.child('clienteTs').isNumber() && newData.child('clienteTs').val() > 1577836800000 && newData.child('clienteTs').val() < now + 86400000 && newData.child('servidorTs').val() === now && (newData.child('tipo').val() === 'entrada' || newData.child('tipo').val() === 'saida' || newData.child('tipo').val() === 'inicio_intervalo' || newData.child('tipo').val() === 'fim_intervalo') && (((auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true) && newData.child('origem').val() === 'gerencia' && newData.child('avaliacao').val() === 'aprovado') || ((auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid && root.child('fdo_ponto_colaboradores').child($fid).child('ativo').val() === true) && newData.child('origem').val() === 'celular' && (newData.child('avaliacao').val() === 'normal' || newData.child('avaliacao').val() === 'pendente' || newData.child('avaliacao').val() === 'sem_internet' || newData.child('avaliacao').val() === 'relogio'))) && (newData.child('avaliacao').val() !== 'normal' || (newData.child('gps').child('situacao').val() === 'dentro' && newData.child('clienteTs').val() >= now - 300000 && newData.child('clienteTs').val() <= now + 300000))"
+        }
+      }
+    },
+    "fdo_ponto_aprovacoes": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$fid": {
+        ".read": "auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid && root.child('fdo_ponto_colaboradores').child($fid).child('ativo').val() === true",
+        "$eventId": {
+          "$auditId": {
+            ".write": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true && !data.exists() && newData.exists()",
+            ".validate": "newData.hasChildren(['gerenteUid','servidorTs']) && newData.child('gerenteUid').val() === auth.uid && newData.child('servidorTs').val() === now"
+          }
+        }
+      }
+    },
+    "fdo_ponto_ajustes": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$fid": {
+        ".read": "auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid && root.child('fdo_ponto_colaboradores').child($fid).child('ativo').val() === true",
+        "$eventId": {
+          "$auditId": {
+            ".write": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true && !data.exists() && newData.exists()",
+            ".validate": "newData.hasChildren(['gerenteUid','servidorTs']) && newData.child('gerenteUid').val() === auth.uid && newData.child('servidorTs').val() === now"
+          }
+        }
+      }
+    },
+    "fdo_ponto_solucoes": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$fid": {
+        ".read": "auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid && root.child('fdo_ponto_colaboradores').child($fid).child('ativo').val() === true",
+        "$eventId": {
+          "$auditId": {
+            ".write": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true && !data.exists() && newData.exists()",
+            ".validate": "newData.hasChildren(['gerenteUid','servidorTs']) && newData.child('gerenteUid').val() === auth.uid && newData.child('servidorTs').val() === now"
+          }
+        }
+      }
+    },
+    "fdo_ponto_solicitacoes": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$fid": {
+        ".read": "auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid && root.child('fdo_ponto_colaboradores').child($fid).child('ativo').val() === true",
+        "$rid": {
+          ".write": "auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid && root.child('fdo_ponto_colaboradores').child($fid).child('ativo').val() === true && !data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['uid','mes','texto','clienteTs','servidorTs']) && newData.child('uid').val() === auth.uid && newData.child('texto').isString() && newData.child('texto').val().length >= 10 && newData.child('texto').val().length <= 500 && newData.child('servidorTs').val() === now"
+        }
+      }
+    },
+    "fdo_ponto_conferencias": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$fid": {
+        ".read": "auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid && root.child('fdo_ponto_colaboradores').child($fid).child('ativo').val() === true",
+        "$mes": {
+          "$cid": {
+            ".write": "auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid && root.child('fdo_ponto_colaboradores').child($fid).child('ativo').val() === true && !data.exists() && newData.exists()",
+            ".validate": "newData.hasChildren(['uid','resumo','clienteTs','servidorTs']) && newData.child('uid').val() === auth.uid && newData.child('resumo').isString() && newData.child('servidorTs').val() === now"
+          }
+        }
+      }
+    },
+    "fdo_ponto_fechamentos": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$mes": {
+        "$cid": {
+          ".write": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true && !data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['mes','gerenteUid','dados','clienteTs','servidorTs']) && newData.child('gerenteUid').val() === auth.uid && newData.child('servidorTs').val() === now"
+        }
+      }
+    },
+    "fdo_ponto_avisos_gerais": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true || auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true",
+      "$aid": {
+        ".write": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true && !data.exists() && newData.exists()",
+        ".validate": "newData.hasChildren(['texto','gerenteUid','clienteTs','servidorTs']) && newData.child('texto').isString() && newData.child('texto').val().length <= 1000 && newData.child('servidorTs').val() === now"
+      }
+    },
+    "fdo_ponto_avisos_individuais": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$fid": {
+        ".read": "auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid && root.child('fdo_ponto_colaboradores').child($fid).child('ativo').val() === true",
+        "$aid": {
+          ".write": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true && !data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['texto','gerenteUid','clienteTs','servidorTs']) && newData.child('texto').isString() && newData.child('texto').val().length <= 1000 && newData.child('servidorTs').val() === now"
+        }
+      }
+    },
+    "fdo_ponto_ocorrencias": {
+      ".read": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true",
+      "$fid": {
+        ".read": "auth != null && root.child('fdo_ponto_vinculos').child(auth.uid).child('ativo').val() === true && root.child('fdo_ponto_vinculos').child(auth.uid).child('funcionarioId').val() === $fid && root.child('fdo_ponto_colaboradores').child($fid).child('ativo').val() === true",
+        "$oid": {
+          ".write": "auth != null && root.child('fdo_ponto_gerentes').child(auth.uid).child('ativo').val() === true && !data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['data','tipo','nota','gerenteUid','servidorTs']) && newData.child('data').isString() && newData.child('nota').isString() && newData.child('nota').val().length >= 5 && newData.child('nota').val().length <= 250 && (newData.child('tipo').val() === 'folga' || newData.child('tipo').val() === 'feriado' || newData.child('tipo').val() === 'justificada' || newData.child('tipo').val() === 'observacao') && newData.child('gerenteUid').val() === auth.uid && newData.child('servidorTs').val() === now"
+        }
       }
     }
   }

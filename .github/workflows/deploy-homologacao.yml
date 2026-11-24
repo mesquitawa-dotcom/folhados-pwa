@@ -1,0 +1,99 @@
+name: Homologação FdO — testar e publicar automaticamente
+
+on:
+  push:
+    branches:
+      - homologacao
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fdo-homologacao
+  cancel-in-progress: true
+
+jobs:
+  validar:
+    name: Testar regressões, interface, segurança e receitas
+    uses: ./.github/workflows/validate-fdo.yml
+
+  publicar:
+    name: Publicar somente no Firebase de HOMOLOGAÇÃO
+    needs: validar
+    if: github.ref == 'refs/heads/homologacao' && github.repository == 'mesquitawa-dotcom/folhados-pwa'
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    environment:
+      name: homologacao
+      url: https://${{ vars.FDO_HOMOLOG_FIREBASE_PROJECT_ID }}.web.app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Testar bloqueios de destino e identidade
+        run: python3 tools/test_credencial_homologacao.py
+      - name: Bloquear configuração ausente, trocada ou de produção
+        env:
+          FDO_HOMOLOG_FIREBASE_PROJECT_ID: ${{ vars.FDO_HOMOLOG_FIREBASE_PROJECT_ID }}
+          FDO_HOMOLOG_FIREBASE_WEB_CONFIG: ${{ vars.FDO_HOMOLOG_FIREBASE_WEB_CONFIG }}
+        run: python3 tools/preparar_credencial_homologacao.py
+      - name: Construir HTML/JS com banco exclusivo de testes
+        env:
+          FDO_HOMOLOG_FIREBASE_PROJECT_ID: ${{ vars.FDO_HOMOLOG_FIREBASE_PROJECT_ID }}
+          FDO_HOMOLOG_FIREBASE_WEB_CONFIG: ${{ vars.FDO_HOMOLOG_FIREBASE_WEB_CONFIG }}
+          FDO_HOMOLOG_APP_CHECK_KEY: ${{ vars.FDO_HOMOLOG_APP_CHECK_KEY }}
+        run: python3 tools/build_homologacao.py
+      - name: Instalar Firebase CLI
+        run: npm install -g firebase-tools
+      - name: Autenticar com identidade temporária exclusiva da homologação
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          project_id: fdo-homologacao-mesquita
+          workload_identity_provider: projects/86853323751/locations/global/workloadIdentityPools/fdo-github/providers/github-homologacao
+          service_account: fdo-github-homologacao@fdo-homologacao-mesquita.iam.gserviceaccount.com
+      - name: Publicar Hosting e Rules APENAS no projeto de testes
+        env:
+          FDO_HOMOLOG_FIREBASE_PROJECT_ID: ${{ vars.FDO_HOMOLOG_FIREBASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          firebase deploy --only hosting,database --project "$FDO_HOMOLOG_FIREBASE_PROJECT_ID" --config firebase.homologacao.json --non-interactive
+      - name: Informar endereço permanente
+        env:
+          STAGING_PROJECT: ${{ vars.FDO_HOMOLOG_FIREBASE_PROJECT_ID }}
+        run: |
+          echo "### Homologação publicada" >> "$GITHUB_STEP_SUMMARY"
+          echo "Endereço: https://$STAGING_PROJECT.web.app" >> "$GITHUB_STEP_SUMMARY"
+          echo "A produção no GitHub Pages não foi alterada." >> "$GITHUB_STEP_SUMMARY"
+
+  propor_producao:
+    name: Preparar PR rascunho para aprovação humana (nunca faz merge)
+    needs: publicar
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Criar PR de homologacao para main, se necessário
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          existente="$(gh pr list --repo "$GITHUB_REPOSITORY" --base main --head homologacao --state open --json number --jq 'length')"
+          if [ "$existente" -gt 0 ]; then
+            echo "Já há uma proposta de publicação aberta; ela acompanha as mudanças da homologação." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          ahead="$(gh api "repos/$GITHUB_REPOSITORY/compare/main...homologacao" --jq '.ahead_by')"
+          if [ "$ahead" -eq 0 ]; then
+            echo "A produção já contém os commits de homologação. Nenhuma proposta necessária." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if gh pr create --repo "$GITHUB_REPOSITORY" --base main --head homologacao --draft --title "PROMOÇÃO PENDENTE: versão homologada FdO" --body "Publicação de homologação validada. **NÃO mesclar antes de Wagner testar e aprovar expressamente.** O merge em main dispara a produção GitHub Pages; nenhuma ação automática faz merge."; then
+            echo "Pull Request criado como RASCUNHO; aguarda avaliação humana." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::Não foi possível abrir PR automaticamente. Em Settings → Actions → General, habilite criação de PR pelo GitHub Actions se desejar, ou abra manualmente PR homologacao → main."
+          fi
