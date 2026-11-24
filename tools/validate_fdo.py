@@ -22,6 +22,23 @@ for marker in (
     if marker not in html: fail('v26.5 sem marcador: '+marker)
 if not (ROOT/'vendor/firebase-app-check-compat.js').exists(): fail('Firebase App Check local ausente')
 
+# v26.8.2 — aviso de massa laminada reconfigurável na escolha da receita, preso à mesma trava da etapa
+for marker in (
+    'NOVIDADES v26.8.2:','function receitaReconfiguravel(id,r){try{return !!aprovPerfilDisponivel(id,r);}catch(e){return false;}}',
+    '<div class="modulo-reconf">MASSA LAMINADA RECONFIGURÁVEL</div>','.modulo-reconf{','color:#fff',
+    "if(rid!=='r2'||!r)return null;"
+):
+    if marker not in html: fail('v26.8.2 sem marcador: '+marker)
+if html.count('MASSA LAMINADA RECONFIGURÁVEL')!=2: fail('v26.8.2: aviso deve existir uma vez no código e uma vez nas notas da versão')
+# v26.8.2 — voz na tela Massa reaproveitada: microfone só com a tela aberta e falas sem palavras de comando
+for marker in (
+    'function aprovVozIniciar()','function aprovVozParar()','function aprovVozComando(todas)','function aprovVozNumero(t)',
+    "if(id!=='aproveitamento')aprovVozParar();","ir('aproveitamento');aprovVozIniciar();aprovVozAnunciar();",
+    'id="aprov-voz"',"aprovVozTem(t,'confirmar|confirma|confirmado|confirmo|continuar|continua|continue')",
+    "'. Diga a quantidade ou confirme.'","'. Confirme.'",'.aprov-quick .btn-sec{'
+):
+    if marker not in html: fail('v26.8.2 (voz) sem marcador: '+marker)
+
 # v26.4 — segurança Firebase e históricos append-only preservada
 for marker in (
     'NOVIDADES v26.4:',"imutavel(nome){return nome==='movimentos'||nome==='auditoria';}",

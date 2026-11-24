@@ -4,10 +4,16 @@ Atualizado em 08/11/2026. Este resumo complementa Resumo_v26.8.1.md e PONTO_PILO
 
 ## Ambientes
 
-- Produção: main, v26.8.1, commit 41bb4c3bae958c77879069f49ecb008d8af57317. Não alterada nesta configuração.
+- Produção: main, v26.8.2, commit bfa71b5678ed822ca9a47b0a7f63e8e47c96c087 (PR #25, 24/11/2026: aviso de massa laminada reconfigurável e voz na tela Massa reaproveitada).
 - Homologação: branch homologacao, piloto Ponto v26.9, https://fdo-homologacao-mesquita.web.app/.
 - PR de promoção #24 permanece em rascunho; nenhuma rotina executa merge.
 - Backup: backup/pre-homologacao-2026-11-08.
+
+## Atualização de 24/11/2026
+
+O `main` v26.8.2 foi mesclado nesta branch. A homologação continua v26.9 e passa a conter o aviso da R2 e a voz da tela Massa reaproveitada. Conflitos apenas nas linhas de versão e cache, resolvidos mantendo a v26.9. Com isso o PR #24 volta a ser mesclável sem conflito. O piloto do Ponto não foi alterado.
+
+Wagner liberou o avanço do Ponto em 24/11/2026 e definiu que valores como salário ficam em tela para preenchimento; já é assim em Gerência → Funcionários (salário ou valor por hora, jornada, vigência) e Gerência → Área autorizada (GPS). A promoção para produção continua dependendo do teste com dados fictícios e da publicação das Rules do Ponto no Firebase de produção.
 
 ## Última mudança
 

@@ -6,6 +6,12 @@
        NOVIDADES v26.9:
        • Ponto piloto isolado com GPS, horários, relatórios e gerência.
        • Produção e receitas anteriores preservadas integralmente.
+       NOVIDADES v26.8.2:
+       • Na escolha da receita, a opção com massa reaproveitada variável mostra "MASSA LAMINADA RECONFIGURÁVEL".
+       • O aviso aparece somente quando a etapa de massa reaproveitada está de fato disponível para a receita vigente.
+       • Tela Massa reaproveitada aceita voz: quantidade em gramas, "sem massa", "padrão", "confirmar", "voltar" e "repetir".
+       • A voz só preenche a quantidade; a receita da execução muda apenas com "confirmar" (voz ou toque).
+       • Nenhuma receita, peso, fermento, tempo, dado histórico ou regra de produção foi alterado.
        NOVIDADES v26.8.1:
        • Etiqueta das massas identifica a receita curta e a quantidade de massa reaproveitada usada na execução.
        • Etiqueta do balde destaca Água/gelo, Leite em pó e Massa laminada em linhas maiores, preservando o formato 60×50 mm.
@@ -360,6 +366,9 @@
     .modulo-nome{font-size:1rem;font-weight:bold;color:var(--gl);margin-bottom:.15rem}
     .modulo.inativo .modulo-nome{color:var(--mut)}
     .modulo-desc{font-size:.75rem;color:var(--mut);line-height:1.3}
+    .modulo.modulo-com-aviso{display:block}
+    .modulo-linha{display:flex;align-items:center;gap:.8rem}
+    .modulo-reconf{margin-top:.45rem;font-size:.68rem;font-weight:bold;color:#fff;letter-spacing:.03em;line-height:1.25;text-align:center;overflow-wrap:anywhere}
     .modulo-slim{padding:.7rem 1rem}
     .modulo-slim .modulo-nome{font-size:1.05rem;margin-bottom:0}
     .modulo-badge{font-size:.55rem;letter-spacing:.15rem;text-transform:uppercase;
@@ -803,6 +812,7 @@
 .aprov-title{font-size:.82rem;color:var(--gl);font-weight:bold;line-height:1.35}
 .aprov-input-row{display:flex;align-items:center;gap:.45rem;margin:.75rem 0}.aprov-input-row .inp{flex:1;min-width:0;text-align:center;font-size:1.45rem;font-weight:bold}.aprov-input-row span{font-size:1rem;color:var(--mut)}
 .aprov-quick{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin:.55rem 0}.aprov-quick button{min-height:2.6rem}
+.aprov-quick .btn-sec{padding:.55rem .35rem;border:1px solid var(--gold);border-radius:.4rem;background:var(--bg3);color:var(--gl);font-family:Georgia,serif;font-size:.72rem;font-weight:bold;cursor:pointer}
 .aprov-resumo{margin-top:.7rem;padding:.65rem;border-left:3px solid var(--gold);background:#161106;border-radius:.3rem;line-height:1.45}.aprov-resumo b{color:var(--gl)}
 .aprov-grid{display:grid;grid-template-columns:1fr 1fr;gap:.25rem .6rem;margin-top:.45rem;font-size:.72rem;color:var(--mut)}.aprov-grid strong{color:var(--text)}
 .ux-flow-menu{padding:.8rem;display:flex;flex-direction:column;gap:.8rem;overflow-y:auto}
@@ -1094,6 +1104,7 @@
     <div class="aprov-card">
       <div class="aprov-title">Massa laminada com manteiga disponível</div>
       <div class="ux-muted" id="aprov-padrao" style="margin-top:.25rem">Padrão da receita: —</div>
+      <div class="ux-muted" id="aprov-voz" style="margin-top:.25rem"></div>
       <div class="aprov-input-row">
         <input id="aprov-qtd" class="inp" type="number" inputmode="numeric" min="0" step="2" autocomplete="off" oninput="aprovAtualizarResumo()">
         <span>g</span>
@@ -2021,9 +2032,11 @@ function receitaMontarEditada(base,v,nome,temp,horas){
   if(Number(v.aprov)===0){r.passosLiquidos=r.passosLiquidos.filter(p=>!(p.nome==='Massa laminada'&&Number(p.g)===0));r.passosLiquidos.forEach((p,i)=>p.id=i+1);}return r;
 }
 function receitaIcone(n){return ({1:'1️⃣',2:'2️⃣',3:'3️⃣',4:'4️⃣',5:'5️⃣'})[n]||'📜';}
+// v26.8.2 — aviso na escolha da receita: usa a mesma trava que abre a etapa de massa reaproveitada.
+function receitaReconfiguravel(id,r){try{return !!aprovPerfilDisponivel(id,r);}catch(e){return false;}}
 function renderReceitasPorcionamento(){
   aplicarReceitasDefinitivas();const el=document.getElementById('receitas-list');if(!el)return;const ativas=receitasOrdenadas().filter(x=>x.ativo);
-  let html=ativas.map(x=>`<div class="modulo ativo" onclick="iniciarReceita('${_escHtml(x.id)}')"><div class="modulo-icon">${receitaIcone(x.numero)}</div><div class="modulo-info"><div class="modulo-nome">${_escHtml(x.r.nome)}</div><div class="modulo-desc">${_escHtml(x.r.farinhas||'')}</div></div><button class="receita-ver" onclick="event.stopPropagation();abrirReceitaCompleta('${_escHtml(x.id)}')">📋 Receita</button></div>`).join('');
+  let html=ativas.map(x=>{const corpo=`<div class="modulo-icon">${receitaIcone(x.numero)}</div><div class="modulo-info"><div class="modulo-nome">${_escHtml(x.r.nome)}</div><div class="modulo-desc">${_escHtml(x.r.farinhas||'')}</div></div><button class="receita-ver" onclick="event.stopPropagation();abrirReceitaCompleta('${_escHtml(x.id)}')">📋 Receita</button>`,reconf=receitaReconfiguravel(x.id,x.r);return `<div class="modulo ativo${reconf?' modulo-com-aviso':''}" onclick="iniciarReceita('${_escHtml(x.id)}')">${reconf?'<div class="modulo-linha">'+corpo+'</div><div class="modulo-reconf">MASSA LAMINADA RECONFIGURÁVEL</div>':corpo}</div>`;}).join('');
   html+=`<div class="modulo ativo" onclick="abrirTesteBase()"><div class="modulo-icon">🧪</div><div class="modulo-info"><div class="modulo-nome">Receita Teste</div><div class="modulo-desc">Copie uma receita definitiva, altere somente o necessário e guarde exatamente o que foi feito</div></div><div class="modulo-badge badge-teste">Teste</div></div>`;
   const arquivadas=receitasOrdenadas().filter(x=>!x.ativo);if(OP.pode('receita_editar')&&arquivadas.length)html+=`<div class="modulo ativo" onclick="abrirReceitasArquivadas()"><div class="modulo-icon">🗄</div><div class="modulo-info"><div class="modulo-nome">Receitas arquivadas</div><div class="modulo-desc">${arquivadas.length} receita${arquivadas.length===1?'':'s'} fora do Porcionamento · histórico preservado</div></div></div>`;
   el.innerHTML=html;
@@ -2971,6 +2984,7 @@ const GEO={
 
 function ir(id){
   if(!document.getElementById('s-'+id))return;
+  if(id!=='aproveitamento')aprovVozParar();
   uxRegistrarTela(id);
   if(id==='receitas' && typeof renderReceitasPorcionamento==='function')renderReceitasPorcionamento();
   else if(id==='teste-base' && typeof renderTesteBase==='function')renderTesteBase();
@@ -4706,7 +4720,7 @@ function aprovAbrir(preservar){
   document.getElementById('aprov-padrao').textContent='Padrão da receita: '+formatPeso(p.padrao_g);
   document.getElementById('aprov-padrao-btn').textContent='Usar padrão · '+formatPeso(p.padrao_g);
   document.getElementById('aprov-qtd').max=String(p.padrao_g);document.getElementById('aprov-qtd').value=String(valor);
-  aprovAtualizarResumo();ir('aproveitamento');
+  aprovAtualizarResumo();ir('aproveitamento');aprovVozIniciar();aprovVozAnunciar();
 }
 function aprovDefinirRapido(g){document.getElementById('aprov-qtd').value=String(g);aprovAtualizarResumo();}
 function aprovUsarPadrao(){if(st.aprovPerfil)aprovDefinirRapido(st.aprovPerfil.padrao_g);}
@@ -4735,6 +4749,91 @@ function aprovConfirmar(){
   st.receitaExecucao=rec;st.aprovEscolhido=g;RECEITA=rec.passosSecos;abrirLotesFarinha();
 }
 function aprovVoltar(){st.aprovEscolhido=null;st.aprovPerfil=null;st.aprovBaseReceita=null;st.receitaExecucao=null;ir('receitas');}
+
+// v26.8.2 — voz na tela Massa reaproveitada. O microfone fica ativo só enquanto a tela está aberta.
+// A voz apenas preenche a quantidade; a receita só muda com "confirmar" (voz ou toque).
+// As falas do app evitam as palavras de comando e o microfone ignora o que chega enquanto o app fala.
+function aprovVozStatus(t){const el=document.getElementById('aprov-voz');if(el)el.textContent=t;}
+function aprovFalar(t){
+  falar(t);
+  if(!ttsAtivo()||!window.speechSynthesis)return;
+  st.aprovVozMudoAte=Date.now()+800;clearInterval(st.aprovVozMudoTimer);let n=0;
+  st.aprovVozMudoTimer=setInterval(()=>{
+    n++;const fala=speechSynthesis.speaking||speechSynthesis.pending;
+    if(fala)st.aprovVozMudoAte=Date.now()+800;
+    if((!fala&&n>2)||n>100){clearInterval(st.aprovVozMudoTimer);st.aprovVozMudoTimer=null;}
+  },200);
+}
+function aprovVozParar(){try{if(st.aprovRec){const r=st.aprovRec;st.aprovRec=null;r.onend=null;try{r.stop();}catch(e){}}}catch(e){}}
+function aprovVozFraseValor(g){return g===0?'Sem massa reaproveitada':falaPeso(g)+' de massa reaproveitada';}
+function aprovVozAnunciar(){
+  const p=st.aprovPerfil,g=aprovLerEntrada();if(!p)return;
+  if(g!=null)st.aprovVozUltimo={g,ts:Date.now()}; // o eco deste anúncio não repete a confirmação do mesmo valor
+  aprovFalar((g==null||g===p.padrao_g?'Massa reaproveitada. Padrão '+falaPeso(p.padrao_g):aprovVozFraseValor(g))+'. Diga a quantidade ou confirme.');
+}
+// Converte a fala em gramas: "1200", "1.200 gramas", "2 quilos", "1 quilo e 200", "1 quilo e meio", "meio quilo".
+function aprovVozNumero(t){
+  t=String(t||'').toLowerCase().replace(/(\d)\.(\d{3})(?!\d)/g,'$1$2');
+  let m=t.match(/(\d+(?:,\d+)?)\s*(?:kg|quilos?|kilos?)(?:\s*e\s*(meio|\d+))?/);
+  if(m){let g=Math.round(parseFloat(m[1].replace(',','.'))*1000);if(m[2])g+=m[2]==='meio'?500:parseInt(m[2],10);return g;}
+  if(/meio\s*(?:kg|quilo|kilo)/.test(t))return 500;
+  if(/\d+,\d/.test(t))return NaN;
+  m=t.match(/\d+/);return m?parseInt(m[0],10):null;
+}
+function aprovVozDefinir(g){
+  const p=st.aprovPerfil;if(!p)return;
+  if(!Number.isInteger(g)||g<0||g>p.padrao_g||g%2!==0){aprovFalar('Quantidade inválida. Confira o limite na tela.');return;}
+  const u=st.aprovVozUltimo,agora=Date.now(),repetida=aprovLerEntrada()===g&&u&&u.g===g&&agora-u.ts<6000;
+  aprovDefinirRapido(g);if(repetida)return;
+  st.aprovVozUltimo={g,ts:agora};aprovFalar(aprovVozFraseValor(g)+'. Confirme.');
+}
+function aprovVozConfirmar(){
+  const g=aprovLerEntrada();if(g==null||!st.aprovPerfil){aprovFalar('Confira a quantidade.');return;}
+  aprovConfirmar();if(uxTelaAtual()!=='aproveitamento')falar('Confirmado. '+aprovVozFraseValor(g)+'.');
+}
+// Palavra inteira, respeitando letras acentuadas (o \b do JavaScript não reconhece "ã", "ç").
+function aprovVozTem(t,lista){return new RegExp('(?<![a-zà-ú0-9])(?:'+lista+')(?![a-zà-ú0-9])').test(t);}
+// Um comando por fala. Quantidade tem prioridade; frases com "não" são ignoradas.
+function aprovVozComando(todas){
+  for(const t of todas){
+    if(aprovVozTem(t,'não|nao|nem'))continue;
+    if(aprovVozTem(t,'sem massa|sem reaproveitamento|zero')){aprovVozDefinir(0);return true;}
+    if(aprovVozTem(t,'padrão|padrao')){aprovVozDefinir(st.aprovPerfil?st.aprovPerfil.padrao_g:NaN);return true;}
+    const n=aprovVozNumero(t);if(n!==null){aprovVozDefinir(n);return true;}
+    if(aprovVozTem(t,'confirmar|confirma|confirmado|confirmo|continuar|continua|continue')){aprovVozConfirmar();return true;}
+    if(aprovVozTem(t,'voltar|volta|volte')){aprovVoltar();return true;}
+    if(aprovVozTem(t,'repetir|repete|repita')){aprovVozAnunciar();return true;}
+  }
+  return false;
+}
+function aprovVozIniciar(){
+  aprovVozParar();
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){aprovVozStatus('Voz indisponível neste navegador. Digite a quantidade.');return;}
+  if(st.rec){aprovVozStatus('Voz indisponível agora. Digite a quantidade.');return;} // sessão de porcionamento ainda ouvindo: não abre um segundo microfone
+  const rec=new SR();rec.lang='pt-BR';rec.continuous=true;rec.interimResults=false;rec.maxAlternatives=3;
+  st.aprovRec=rec;st.aprovVozErros=0;st.aprovVozTs=0;st.aprovVozUltimo=null;
+  rec.onstart=()=>{if(st.aprovRec===rec)aprovVozStatus('🎤 Diga a quantidade em gramas, "sem massa", "padrão" ou "confirmar".');};
+  rec.onend=()=>{
+    if(st.aprovRec!==rec)return;
+    if(uxTelaAtual()!=='aproveitamento'||st.aprovVozErros>=3){const falhou=st.aprovVozErros>=3;aprovVozParar();if(falhou)aprovVozStatus('Voz indisponível agora. Digite a quantidade.');return;}
+    setTimeout(()=>{if(st.aprovRec===rec){try{rec.start();}catch(e){}}},400);
+  };
+  rec.onerror=(e)=>{
+    if(st.aprovRec!==rec)return;
+    if(e.error==='not-allowed'||e.error==='service-not-allowed'){aprovVozParar();aprovVozStatus('Microfone bloqueado. Digite a quantidade.');}
+    else if(e.error!=='no-speech'&&e.error!=='aborted')st.aprovVozErros=(st.aprovVozErros||0)+1;
+  };
+  rec.onresult=(e)=>{
+    if(st.aprovRec!==rec)return;
+    if(uxTelaAtual()!=='aproveitamento'){aprovVozParar();return;}
+    st.aprovVozErros=0;
+    const a=Date.now();if(a<(st.aprovVozMudoAte||0)||a-(st.aprovVozTs||0)<800)return;
+    const r=e.results[e.results.length-1],todas=[];for(let i=0;i<r.length;i++)todas.push(String(r[i].transcript||'').trim().toLowerCase());
+    if(aprovVozComando(todas))st.aprovVozTs=a;
+  };
+  try{rec.start();}catch(e){}
+}
 
 // Escolhe qual receita rodar (R1–R5), ajusta o cabeçalho e segue para os lotes de farinha.
 function iniciarReceita(rid){
